@@ -4,6 +4,24 @@ import clientPromise from './mongodb';
 const DB_NAME = 'elevaite';
 const COLLECTION = 'users';
 
+export type AppearancePrefs = {
+  theme: 'light' | 'dark' | 'system';
+  density: 'compact' | 'regular' | 'comfy';
+  accent: string; // hex color
+  chipStyle: 'fill' | 'tinted' | 'outline';
+  weekStart: 'mon' | 'sun' | 'sat';
+  timeFormat: '12' | '24';
+};
+
+export const DEFAULT_APPEARANCE: AppearancePrefs = {
+  theme: 'light',
+  density: 'regular',
+  accent: '#D97757',
+  chipStyle: 'tinted',
+  weekStart: 'mon',
+  timeFormat: '24',
+};
+
 export type NotificationPrefs = {
   // Channels (where to reach you) — only `inbox` works today; others are placeholders
   desktop: boolean;
@@ -52,6 +70,7 @@ export type UserRecord = {
   handle?: string;      // lowercase, alphanumeric + dash, unique
   timezone?: string;    // IANA, e.g. "America/Los_Angeles"
   notificationPrefs?: Partial<NotificationPrefs>;
+  appearancePrefs?: Partial<AppearancePrefs>;
   updatedAt?: Date;
 };
 
@@ -104,6 +123,25 @@ export async function getUserById(id: string): Promise<UserRecord | null> {
 export async function getNotificationPrefs(id: string): Promise<NotificationPrefs> {
   const u = await getUserById(id);
   return { ...DEFAULT_PREFS, ...(u?.notificationPrefs ?? {}) };
+}
+
+export async function getAppearancePrefs(id: string): Promise<AppearancePrefs> {
+  const u = await getUserById(id);
+  return { ...DEFAULT_APPEARANCE, ...(u?.appearancePrefs ?? {}) };
+}
+
+export async function updateAppearancePrefs(
+  id: string,
+  patch: Partial<AppearancePrefs>,
+): Promise<AppearancePrefs | null> {
+  if (!ObjectId.isValid(id)) return null;
+  const c = await col();
+  const setOps: Record<string, unknown> = { updatedAt: new Date() };
+  for (const [k, v] of Object.entries(patch)) {
+    if (v !== undefined) setOps[`appearancePrefs.${k}`] = v;
+  }
+  await c.updateOne({ _id: new ObjectId(id) }, { $set: setOps });
+  return getAppearancePrefs(id);
 }
 
 export async function updateNotificationPrefs(

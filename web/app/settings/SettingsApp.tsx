@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import './settings.css';
+import { useAppearance } from '@/lib/useAppearance';
 
 type TabId = 'profile' | 'accounts' | 'notifications' | 'appearance' | 'keyboard' | 'billing' | 'workspace';
 
@@ -519,48 +520,33 @@ function Notifications() {
 }
 
 function Appearance() {
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('light');
-  const [density, setDensity] = useState<'compact' | 'regular' | 'comfy'>('regular');
-  const [weekStart, setWeekStart] = useState<'mon' | 'sun' | 'sat'>('mon');
-  const [timeFormat, setTimeFormat] = useState<'12' | '24'>('24');
-  const [chip, setChip] = useState<'fill' | 'tinted' | 'outline'>('tinted');
-  const [accent, setAccent] = useState('#D97757');
-
-  // Restore + persist
-  useEffect(() => {
-    const saved = (localStorage.getItem('elevaite.theme') as 'light' | 'dark' | null) ?? null;
-    if (saved) setTheme(saved);
-  }, []);
-  useEffect(() => {
-    if (theme !== 'system') {
-      document.documentElement.dataset.theme = theme;
-      localStorage.setItem('elevaite.theme', theme);
-    }
-  }, [theme]);
-
+  const [prefs, setPref, saving] = useAppearance();
   return (
     <>
       <h1 className="ss-page-h">Appearance</h1>
-      <p className="ss-page-sub">Make ElevAIte look how you want.</p>
+      <p className="ss-page-sub">
+        Make ElevAIte look how you want.{' '}
+        {saving && <span style={{ color: 'var(--text-3)' }}>· Saving…</span>}
+      </p>
 
       <div className="ss-card">
         <Row label="Theme">
           <div className="theme-cards">
             {([
-              { k: 'light', l: 'Light', bg: '#FAF9F5', sk: '#F5F4ED' },
-              { k: 'dark', l: 'Dark', bg: '#1A1916', sk: '#232220' },
-              { k: 'system', l: 'System', bg: 'linear-gradient(135deg, #FAF9F5 50%, #1A1916 50%)', sk: '#888' },
-            ] as const).map((o) => (
+              { k: 'light' as const, l: 'Light', bg: '#FAF9F5', sk: '#F5F4ED' },
+              { k: 'dark' as const, l: 'Dark', bg: '#1A1916', sk: '#232220' },
+              { k: 'system' as const, l: 'System', bg: 'linear-gradient(135deg, #FAF9F5 50%, #1A1916 50%)', sk: '#888' },
+            ]).map((o) => (
               <button
                 key={o.k}
                 type="button"
-                className={`theme-card ${theme === o.k ? 'on' : ''}`}
-                onClick={() => setTheme(o.k)}
+                className={`theme-card ${prefs.theme === o.k ? 'on' : ''}`}
+                onClick={() => setPref('theme', o.k)}
               >
                 <div className="theme-card__prev" style={{ background: o.bg }}>
                   <div style={{ width: '60%', background: o.sk }} />
                   <div style={{ width: '40%', background: o.sk }} />
-                  <div style={{ height: 18, marginTop: 'auto', background: accent, borderRadius: 3, opacity: 0.7 }} />
+                  <div style={{ height: 18, marginTop: 'auto', background: prefs.accent, borderRadius: 3, opacity: 0.7 }} />
                 </div>
                 <div className="theme-card__lbl">{o.l}</div>
               </button>
@@ -574,11 +560,11 @@ function Appearance() {
               <button
                 key={c}
                 type="button"
-                onClick={() => setAccent(c)}
+                onClick={() => setPref('accent', c)}
                 style={{
                   width: 28, height: 28, borderRadius: 7,
                   background: c, border: 0, cursor: 'pointer',
-                  boxShadow: accent === c ? `0 0 0 2px var(--bg), 0 0 0 4px ${c}` : 'none',
+                  boxShadow: prefs.accent === c ? `0 0 0 2px var(--bg), 0 0 0 4px ${c}` : 'none',
                   transition: 'box-shadow 140ms var(--ease)',
                 }}
               />
@@ -586,22 +572,30 @@ function Appearance() {
           </div>
         </Row>
 
-        <Row label="Density">
-          <Seg value={density} options={['compact', 'regular', 'comfy'] as const} onChange={setDensity} />
+        <Row label="Density" sub="Affects how tall hour rows are in the calendar.">
+          <Seg value={prefs.density} options={['compact', 'regular', 'comfy'] as const} onChange={(v) => setPref('density', v)} />
         </Row>
 
-        <Row label="Event chip style">
-          <Seg value={chip} options={['fill', 'tinted', 'outline'] as const} onChange={setChip} />
+        <Row label="Event chip style" sub="How events render on the calendar grid.">
+          <Seg value={prefs.chipStyle} options={['fill', 'tinted', 'outline'] as const} onChange={(v) => setPref('chipStyle', v)} />
         </Row>
       </div>
 
       <div className="ss-card">
         <div className="ss-card__h">Calendar defaults</div>
         <Row label="Week starts on">
-          <Seg value={weekStart} options={[{ v: 'mon' as const, l: 'Monday' }, { v: 'sun' as const, l: 'Sunday' }, { v: 'sat' as const, l: 'Saturday' }]} onChange={setWeekStart} />
+          <Seg
+            value={prefs.weekStart}
+            options={[{ v: 'mon' as const, l: 'Monday' }, { v: 'sun' as const, l: 'Sunday' }, { v: 'sat' as const, l: 'Saturday' }]}
+            onChange={(v) => setPref('weekStart', v)}
+          />
         </Row>
         <Row label="Time format">
-          <Seg value={timeFormat} options={[{ v: '12' as const, l: '12-hour' }, { v: '24' as const, l: '24-hour' }]} onChange={setTimeFormat} />
+          <Seg
+            value={prefs.timeFormat}
+            options={[{ v: '12' as const, l: '12-hour' }, { v: '24' as const, l: '24-hour' }]}
+            onChange={(v) => setPref('timeFormat', v)}
+          />
         </Row>
       </div>
     </>

@@ -10,6 +10,7 @@ import {
   IconPlus, IconSearch, IconSettings, IconSidebar,
 } from '../calendar/Icons';
 import type { NotificationDTO } from '@/lib/notifications';
+import { useAppearance } from '@/lib/useAppearance';
 
 const KIND_ICON: Record<string, string> = {
   'booking.created': '📅',
@@ -66,20 +67,13 @@ export function InboxApp({ userName, userEmail }: { userName: string; userEmail:
 
   useEffect(() => { fetchInbox(); }, [fetchInbox]);
 
-  // Theme toggle
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  useEffect(() => {
-    const saved = (localStorage.getItem('elevaite.theme') as 'light' | 'dark' | null) ?? null;
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initial = saved ?? (prefersDark ? 'dark' : 'light');
-    setTheme(initial);
-    document.documentElement.dataset.theme = initial;
-  }, []);
+  // Theme — managed by useAppearance hook
+  const [appearance, setAppearance] = useAppearance();
+  const theme = appearance.theme === 'system'
+    ? (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    : appearance.theme;
   const toggleTheme = () => {
-    const next = theme === 'light' ? 'dark' : 'light';
-    setTheme(next);
-    document.documentElement.dataset.theme = next;
-    localStorage.setItem('elevaite.theme', next);
+    setAppearance('theme', theme === 'light' ? 'dark' : 'light');
   };
 
   const filtered = useMemo(() => {
