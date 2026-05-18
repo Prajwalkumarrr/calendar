@@ -389,9 +389,6 @@
 }
 
 /* Hour rows */
-.body {
-  display: contents;
-}
 .gutter {
   border-right: 1px solid var(--hairline);
   position: relative;
