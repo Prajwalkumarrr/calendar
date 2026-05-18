@@ -30,6 +30,8 @@ export async function POST(req: NextRequest) {
       slug: typeof body.slug === 'string' ? body.slug : undefined,
       durationMin: body.durationMin,
       description: typeof body.description === 'string' ? body.description : undefined,
+      workingHours: body.workingHours && typeof body.workingHours === 'object' ? body.workingHours : undefined,
+      bufferMin: typeof body.bufferMin === 'number' ? body.bufferMin : undefined,
     });
     if ('error' in created) {
       return NextResponse.json({ error: created.error }, { status: 400 });
