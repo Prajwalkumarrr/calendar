@@ -78,12 +78,48 @@ The Render free tier spins down after 15 min idle (~30–60s cold start on next 
 
 ## Phases
 
-- ✅ **Phase 1 — Foundation** (you are here): scaffolding, design tokens, landing served at /
-- ⏳ Phase 2 — Auth + DB: NextAuth (Google), User/Session models, sign-in page
+- ✅ Phase 1 — Foundation: scaffolding, design tokens, landing served at /
+- ✅ **Phase 2 — Auth + DB** (you are here): NextAuth (Google), MongoDB adapter, sign-in page, protected dashboard
 - ⏳ Phase 3 — Calendar core: Event model, CRUD API, port week view
 - ⏳ Phase 4 — Scheduling links: Link/Booking models, port create/book/booked/reschedule
 - ⏳ Phase 5 — Settings + remaining pages: port settings, profile, mobile, etc.
 - ⏳ Phase 6 — Deploy: push to Vercel + Render + connect Atlas + custom domain
+
+## Set up Google OAuth
+
+NextAuth needs a Google OAuth client. **One-time setup, ~3 minutes.**
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com)
+2. Create a project (or pick an existing one)
+3. Search for **"OAuth consent screen"** in the top bar → click it
+4. User type: **External** → Create
+5. Fill in:
+   - App name: `ElevAIte Calendar`
+   - User support email: your email
+   - Developer contact email: your email
+   - Save and continue through the rest (no scopes needed beyond defaults)
+6. Search **"Credentials"** in the top bar → click → **Create Credentials** → **OAuth client ID**
+7. Application type: **Web application**
+8. Name: `ElevAIte (local)`
+9. **Authorized redirect URIs** — add:
+   ```
+   http://localhost:3000/api/auth/callback/google
+   ```
+   (When you deploy to Vercel, add your prod URL too: `https://your-domain.vercel.app/api/auth/callback/google`)
+10. Click **Create**, copy the **Client ID** and **Client Secret**
+11. Paste both into `web/.env.local`:
+    ```
+    GOOGLE_CLIENT_ID=...
+    GOOGLE_CLIENT_SECRET=...
+    ```
+12. Generate `NEXTAUTH_SECRET`:
+    ```
+    openssl rand -base64 32
+    ```
+    Paste it into `web/.env.local`.
+13. Add `MONGODB_URI` to `web/.env.local` — **same connection string as `api/.env`** (NextAuth and the API share the cluster).
+
+Restart `npm run dev` after editing env vars. Visit [http://localhost:3000/sign-in](http://localhost:3000/sign-in), click "Continue with Google" → you land on `/dashboard` signed in. Your user is now in the `users` collection in Atlas.
 
 ## Prototype
 

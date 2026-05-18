@@ -11,6 +11,13 @@ const WEB_ORIGIN = process.env.WEB_ORIGIN ?? 'http://localhost:3000';
 app.use(cors({ origin: WEB_ORIGIN, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
 
+app.get('/', (_req, res) => {
+  res.json({
+    service: 'elevaite-api',
+    docs: 'try GET /api/health',
+  });
+});
+
 app.use('/api/health', healthRouter);
 
 app.use((_req, res) => res.status(404).json({ error: 'not_found' }));
