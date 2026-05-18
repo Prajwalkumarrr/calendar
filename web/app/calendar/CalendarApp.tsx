@@ -11,7 +11,8 @@ import {
   DEFAULT_CALENDARS, DEFAULT_TZONES, DAY_NAMES, HOUR_START, HOUR_END,
   fmtTime, fmtTime24, type CalendarMeta,
 } from './defaults';
-import { EventModal, type EventDraft } from './EventModal';
+import { EventPanel, type PanelDraft } from './EventPanel';
+import { CommandPaletteProto, type Cmd } from './CommandPaletteProto';
 import type { ChipColor, EventDTO } from '@/lib/events';
 import { addDays, daysInWeek, endOfWeek, startOfWeek, isSameDay, MONTHS_FULL } from '@/lib/date';
 
@@ -94,7 +95,9 @@ export function CalendarApp() {
   const [anchor, setAnchor] = useState<Date>(() => new Date());
   const [events, setEvents] = useState<EventDTO[]>([]);
   const [calendars, setCalendars] = useState<CalendarMeta[]>(DEFAULT_CALENDARS);
-  const [draft, setDraft] = useState<EventDraft | null>(null);
+  const [draft, setDraft] = useState<PanelDraft | null>(null);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [cmdkOpen, setCmdkOpen] = useState(false);
   const [sidebarMode, setSidebarMode] = useState<'expanded' | 'collapsed' | 'hidden'>('expanded');
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [nowMin, setNowMin] = useState<number>(() => {
@@ -171,6 +174,19 @@ export function CalendarApp() {
   // ── Keyboard ──────────────────────────────────────────────────────
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // ⌘K / Ctrl+K toggles palette anywhere
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setCmdkOpen((o) => !o);
+        return;
+      }
+      // ⌘⇧D toggles dark mode
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'd') {
+        e.preventDefault();
+        toggleTheme();
+        return;
+      }
+      if (cmdkOpen) return;
       if (e.target instanceof HTMLElement && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
       const k = e.key.toLowerCase();
       if (k === 't') setAnchor(new Date());
@@ -180,12 +196,14 @@ export function CalendarApp() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cmdkOpen, theme]);
 
   function openCreateNow() {
     const n = new Date();
     const end = new Date(n); end.setHours(n.getHours() + 1);
     setDraft({ title: '', start: n, end, color: 'coral' });
+    setPanelOpen(true);
   }
 
   function openEdit(ev: EventDTO) {
@@ -195,7 +213,14 @@ export function CalendarApp() {
       start: new Date(ev.start),
       end: new Date(ev.end),
       color: ev.color,
+      location: ev.location,
+      description: ev.description,
     });
+    setPanelOpen(true);
+  }
+
+  function closePanel() {
+    setPanelOpen(false);
   }
 
   function toggleCalendar(id: string) {
@@ -232,6 +257,7 @@ export function CalendarApp() {
     const start = new Date(dayDate); start.setHours(Math.floor(sH), Math.round((sH - Math.floor(sH)) * 60), 0, 0);
     const end = new Date(dayDate); end.setHours(Math.floor(eH), Math.round((eH - Math.floor(eH)) * 60), 0, 0);
     setDraft({ title: '', start, end, color: 'coral' });
+    setPanelOpen(true);
   };
 
   function onColMouseDown(e: React.MouseEvent<HTMLDivElement>, day: number) {
@@ -315,7 +341,7 @@ export function CalendarApp() {
           <span className="kbd-on-coral">C</span>
         </button>
 
-        <button className="search-trigger" title="Search (⌘K)">
+        <button className="search-trigger" title="Search (⌘K)" onClick={() => setCmdkOpen(true)}>
           <IconSearch size={14} />
           <span className="search-trigger__placeholder">Search or command…</span>
           <span className="kbd">⌘K</span>
@@ -549,13 +575,70 @@ export function CalendarApp() {
         </div>
       </div>
 
-      {draft && (
-        <EventModal
-          draft={draft}
-          onClose={() => setDraft(null)}
-          onSaved={() => { setDraft(null); fetchEvents(); }}
-        />
-      )}
+      <EventPanel
+        draft={draft}
+        open={panelOpen}
+        onClose={closePanel}
+        onSaved={() => {
+          setPanelOpen(false);
+          fetchEvents();
+        }}
+      />
+
+      <CommandPaletteProto
+        open={cmdkOpen}
+        onClose={() => setCmdkOpen(false)}
+        commands={buildCommands({
+          openCreateNow,
+          gotoToday: () => setAnchor(new Date()),
+          toggleTheme,
+          gotoScheduling: () => { window.location.href = '/scheduling'; },
+          signOut: () => signOut({ callbackUrl: '/' }),
+          events,
+          openEdit,
+        })}
+      />
     </div>
   );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Command palette items
+
+function buildCommands(args: {
+  openCreateNow: () => void;
+  gotoToday: () => void;
+  toggleTheme: () => void;
+  gotoScheduling: () => void;
+  signOut: () => void;
+  events: EventDTO[];
+  openEdit: (e: EventDTO) => void;
+}): Cmd[] {
+  const recents: Cmd[] = args.events.slice(0, 3).map((e, i) => ({
+    section: 'Recent' as const,
+    id: `r${i}`,
+    label: e.title,
+    hint: new Date(e.start).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' }),
+    icon: 'event' as const,
+    run: () => args.openEdit(e),
+  }));
+
+  const actions: Cmd[] = [
+    { section: 'Actions', id: 'a1', label: 'Create event',            kbd: ['C'],            icon: 'plus', run: args.openCreateNow },
+    { section: 'Actions', id: 'a2', label: 'Go to today',             kbd: ['T'],            icon: 'cal',  run: args.gotoToday },
+    { section: 'Actions', id: 'a6', label: 'Toggle dark mode',        kbd: ['⌘', '⇧', 'D'],  icon: 'moon', run: args.toggleTheme },
+    { section: 'Actions', id: 'a7', label: 'Open scheduling links',                          icon: 'link', run: args.gotoScheduling },
+    { section: 'Actions', id: 'a9', label: 'Sign out',                                       icon: 'set',  run: args.signOut },
+  ];
+
+  const eventCmds: Cmd[] = args.events.slice(0, 8).map((e) => ({
+    section: 'Events' as const,
+    id: `ev-${e.id}`,
+    label: e.title,
+    hint: new Date(e.start).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' }),
+    icon: 'event' as const,
+    run: () => args.openEdit(e),
+  }));
+
+  return [...recents, ...actions, ...eventCmds];
 }
