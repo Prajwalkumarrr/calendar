@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createBooking, generateSlots, getLinkBySlug } from '@/lib/scheduling';
 import { listEventsInRange } from '@/lib/events';
-import { getUserById } from '@/lib/users';
+import { getUserById, getNotificationPrefs } from '@/lib/users';
 import { sendBookingEmails } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 
@@ -46,17 +46,20 @@ export async function POST(req: NextRequest) {
 
     // Fire-and-forget side effects: notification to host's inbox + (when wired) email
     const host = await getUserById(link.ownerId);
-    void createNotification({
-      ownerId: link.ownerId,
-      kind: 'booking.created',
-      title: `${name} booked ${link.title}`,
-      body: `${start.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} (${link.durationMin} min)${typeof note === 'string' && note ? ` — "${note.slice(0, 120)}"` : ''}`,
-      href: `/booked/${booking.id}`,
-      actorName: name,
-      actorEmail: email,
-      refId: booking.id,
-    });
-    if (host?.email) {
+    const prefs = await getNotificationPrefs(link.ownerId);
+    if (prefs.bookings) {
+      void createNotification({
+        ownerId: link.ownerId,
+        kind: 'booking.created',
+        title: `${name} booked ${link.title}`,
+        body: `${start.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} (${link.durationMin} min)${typeof note === 'string' && note ? ` — "${note.slice(0, 120)}"` : ''}`,
+        href: `/booked/${booking.id}`,
+        actorName: name,
+        actorEmail: email,
+        refId: booking.id,
+      });
+    }
+    if (prefs.email && host?.email) {
       void sendBookingEmails({
         inviteeName: name,
         inviteeEmail: email,

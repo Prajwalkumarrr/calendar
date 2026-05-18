@@ -394,54 +394,125 @@ function Accounts({ userEmail }: { userEmail: string }) {
   );
 }
 
+type Prefs = {
+  desktop: boolean; email: boolean; mobile: boolean; sms: boolean;
+  reminders: boolean; reminderLeadMin: number; digest: boolean;
+  invites: boolean; rsvp: boolean; cancel: boolean; reschedule: boolean; bookings: boolean;
+  slack: boolean; linear: boolean;
+};
+
 function Notifications() {
-  const [s, setS] = useState({
-    desktop: true, email: true, mobile: true, sms: false,
-    reminders: true, reminderTime: '10', digest: true,
-    invites: true, rsvp: true, cancel: true, reschedule: true,
-    links: true, slack: false,
-  });
-  const set = <K extends keyof typeof s>(k: K, v: (typeof s)[K]) => setS((p) => ({ ...p, [k]: v }));
+  const [prefs, setPrefs] = useState<Prefs | null>(null);
+  const [savingKey, setSavingKey] = useState<keyof Prefs | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [savedAt, setSavedAt] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch('/api/me/notifications')
+      .then((r) => r.json())
+      .then((d) => setPrefs(d.prefs))
+      .catch(() => setError('Could not load preferences'));
+  }, []);
+
+  async function save<K extends keyof Prefs>(k: K, v: Prefs[K]) {
+    if (!prefs) return;
+    setSavingKey(k);
+    setError(null);
+    // Optimistic update
+    const prev = prefs[k];
+    setPrefs({ ...prefs, [k]: v });
+    try {
+      const res = await fetch('/api/me/notifications', {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ [k]: v }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error ?? `HTTP ${res.status}`);
+      setPrefs(data.prefs);
+      setSavedAt(Date.now());
+    } catch (e) {
+      // Rollback on failure
+      setPrefs({ ...prefs, [k]: prev });
+      setError(`Could not update — ${(e as Error).message}`);
+    } finally {
+      setSavingKey(null);
+    }
+  }
+
+  if (!prefs) {
+    return (
+      <>
+        <h1 className="ss-page-h">Notifications</h1>
+        <p className="ss-page-sub">Loading your preferences…</p>
+      </>
+    );
+  }
 
   return (
     <>
       <h1 className="ss-page-h">Notifications</h1>
-      <p className="ss-page-sub">Choose how and when we ping you. We default to &quot;useful and warm&quot;.</p>
+      <p className="ss-page-sub">
+        Choose how and when we ping you.{' '}
+        {savedAt && Date.now() - savedAt < 3000 && (
+          <span style={{ color: 'var(--coral)' }}>Saved ✓</span>
+        )}
+        {savingKey && <span style={{ color: 'var(--text-3)' }}>· Saving…</span>}
+      </p>
+
+      {error && (
+        <div style={{
+          padding: '10px 12px',
+          background: 'var(--coral-subtle)',
+          color: 'var(--coral-strong, var(--coral))',
+          borderRadius: 8, fontSize: 12.5, marginBottom: 16,
+        }}>{error}</div>
+      )}
 
       <div className="ss-card">
         <div className="ss-card__h">Where to reach you</div>
-        <SwitchRow title="Desktop notifications" sub="Native macOS / Windows alerts for upcoming events." on={s.desktop} onChange={(v) => set('desktop', v)} />
-        <SwitchRow title="Email digest" sub="One email per day with what's ahead." on={s.email} onChange={(v) => set('email', v)} />
-        <SwitchRow title="Mobile push" sub="iOS app — Android coming soon." on={s.mobile} onChange={(v) => set('mobile', v)} />
-        <SwitchRow title="SMS (Team plan only)" sub="For meeting reminders on the go." on={s.sms} onChange={(v) => set('sms', v)} />
+        <p className="ss-card__sub" style={{ color: 'var(--text-3)', fontSize: 12 }}>
+          Inbox notifications are always on. The other channels are wired but not yet sending —
+          you can pre-configure them now.
+        </p>
+        <SwitchRow title="Desktop notifications" sub="Native macOS / Windows alerts for upcoming events." on={prefs.desktop} onChange={(v) => save('desktop', v)} />
+        <SwitchRow title="Email digest" sub="Email when someone books, RSVPs, or reschedules." on={prefs.email} onChange={(v) => save('email', v)} />
+        <SwitchRow title="Mobile push" sub="iOS app — Android coming soon." on={prefs.mobile} onChange={(v) => save('mobile', v)} />
+        <SwitchRow title="SMS (Team plan only)" sub="For meeting reminders on the go." on={prefs.sms} onChange={(v) => save('sms', v)} />
       </div>
 
       <div className="ss-card">
         <div className="ss-card__h">Event reminders</div>
         <Row label="Reminder lead time" sub="How long before an event we nudge you.">
           <Seg
-            value={s.reminderTime}
+            value={String(prefs.reminderLeadMin) as '1' | '5' | '10' | '15' | '30'}
             options={[{ v: '1', l: '1 min' }, { v: '5', l: '5 min' }, { v: '10', l: '10 min' }, { v: '15', l: '15 min' }, { v: '30', l: '30 min' }]}
-            onChange={(v) => set('reminderTime', v)}
+            onChange={(v) => save('reminderLeadMin', Number(v))}
           />
         </Row>
-        <SwitchRow title="Reminders for accepted events" on={s.reminders} onChange={(v) => set('reminders', v)} />
-        <SwitchRow title="Daily morning digest" sub="Sent at 8:00 AM in your time zone." on={s.digest} onChange={(v) => set('digest', v)} />
+        <SwitchRow title="Reminders for accepted events" on={prefs.reminders} onChange={(v) => save('reminders', v)} />
+        <SwitchRow title="Daily morning digest" sub="Sent at 8:00 AM in your time zone." on={prefs.digest} onChange={(v) => save('digest', v)} />
       </div>
 
       <div className="ss-card">
         <div className="ss-card__h">When others do things</div>
-        <SwitchRow title="New event invitations" on={s.invites} onChange={(v) => set('invites', v)} />
-        <SwitchRow title="RSVPs to your events" on={s.rsvp} onChange={(v) => set('rsvp', v)} />
-        <SwitchRow title="Event cancellations" on={s.cancel} onChange={(v) => set('cancel', v)} />
-        <SwitchRow title="Event reschedules" on={s.reschedule} onChange={(v) => set('reschedule', v)} />
-        <SwitchRow title="Bookings on scheduling links" sub="When someone books one of your /book links." on={s.links} onChange={(v) => set('links', v)} />
+        <p className="ss-card__sub" style={{ color: 'var(--text-3)', fontSize: 12 }}>
+          These control which notifications land in your <a href="/inbox" style={{ color: 'var(--coral)' }}>inbox</a>.
+        </p>
+        <SwitchRow title="Bookings on scheduling links" sub="When someone books one of your /book links." on={prefs.bookings} onChange={(v) => save('bookings', v)} />
+        <SwitchRow title="New event invitations" sub="When someone invites you to an event." on={prefs.invites} onChange={(v) => save('invites', v)} />
+        <SwitchRow title="RSVPs to your events" on={prefs.rsvp} onChange={(v) => save('rsvp', v)} />
+        <SwitchRow title="Event cancellations" on={prefs.cancel} onChange={(v) => save('cancel', v)} />
+        <SwitchRow title="Event reschedules" on={prefs.reschedule} onChange={(v) => save('reschedule', v)} />
       </div>
 
       <div className="ss-card">
         <div className="ss-card__h">Integrations</div>
-        <SwitchRow title="Slack — post in #standup before your standup" on={s.slack} onChange={(v) => set('slack', v)} />
-        <SwitchRow title="Linear — link issues mentioned in events" on={false} onChange={() => {}} />
+        <p className="ss-card__sub" style={{ color: 'var(--text-3)', fontSize: 12 }}>
+          Coming in Phase 10. Pre-toggle now.
+        </p>
+        <SwitchRow title="Slack — post in #standup before your standup" on={prefs.slack} onChange={(v) => save('slack', v)} />
+        <SwitchRow title="Linear — link issues mentioned in events" on={prefs.linear} onChange={(v) => save('linear', v)} />
       </div>
     </>
   );

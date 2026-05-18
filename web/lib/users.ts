@@ -4,6 +4,44 @@ import clientPromise from './mongodb';
 const DB_NAME = 'elevaite';
 const COLLECTION = 'users';
 
+export type NotificationPrefs = {
+  // Channels (where to reach you) — only `inbox` works today; others are placeholders
+  desktop: boolean;
+  email: boolean;
+  mobile: boolean;
+  sms: boolean;
+  // Event reminders
+  reminders: boolean;
+  reminderLeadMin: number; // 1 | 5 | 10 | 15 | 30
+  digest: boolean;
+  // What gets fired into your inbox when others do things
+  invites: boolean;
+  rsvp: boolean;
+  cancel: boolean;
+  reschedule: boolean;
+  bookings: boolean; // someone books one of your scheduling links
+  // Integrations
+  slack: boolean;
+  linear: boolean;
+};
+
+export const DEFAULT_PREFS: NotificationPrefs = {
+  desktop: true,
+  email: true,
+  mobile: true,
+  sms: false,
+  reminders: true,
+  reminderLeadMin: 10,
+  digest: true,
+  invites: true,
+  rsvp: true,
+  cancel: true,
+  reschedule: true,
+  bookings: true,
+  slack: false,
+  linear: false,
+};
+
 export type UserRecord = {
   _id: ObjectId;
   name?: string;        // from NextAuth (Google) — first/last name
@@ -13,6 +51,7 @@ export type UserRecord = {
   bio?: string;
   handle?: string;      // lowercase, alphanumeric + dash, unique
   timezone?: string;    // IANA, e.g. "America/Los_Angeles"
+  notificationPrefs?: Partial<NotificationPrefs>;
   updatedAt?: Date;
 };
 
@@ -59,6 +98,27 @@ export async function getUserById(id: string): Promise<UserRecord | null> {
   if (!ObjectId.isValid(id)) return null;
   const c = await col();
   return (await c.findOne({ _id: new ObjectId(id) })) as UserRecord | null;
+}
+
+/** Get a user's effective notification prefs, with defaults filled in. */
+export async function getNotificationPrefs(id: string): Promise<NotificationPrefs> {
+  const u = await getUserById(id);
+  return { ...DEFAULT_PREFS, ...(u?.notificationPrefs ?? {}) };
+}
+
+export async function updateNotificationPrefs(
+  id: string,
+  patch: Partial<NotificationPrefs>,
+): Promise<NotificationPrefs | null> {
+  if (!ObjectId.isValid(id)) return null;
+  const c = await col();
+  // Build $set with notificationPrefs.<key> = value to avoid clobbering other prefs
+  const setOps: Record<string, unknown> = { updatedAt: new Date() };
+  for (const [k, v] of Object.entries(patch)) {
+    if (v !== undefined) setOps[`notificationPrefs.${k}`] = v;
+  }
+  await c.updateOne({ _id: new ObjectId(id) }, { $set: setOps });
+  return getNotificationPrefs(id);
 }
 
 export async function getProfile(id: string): Promise<UserProfileDTO | null> {
