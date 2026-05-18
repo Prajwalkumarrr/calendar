@@ -275,7 +275,7 @@ export function CalendarApp() {
   }, [weekStart]);
 
   return (
-    <div className="app-shell">
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       {/* ── Top Bar ─────────────────────────────────────────────────── */}
       <div className="topbar">
         <button
@@ -341,7 +341,7 @@ export function CalendarApp() {
       </div>
 
       {/* ── Main ─────────────────────────────────────────────────────── */}
-      <div className="main">
+      <div style={{ flex: 1, display: 'flex', minHeight: 0, position: 'relative' }}>
         {sidebarMode !== 'hidden' && (
           <aside className={`sidebar ${sidebarMode === 'collapsed' ? 'sidebar--collapsed' : ''}`}>
             {sidebarMode === 'expanded' ? (
