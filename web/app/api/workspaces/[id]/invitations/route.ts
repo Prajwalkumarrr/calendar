@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireUser } from '@/lib/session';
 import { createInvitation, getRoleInWorkspace, listInvitations, type Role } from '@/lib/workspaces';
+import { logAudit } from '@/lib/audit';
 
 const ROLES: Role[] = ['admin', 'member', 'guest']; // owner can't be invited
 
@@ -40,6 +41,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       email,
       role,
       invitedBy: user.id,
+    });
+    void logAudit({
+      workspaceId: id,
+      actorId: user.id,
+      action: 'invitation.sent',
+      targetEmail: email,
+      details: { role },
     });
     return NextResponse.json({ invitation }, { status: 201 });
   } catch (err) {

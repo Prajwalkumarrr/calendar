@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireUser } from '@/lib/session';
 import { createWorkspace, listWorkspacesForUser } from '@/lib/workspaces';
+import { logAudit } from '@/lib/audit';
 
 export async function GET() {
   try {
@@ -22,6 +23,12 @@ export async function POST(req: NextRequest) {
     if (!name) return NextResponse.json({ error: 'name_required' }, { status: 400 });
     if (name.length > 80) return NextResponse.json({ error: 'name_too_long' }, { status: 400 });
     const ws = await createWorkspace({ name, ownerId: user.id });
+    void logAudit({
+      workspaceId: ws.id,
+      actorId: user.id,
+      action: 'workspace.created',
+      details: { name: ws.name },
+    });
     return NextResponse.json({ workspace: ws }, { status: 201 });
   } catch (err) {
     if (err instanceof Response) return err;

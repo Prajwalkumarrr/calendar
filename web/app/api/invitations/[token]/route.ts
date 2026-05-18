@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireUser, getCurrentUser } from '@/lib/session';
 import { acceptInvitation, findInvitationByToken } from '@/lib/workspaces';
+import { logAudit } from '@/lib/audit';
+import { getUserById } from '@/lib/users';
 
 // Public — fetch invitation details so the accept page can show context.
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
@@ -28,6 +30,15 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ to
     const { token } = await params;
     const result = await acceptInvitation(token, user.id);
     if (!result) return NextResponse.json({ error: 'invalid_or_expired' }, { status: 404 });
+    const actor = await getUserById(user.id).catch(() => null);
+    void logAudit({
+      workspaceId: result.workspaceId,
+      actorId: user.id,
+      action: 'member.joined',
+      targetUserId: user.id,
+      targetName: actor?.name,
+      targetEmail: actor?.email,
+    });
     return NextResponse.json({ workspaceId: result.workspaceId });
   } catch (err) {
     if (err instanceof Response) return err;

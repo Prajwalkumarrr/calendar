@@ -748,12 +748,25 @@ function Billing({ userEmail }: { userEmail: string }) {
 type WorkspaceDTO = { id: string; name: string; slug: string; ownerId: string; role: 'owner' | 'admin' | 'member' | 'guest'; memberCount: number };
 type MemberDTO = { userId: string; name?: string; email?: string; image?: string; role: 'owner' | 'admin' | 'member' | 'guest'; joinedAt: string };
 type InvitationDTO = { id: string; email: string; role: 'admin' | 'member' | 'guest'; token: string; createdAt: string; expiresAt: string };
+type AuditEntry = {
+  id: string;
+  actorId: string;
+  actorName?: string;
+  actorEmail?: string;
+  action: 'workspace.created' | 'invitation.sent' | 'invitation.revoked' | 'member.joined' | 'member.removed' | 'member.role_changed';
+  targetUserId?: string;
+  targetEmail?: string;
+  targetName?: string;
+  details?: { role?: string; fromRole?: string; toRole?: string; name?: string };
+  createdAt: string;
+};
 
 function Workspace() {
   const [workspaces, setWorkspaces] = useState<WorkspaceDTO[] | null>(null);
   const [activeWs, setActiveWs] = useState<WorkspaceDTO | null>(null);
   const [members, setMembers] = useState<MemberDTO[]>([]);
   const [invitations, setInvitations] = useState<InvitationDTO[]>([]);
+  const [audit, setAudit] = useState<AuditEntry[]>([]);
   const [creating, setCreating] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -772,11 +785,12 @@ function Workspace() {
   }
   useEffect(() => { loadWorkspaces(); /* eslint-disable-next-line */ }, []);
 
-  // Load members + invitations for the active workspace
+  // Load members + invitations + audit log for the active workspace
   async function loadDetails(wsId: string) {
-    const [mRes, iRes] = await Promise.all([
+    const [mRes, iRes, aRes] = await Promise.all([
       fetch(`/api/workspaces/${wsId}/members`),
       fetch(`/api/workspaces/${wsId}/invitations`),
+      fetch(`/api/workspaces/${wsId}/audit`),
     ]);
     if (mRes.ok) {
       const d = await mRes.json();
@@ -785,6 +799,10 @@ function Workspace() {
     if (iRes.ok) {
       const d = await iRes.json();
       setInvitations(d.invitations ?? []);
+    }
+    if (aRes.ok) {
+      const d = await aRes.json();
+      setAudit(d.entries ?? []);
     }
   }
   useEffect(() => { if (activeWs) loadDetails(activeWs.id); }, [activeWs]);
@@ -838,6 +856,13 @@ function Workspace() {
   function copyInviteLink(token: string) {
     const url = `${window.location.origin}/invite/${token}`;
     navigator.clipboard.writeText(url);
+  }
+
+  async function revokeInvite(invId: string) {
+    if (!activeWs) return;
+    if (!confirm('Revoke this invitation? The link will stop working.')) return;
+    await fetch(`/api/workspaces/${activeWs.id}/invitations/${invId}`, { method: 'DELETE' });
+    loadDetails(activeWs.id);
   }
 
   if (workspaces === null) {
@@ -984,7 +1009,7 @@ function Workspace() {
                 </div>
               </div>
               <button className="acct__btn" onClick={() => copyInviteLink(inv.token)}>Copy link</button>
-              <button className="acct__btn">Revoke</button>
+              <button className="acct__btn" onClick={() => revokeInvite(inv.id)}>Revoke</button>
             </div>
           ))}
         </div>
@@ -999,12 +1024,67 @@ function Workspace() {
       )}
 
       <div className="ss-card">
+        <div className="ss-card__h">Audit log</div>
+        <p className="ss-card__sub">Every workspace event — joins, role changes, invites — the last 50 entries.</p>
+        {audit.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text-3)', fontSize: 12.5 }}>
+            No activity yet.
+          </div>
+        ) : (
+          audit.map((e) => <AuditRow key={e.id} entry={e} />)
+        )}
+      </div>
+
+      <div className="ss-card">
         <div className="ss-card__h">SSO &amp; security</div>
         <SwitchRow title="Two-factor authentication" sub="Coming soon — for now, sign-in is gated by your provider's 2FA." on={false} onChange={() => {}} />
         <SwitchRow title="Google Workspace SSO" sub="Available on Team plan." on={false} onChange={() => {}} />
         <SwitchRow title="SAML SSO (Okta, Auth0)" sub="Available on Enterprise. Contact sales." on={false} onChange={() => {}} />
       </div>
     </>
+  );
+}
+
+function AuditRow({ entry }: { entry: AuditEntry }) {
+  const actor = entry.actorName ?? entry.actorEmail ?? 'someone';
+  const target = entry.targetName ?? entry.targetEmail ?? '';
+  let text: React.ReactNode;
+  switch (entry.action) {
+    case 'workspace.created':
+      text = <><b>{actor}</b> created the workspace</>;
+      break;
+    case 'invitation.sent':
+      text = <><b>{actor}</b> invited <b>{entry.targetEmail}</b> as {entry.details?.role}</>;
+      break;
+    case 'invitation.revoked':
+      text = <><b>{actor}</b> revoked the invitation to <b>{entry.targetEmail}</b></>;
+      break;
+    case 'member.joined':
+      text = <><b>{target || actor}</b> joined the workspace</>;
+      break;
+    case 'member.removed':
+      text = <><b>{actor}</b> removed <b>{target}</b></>;
+      break;
+    case 'member.role_changed':
+      text = <><b>{actor}</b> changed <b>{target}</b>&apos;s role from {entry.details?.fromRole} to <b>{entry.details?.toRole}</b></>;
+      break;
+    default:
+      text = <>{entry.action}</>;
+  }
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: '110px 1fr',
+      gap: 14,
+      padding: '8px 0',
+      fontSize: 12.5,
+      borderTop: '1px solid var(--hairline)',
+    }}>
+      <span style={{ fontFamily: '"Geist Mono", monospace', color: 'var(--text-3)', fontSize: 11 }}>
+        {new Date(entry.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+      </span>
+      <span style={{ color: 'var(--text-2)' }}>{text}</span>
+    </div>
   );
 }
 

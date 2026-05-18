@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireUser } from '@/lib/session';
 import { getRoleInWorkspace, listMembers, updateMemberRole, removeMember, type Role } from '@/lib/workspaces';
+import { logAudit } from '@/lib/audit';
+import { getUserById } from '@/lib/users';
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -37,8 +39,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       // Only the current owner can transfer ownership — and that's a v2 feature
       return NextResponse.json({ error: 'cannot_assign_owner_yet' }, { status: 400 });
     }
+    const prevRole = await getRoleInWorkspace(userId, id);
     const ok = await updateMemberRole(id, userId, role);
     if (!ok) return NextResponse.json({ error: 'not_found' }, { status: 404 });
+    const target = await getUserById(userId).catch(() => null);
+    void logAudit({
+      workspaceId: id,
+      actorId: user.id,
+      action: 'member.role_changed',
+      targetUserId: userId,
+      targetName: target?.name,
+      targetEmail: target?.email,
+      details: { fromRole: prevRole, toRole: role },
+    });
     return NextResponse.json({ ok: true });
   } catch (err) {
     if (err instanceof Response) return err;
@@ -63,8 +76,17 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     if (targetRole === 'owner') {
       return NextResponse.json({ error: 'cannot_remove_owner' }, { status: 400 });
     }
+    const target = await getUserById(userId).catch(() => null);
     const ok = await removeMember(id, userId);
     if (!ok) return NextResponse.json({ error: 'not_found' }, { status: 404 });
+    void logAudit({
+      workspaceId: id,
+      actorId: user.id,
+      action: 'member.removed',
+      targetUserId: userId,
+      targetName: target?.name,
+      targetEmail: target?.email,
+    });
     return NextResponse.json({ ok: true });
   } catch (err) {
     if (err instanceof Response) return err;
