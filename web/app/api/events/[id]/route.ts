@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireUser } from '@/lib/session';
-import { updateEvent, deleteEvent, CHIP_COLORS, ChipColor } from '@/lib/events';
+import { updateEvent, deleteEvent, CHIP_COLORS, ChipColor, parseRecurrenceInput } from '@/lib/events';
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -24,6 +24,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (CHIP_COLORS.includes(body.color as ChipColor)) patch.color = body.color;
     if (typeof body.location === 'string') patch.location = body.location;
     if (typeof body.description === 'string') patch.description = body.description;
+    if ('recurrence' in body) {
+      const r = parseRecurrenceInput(body.recurrence);
+      // r === null means "clear", r === undefined means "not provided", r === object means "set"
+      patch.recurrence = r;
+    }
 
     const updated = await updateEvent(user.id, id, patch);
     if (!updated) return NextResponse.json({ error: 'not_found' }, { status: 404 });

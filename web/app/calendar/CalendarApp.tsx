@@ -203,12 +203,14 @@ export function CalendarApp() {
   function openEdit(ev: EventDTO) {
     setDraft({
       id: ev.id,
+      seriesId: ev.seriesId,
       title: ev.title,
       start: new Date(ev.start),
       end: new Date(ev.end),
       color: ev.color,
       location: ev.location,
       description: ev.description,
+      recurrence: ev.recurrence,
     });
     setPanelOpen(true);
   }

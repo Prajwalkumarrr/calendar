@@ -9,12 +9,13 @@ import {
   IconVideo, IconX, IconCalendar,
 } from './Icons';
 import { DEFAULT_CALENDARS } from './defaults';
-import type { ChipColor, EventDTO } from '@/lib/events';
+import type { ChipColor, EventDTO, RecurrenceDTO } from '@/lib/events';
 
 const CHIP_COLORS: ChipColor[] = ['coral', 'sand', 'sage', 'slate', 'plum', 'ochre', 'rose', 'stone'];
 
 export type PanelDraft = {
   id?: string;
+  seriesId?: string;  // if editing an expanded instance, use this id for PATCH/DELETE
   title: string;
   start: Date;
   end: Date;
@@ -22,7 +23,49 @@ export type PanelDraft = {
   location?: string;
   description?: string;
   allDay?: boolean;
+  recurrence?: RecurrenceDTO | null;
 };
+
+type RepeatPreset = 'none' | 'daily' | 'weekly' | 'weekdays';
+
+function recurrenceToPreset(r: RecurrenceDTO | null | undefined): RepeatPreset {
+  if (!r) return 'none';
+  if (r.freq === 'daily' && (!r.interval || r.interval === 1)) return 'daily';
+  if (r.freq === 'weekly' && (!r.interval || r.interval === 1)) {
+    const days = r.byWeekday;
+    if (!days || days.length === 0) return 'weekly';
+    // 1,2,3,4,5 = Mon-Fri
+    if (days.length === 5 && [1, 2, 3, 4, 5].every((d) => days.includes(d))) return 'weekdays';
+  }
+  return 'weekly'; // anything custom → render as weekly preset for now
+}
+
+function presetToRecurrence(p: RepeatPreset, start: Date): RecurrenceDTO | null {
+  switch (p) {
+    case 'none': return null;
+    case 'daily': return { freq: 'daily', interval: 1 };
+    case 'weekly': return { freq: 'weekly', interval: 1, byWeekday: [start.getDay()] };
+    case 'weekdays': return { freq: 'weekly', interval: 1, byWeekday: [1, 2, 3, 4, 5] };
+  }
+}
+
+function describeRecurrence(r: RecurrenceDTO | null | undefined, start: Date): string {
+  if (!r) return 'Does not repeat';
+  const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][start.getDay()];
+  if (r.freq === 'daily') return r.interval > 1 ? `Every ${r.interval} days` : 'Daily';
+  if (r.freq === 'weekly') {
+    const days = r.byWeekday ?? [];
+    if (days.length === 5 && [1, 2, 3, 4, 5].every((d) => days.includes(d))) return 'Weekdays (Mon–Fri)';
+    if (days.length === 0 || (days.length === 1 && days[0] === start.getDay())) {
+      return r.interval > 1 ? `Every ${r.interval} weeks on ${dayName}` : `Weekly on ${dayName}`;
+    }
+    const names = days.sort().map((d) => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d]).join(', ');
+    return r.interval > 1 ? `Every ${r.interval} weeks on ${names}` : `Weekly on ${names}`;
+  }
+  if (r.freq === 'monthly') return r.interval > 1 ? `Every ${r.interval} months` : 'Monthly';
+  if (r.freq === 'yearly') return r.interval > 1 ? `Every ${r.interval} years` : 'Yearly';
+  return 'Custom';
+}
 
 type Props = {
   draft: PanelDraft | null;
@@ -68,6 +111,7 @@ export function EventPanel({ draft, open, onClose, onSaved }: Props) {
   const [priv, setPriv] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [repeat, setRepeat] = useState<RepeatPreset>('none');
 
   useEffect(() => {
     if (!draft) return;
@@ -75,9 +119,10 @@ export function EventPanel({ draft, open, onClose, onSaved }: Props) {
     setColor(draft.color);
     setLocation(draft.location ?? '');
     setDescription(draft.description ?? '');
+    setRepeat(recurrenceToPreset(draft.recurrence));
     setError(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draft?.id, draft?.start?.toISOString()]);
+  }, [draft?.id, draft?.seriesId, draft?.start?.toISOString()]);
 
   useEffect(() => {
     if (!open) return;
@@ -112,9 +157,13 @@ export function EventPanel({ draft, open, onClose, onSaved }: Props) {
         color,
         location: location || undefined,
         description: description || undefined,
+        recurrence: presetToRecurrence(repeat, draft.start),
       };
-      const res = draft.id
-        ? await fetch(`/api/events/${draft.id}`, {
+      // When editing an expanded instance, the panel's `id` is synthetic ("baseId@N").
+      // Use seriesId (the real Mongo id) for PATCH.
+      const targetId = draft.seriesId ?? draft.id;
+      const res = targetId
+        ? await fetch(`/api/events/${targetId}`, {
             method: 'PATCH',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify(body),
@@ -137,11 +186,16 @@ export function EventPanel({ draft, open, onClose, onSaved }: Props) {
   }
 
   async function remove() {
-    if (!draft?.id) { onClose(); return; }
-    if (!confirm('Delete this event?')) return;
+    if (!draft) { onClose(); return; }
+    const targetId = draft.seriesId ?? draft.id;
+    if (!targetId) { onClose(); return; }
+    const msg = draft.recurrence
+      ? 'Delete this recurring event and ALL of its repeats?'
+      : 'Delete this event?';
+    if (!confirm(msg)) return;
     setSaving(true);
     try {
-      const res = await fetch(`/api/events/${draft.id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/events/${targetId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       onSaved();
     } catch (e) {
@@ -219,6 +273,33 @@ export function EventPanel({ draft, open, onClose, onSaved }: Props) {
               {cal.name}
               <IconChevronDown size={12} />
             </div>
+          </div>
+
+          <div className="panel-section">
+            <div className="panel-section__lbl">Repeat</div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>
+              {([
+                { v: 'none', l: 'Never' },
+                { v: 'daily', l: 'Daily' },
+                { v: 'weekly', l: 'Weekly' },
+                { v: 'weekdays', l: 'Weekdays' },
+              ] as { v: RepeatPreset; l: string }[]).map((o) => (
+                <button
+                  key={o.v}
+                  type="button"
+                  className="chip-toggle"
+                  aria-pressed={repeat === o.v}
+                  onClick={() => setRepeat(o.v)}
+                >
+                  {o.l}
+                </button>
+              ))}
+            </div>
+            {repeat !== 'none' && (
+              <div style={{ fontSize: 11.5, color: 'var(--text-3)' }}>
+                {describeRecurrence(presetToRecurrence(repeat, draft.start), draft.start)}
+              </div>
+            )}
           </div>
 
           <div className="panel-section">
