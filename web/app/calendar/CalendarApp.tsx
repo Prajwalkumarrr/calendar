@@ -16,6 +16,7 @@ import {
 import { EventPanel, type PanelDraft } from './EventPanel';
 import { CommandPaletteProto, type Cmd } from './CommandPaletteProto';
 import { useUnreadCount } from '@/lib/useUnreadCount';
+import { useAppearance } from '@/lib/useAppearance';
 import type { ChipColor, EventDTO } from '@/lib/events';
 import { addDays, daysInWeek, endOfWeek, startOfWeek, isSameDay, MONTHS_FULL } from '@/lib/date';
 
@@ -102,7 +103,10 @@ export function CalendarApp() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [cmdkOpen, setCmdkOpen] = useState(false);
   const [sidebarMode, setSidebarMode] = useState<'expanded' | 'collapsed' | 'hidden'>('expanded');
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [appearance, setAppearance] = useAppearance();
+  const theme = appearance.theme === 'system'
+    ? (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    : appearance.theme;
   const [nowMin, setNowMin] = useState<number>(() => {
     const n = new Date();
     return n.getHours() * 60 + n.getMinutes();
@@ -124,19 +128,8 @@ export function CalendarApp() {
   const now = new Date();
   const todayIdx = days.findIndex((d) => isSameDay(d, now));
 
-  // ── Theme ─────────────────────────────────────────────────────────
-  useEffect(() => {
-    const saved = (localStorage.getItem('elevaite.theme') as 'light' | 'dark' | null) ?? null;
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initial = saved ?? (prefersDark ? 'dark' : 'light');
-    setTheme(initial);
-    document.documentElement.dataset.theme = initial;
-  }, []);
   const toggleTheme = () => {
-    const next = theme === 'light' ? 'dark' : 'light';
-    setTheme(next);
-    document.documentElement.dataset.theme = next;
-    localStorage.setItem('elevaite.theme', next);
+    setAppearance('theme', theme === 'light' ? 'dark' : 'light');
   };
 
   // ── Tick now-line + tz clocks every minute ────────────────────────

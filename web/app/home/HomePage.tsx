@@ -13,6 +13,7 @@ import {
 import { DEFAULT_CALENDARS, DEFAULT_TZONES } from '../calendar/defaults';
 import type { EventDTO } from '@/lib/events';
 import { useUnreadCount } from '@/lib/useUnreadCount';
+import { useAppearance } from '@/lib/useAppearance';
 
 type Booking = {
   id: string;
@@ -123,20 +124,13 @@ export function HomePage({ userName, userEmail }: { userName: string; userEmail:
     fetchAll().catch(console.error);
   }, []);
 
-  // Theme toggle
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  useEffect(() => {
-    const saved = (localStorage.getItem('elevaite.theme') as 'light' | 'dark' | null) ?? null;
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initial = saved ?? (prefersDark ? 'dark' : 'light');
-    setTheme(initial);
-    document.documentElement.dataset.theme = initial;
-  }, []);
+  // Theme — managed by useAppearance hook (persists to server + localStorage)
+  const [appearance, setAppearance] = useAppearance();
+  const theme = appearance.theme === 'system'
+    ? (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    : appearance.theme;
   function toggleTheme() {
-    const next = theme === 'light' ? 'dark' : 'light';
-    setTheme(next);
-    document.documentElement.dataset.theme = next;
-    localStorage.setItem('elevaite.theme', next);
+    setAppearance('theme', theme === 'light' ? 'dark' : 'light');
   }
 
   // Today's events sorted ascending
