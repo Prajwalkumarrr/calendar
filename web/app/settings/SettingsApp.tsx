@@ -99,18 +99,134 @@ function Row({ label, sub, children }: { label: string; sub?: string; children: 
 // ─── Tabs ────────────────────────────────────────────────────────────
 
 function Profile({ userName, userEmail }: { userName: string; userEmail: string }) {
-  const [name, setName] = useState(userName);
-  const [bio, setBio] = useState('Founder of ElevAIte. Caffeinated by Verve, soothed by Geist Mono.');
+  // Server profile (snapshot of what's in Mongo)
+  const [serverProfile, setServerProfile] = useState<{
+    displayName: string;
+    bio: string;
+    handle: string;
+    timezone: string;
+  } | null>(null);
+
+  // Form state
+  const [displayName, setDisplayName] = useState(userName);
+  const [bio, setBio] = useState('');
+  const [handle, setHandle] = useState('');
+  const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [savedAt, setSavedAt] = useState<number | null>(null);
+
+  // Load profile on mount
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/me');
+        if (!res.ok || cancelled) { setLoading(false); return; }
+        const data = await res.json();
+        const p = data.profile;
+        if (!cancelled) {
+          const snap = {
+            displayName: p.displayName ?? p.name ?? userName,
+            bio: p.bio ?? '',
+            handle: p.handle ?? '',
+            timezone: p.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+          };
+          setServerProfile(snap);
+          setDisplayName(snap.displayName);
+          setBio(snap.bio);
+          setHandle(snap.handle);
+          setTimezone(snap.timezone);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [userName]);
+
+  const dirty =
+    !!serverProfile &&
+    (displayName !== serverProfile.displayName ||
+      bio !== serverProfile.bio ||
+      handle !== serverProfile.handle ||
+      timezone !== serverProfile.timezone);
+
+  function discard() {
+    if (!serverProfile) return;
+    setDisplayName(serverProfile.displayName);
+    setBio(serverProfile.bio);
+    setHandle(serverProfile.handle);
+    setTimezone(serverProfile.timezone);
+    setError(null);
+  }
+
+  async function save() {
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/me', {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ displayName, bio, handle, timezone }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        const msg = data.error === 'handle_taken'
+          ? `The handle “${handle}” is taken. Try another.`
+          : data.error === 'invalid_handle'
+            ? 'Handle must be 3–30 chars: lowercase letters, numbers, dashes.'
+            : data.error === 'invalid_bio'
+              ? 'Bio must be 280 characters or fewer.'
+              : `Could not save (${data.error ?? `HTTP ${res.status}`})`;
+        throw new Error(msg);
+      }
+      const p = data.profile;
+      const snap = {
+        displayName: p.displayName ?? p.name ?? userName,
+        bio: p.bio ?? '',
+        handle: p.handle ?? '',
+        timezone: p.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+      };
+      setServerProfile(snap);
+      setDisplayName(snap.displayName);
+      setBio(snap.bio);
+      setHandle(snap.handle);
+      setTimezone(snap.timezone);
+      setSavedAt(Date.now());
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const userInitial = (userName?.[0] ?? userEmail?.[0] ?? 'U').toUpperCase();
+  const previewUrl = handle ? `/book/${handle}/<your-slug>` : '/book/<your-slug>';
+
   return (
     <>
       <h1 className="ss-page-h">Profile</h1>
-      <p className="ss-page-sub">How you appear inside ElevAIte and on your scheduling pages.</p>
+      <p className="ss-page-sub">
+        How you appear inside ElevAIte and on your scheduling pages.{' '}
+        {loading && <span style={{ color: 'var(--text-3)' }}>· Loading…</span>}
+        {!loading && savedAt && Date.now() - savedAt < 5000 && (
+          <span style={{ color: 'var(--coral)' }}>· Saved ✓</span>
+        )}
+      </p>
 
       <div className="ss-card">
         <Row label="Display name">
-          <input className="field-input" value={name} onChange={(e) => setName(e.target.value)} />
+          <input
+            className="field-input"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            disabled={loading}
+          />
         </Row>
-        <Row label="Profile photo" sub="Shown on your booking page and to teammates.">
+        <Row label="Profile photo" sub="Pulled from your sign-in provider.">
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <div style={{
               width: 56, height: 56, borderRadius: '50%',
@@ -118,24 +234,31 @@ function Profile({ userName, userEmail }: { userName: string; userEmail: string 
               color: '#fff', fontWeight: 600, fontSize: 22,
               display: 'grid', placeItems: 'center',
             }}>
-              {(userName?.[0] ?? 'U').toUpperCase()}
+              {userInitial}
             </div>
-            <button className="cta-ghost">Upload</button>
-            <button className="danger-btn">Remove</button>
+            <span style={{ fontSize: 12, color: 'var(--text-3)' }}>
+              Sync from Google · upload coming soon
+            </span>
           </div>
         </Row>
         <Row label="Email" sub="Your sign-in email and where notifications go.">
-          <input className="field-input" defaultValue={userEmail} />
+          <input className="field-input" value={userEmail} disabled />
         </Row>
-        <Row label="Bio" sub="Shown on your public booking page.">
+        <Row label="Bio" sub="Shown on your public booking page. 280 chars max.">
           <textarea
             className="field-input"
             value={bio}
             onChange={(e) => setBio(e.target.value)}
+            placeholder="What people should know before booking you…"
+            maxLength={280}
+            disabled={loading}
             style={{ minHeight: 90, resize: 'vertical', fontFamily: 'inherit' }}
           />
+          <span style={{ fontSize: 11, color: 'var(--text-3)', alignSelf: 'flex-end' }}>
+            {bio.length}/280
+          </span>
         </Row>
-        <Row label="Booking-page handle" sub="Your public URL for scheduling links.">
+        <Row label="Booking-page handle" sub={`Your URL preview: ${previewUrl}`}>
           <div style={{ display: 'flex' }}>
             <span style={{
               padding: '10px 12px',
@@ -152,25 +275,56 @@ function Profile({ userName, userEmail }: { userName: string; userEmail: string 
             </span>
             <input
               className="field-input"
-              defaultValue={userName?.toLowerCase().replace(/\s+/g, '-') || 'you'}
+              value={handle}
+              onChange={(e) => setHandle(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+              placeholder="your-handle"
+              disabled={loading}
               style={{ borderRadius: '0 8px 8px 0', fontFamily: '"Geist Mono", monospace' }}
             />
           </div>
         </Row>
-        <Row label="Time zone">
-          <select className="field-input" defaultValue={Intl.DateTimeFormat().resolvedOptions().timeZone}>
-            <option value="America/Los_Angeles">America/Los_Angeles</option>
-            <option value="America/New_York">America/New_York</option>
-            <option value="Europe/London">Europe/London</option>
-            <option value="Asia/Singapore">Asia/Singapore</option>
-            <option value={Intl.DateTimeFormat().resolvedOptions().timeZone}>{Intl.DateTimeFormat().resolvedOptions().timeZone}</option>
+        <Row label="Time zone" sub="Used to render booking slots in your local time on the host side.">
+          <select
+            className="field-input"
+            value={timezone}
+            onChange={(e) => setTimezone(e.target.value)}
+            disabled={loading}
+          >
+            {[
+              timezone, // keep user's current TZ if it's not in the list
+              'America/Los_Angeles', 'America/Denver', 'America/Chicago', 'America/New_York',
+              'Europe/London', 'Europe/Paris', 'Europe/Berlin', 'Europe/Madrid',
+              'Asia/Kolkata', 'Asia/Singapore', 'Asia/Tokyo', 'Asia/Dubai',
+              'Australia/Sydney', 'UTC',
+            ]
+              .filter((v, i, arr) => arr.indexOf(v) === i)
+              .map((tz) => (
+                <option key={tz} value={tz}>{tz}</option>
+              ))}
           </select>
         </Row>
       </div>
 
+      {error && (
+        <div style={{
+          padding: '10px 12px',
+          background: 'var(--coral-subtle)',
+          color: 'var(--coral-strong, var(--coral))',
+          borderRadius: 8,
+          fontSize: 12.5,
+          marginBottom: 16,
+        }}>
+          {error}
+        </div>
+      )}
+
       <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-        <button className="cta-ghost">Discard</button>
-        <button className="cta-primary">Save changes</button>
+        <button className="cta-ghost" onClick={discard} disabled={!dirty || saving}>
+          Discard
+        </button>
+        <button className="cta-primary" onClick={save} disabled={!dirty || saving || loading}>
+          {saving ? 'Saving…' : 'Save changes'}
+        </button>
       </div>
     </>
   );
