@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { signOut } from 'next-auth/react';
 import styles from './calendar.module.css';
 import {
@@ -43,6 +43,7 @@ export function CalendarApp() {
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState<EventDraft | null>(null);
   const [nowMinute, setNowMinute] = useState<number>(() => Date.now());
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const weekStart = useMemo(() => startOfWeek(anchor), [anchor]);
   const weekEnd = useMemo(() => endOfWeek(anchor), [anchor]);
@@ -74,6 +75,14 @@ export function CalendarApp() {
   useEffect(() => {
     const id = setInterval(() => setNowMinute(Date.now()), 60_000);
     return () => clearInterval(id);
+  }, []);
+
+  // Scroll to current hour (or 8am if it's late at night) on first paint
+  useEffect(() => {
+    if (!scrollRef.current) return;
+    const hour = new Date().getHours();
+    const targetHour = Math.max(0, Math.min(hour - 1, 16)); // show context above current hour
+    scrollRef.current.scrollTop = targetHour * HOUR_HEIGHT;
   }, []);
 
   // global keyboard shortcuts
@@ -155,7 +164,7 @@ export function CalendarApp() {
         </button>
       </header>
 
-      <div className={styles.scroll}>
+      <div className={styles.scroll} ref={scrollRef}>
         <div className={styles.grid} style={{ ['--hour-h' as never]: `${HOUR_HEIGHT}px`, ['--gutter-w' as never]: '64px' }}>
           {/* Header row */}
           <div className={styles.headGutter} />
@@ -195,8 +204,6 @@ export function CalendarApp() {
                 className={`${styles.day} ${isToday ? styles.today : ''}`}
                 style={{ gridRow: `2 / span 1`, height: HOURS.length * HOUR_HEIGHT }}
                 onClick={(e) => {
-                  // only on background, not on chip
-                  if (e.target !== e.currentTarget) return;
                   const rect = e.currentTarget.getBoundingClientRect();
                   const y = e.clientY - rect.top;
                   const hour = Math.max(0, Math.min(23, Math.floor(y / HOUR_HEIGHT)));

@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Press & Brand — ElevAIte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="motion.css" />
+  <style>
+    body { font-family: 'Geist'; }
+    .pr-hero { padding: 76px 32px 50px; text-align: center; position: relative; overflow: hidden; }
+    .pr-hero__bloom { position: absolute; inset: -10%; background: radial-gradient(ellipse at 50% 30%, rgba(217,119,87,0.13), transparent 60%); filter: blur(40px); animation: bloom 9s ease-in-out infinite alternate; }
+    .pr-hero > * { position: relative; z-index: 1; }
+    .pr-eyebrow { font-size: 11.5px; font-weight: 600; letter-spacing: .08em; color: var(--coral); text-transform: uppercase; margin-bottom: 14px; }
+    .pr-hero h1 { font-size: clamp(36px, 5vw, 52px); font-weight: 600; letter-spacing: -0.025em; line-height: 1.05; margin: 0 0 14px; }
+    .pr-hero p { font-size: 16.5px; color: var(--text-2); max-width: 580px; margin: 0 auto; line-height: 1.55; }
+
+    .pr-shell { max-width: 1100px; margin: 0 auto; padding: 0 32px 80px; }
+    .pr-section { margin: 56px 0; }
+    .pr-section__h { font-size: clamp(22px, 3vw, 28px); font-weight: 600; letter-spacing: -0.015em; margin: 0 0 8px; }
+    .pr-section__p { font-size: 14.5px; color: var(--text-2); margin: 0 0 24px; line-height: 1.55; }
+
+    .pr-logo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    @media (max-width: 720px) { .pr-logo-grid { grid-template-columns: 1fr 1fr; } }
+    .pr-logo { padding: 28px; background: var(--bg); border: 1px solid var(--hairline-strong); border-radius: 14px; text-align: center; transition: transform 220ms var(--ease), box-shadow 220ms var(--ease); }
+    .pr-logo:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+    .pr-logo--dark { background: var(--text); }
+    .pr-logo--dark .pr-logo__name { color: var(--bg); }
+    .pr-logo--coral { background: var(--coral); }
+    .pr-logo--coral .pr-logo__name { color: var(--text-on-coral); }
+    .pr-logo--coral .pr-logo__caption { color: rgba(255,255,255,0.7); }
+    .pr-logo--dark .pr-logo__caption { color: rgba(245,244,237,0.55); }
+    .pr-logo__mark { width: 56px; height: 56px; border-radius: 14px; background: var(--coral); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 24px; margin: 0 auto 12px; }
+    .pr-logo--dark .pr-logo__mark { background: var(--bg); color: var(--coral); }
+    .pr-logo--coral .pr-logo__mark { background: var(--bg); color: var(--coral); }
+    .pr-logo__name { font-size: 18px; font-weight: 600; letter-spacing: -0.012em; margin-bottom: 6px; }
+    .pr-logo__caption { font-size: 11px; color: var(--text-3); font-family: 'Geist Mono'; }
+    .pr-logo__dl { display: inline-flex; gap: 6px; margin-top: 12px; }
+    .pr-logo__dl a { font-size: 10.5px; padding: 3px 7px; background: var(--surface); border-radius: 4px; color: var(--text-2); text-decoration: none; font-family: 'Geist Mono'; font-weight: 500; }
+    .pr-logo--dark .pr-logo__dl a, .pr-logo--coral .pr-logo__dl a { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.85); }
+
+    .pr-colors { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    @media (max-width: 720px) { .pr-colors { grid-template-columns: 1fr 1fr; } }
+    .pr-color { padding: 16px; background: var(--bg); border: 1px solid var(--hairline-strong); border-radius: 10px; }
+    .pr-color__sw { height: 80px; border-radius: 8px; margin-bottom: 12px; }
+    .pr-color__name { font-size: 12.5px; font-weight: 600; }
+    .pr-color__hex { font-size: 11px; color: var(--text-3); font-family: 'Geist Mono'; margin-top: 3px; }
+
+    .pr-quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    @media (max-width: 720px) { .pr-quick { grid-template-columns: 1fr; } }
+    .pr-quick-card { padding: 22px; background: var(--bg); border: 1px solid var(--hairline-strong); border-radius: 12px; }
+    .pr-quick-card__lbl { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 6px; }
+    .pr-quick-card__val { font-size: 17px; font-weight: 600; }
+    .pr-quick-card__sub { font-size: 12px; color: var(--text-2); margin-top: 4px; }
+
+    .pr-coverage { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 720px) { .pr-coverage { grid-template-columns: 1fr; } }
+    .pr-cov { padding: 18px; background: var(--bg); border: 1px solid var(--hairline-strong); border-radius: 12px; text-decoration: none; color: inherit; transition: transform 220ms var(--ease), box-shadow 220ms var(--ease); display: flex; align-items: center; gap: 14px; }
+    .pr-cov:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+    .pr-cov__src { font-family: 'Geist Mono'; font-size: 10.5px; font-weight: 600; color: var(--coral); letter-spacing: .04em; text-transform: uppercase; padding: 2px 7px; background: var(--coral-subtle); border-radius: 3px; flex-shrink: 0; }
+    .pr-cov__title { font-size: 13.5px; font-weight: 500; line-height: 1.35; flex: 1; }
+    .pr-cov__date { font-size: 11px; color: var(--text-3); font-family: 'Geist Mono'; flex-shrink: 0; }
+
+    .pr-download {
+      margin-top: 28px; padding: 20px 22px;
+      background: var(--coral-subtle); border-left: 3px solid var(--coral);
+      border-radius: 8px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .pr-download__icon { width: 38px; height: 38px; border-radius: 9px; background: var(--coral); color: #fff; display: grid; place-items: center; flex-shrink: 0; }
+    .pr-download__txt { flex: 1; }
+    .pr-download__h { font-size: 14px; font-weight: 600; color: var(--coral-strong); }
+    .pr-download__p { font-size: 12px; color: var(--coral-strong); opacity: 0.85; }
+  </style>
+</head>
+<body class="shell">
+
+<header class="mini-nav">
+  <div class="container mini-nav__inner">
+    <a href="landing.html" class="mini-nav__brand"><span class="topbar__brand-mark">E</span> ElevAIte</a>
+    <nav class="mini-nav__links"><a href="about.html">About</a><a href="careers.html">Careers</a><a href="press.html" style="color:var(--text);">Press</a></nav>
+    <span class="mini-nav__spacer"></span>
+    <a class="cta-primary" href="auth.html?mode=signup" style="padding:7px 14px;font-size:13px;">Get free</a>
+  </div>
+</header>
+
+<section class="pr-hero">
+  <div class="pr-hero__bloom"></div>
+  <div class="pr-eyebrow">Press &amp; Brand</div>
+  <h1>Everything you need to write about us.</h1>
+  <p>Logos, screenshots, brand guidelines, key facts. Press inquiries: <a href="mailto:press@elevaite.so" style="color: var(--coral);">press@elevaite.so</a>.</p>
+</section>
+
+<main class="pr-shell">
+
+  <section class="pr-section">
+    <h2 class="pr-section__h">Quick facts</h2>
+    <div class="pr-quick">
+      <div class="pr-quick-card"><div class="pr-quick-card__lbl">Founded</div><div class="pr-quick-card__val">2024</div><div class="pr-quick-card__sub">Palo Alto, California</div></div>
+      <div class="pr-quick-card"><div class="pr-quick-card__lbl">Team</div><div class="pr-quick-card__val">8 people</div><div class="pr-quick-card__sub">Hiring across design, eng, growth</div></div>
+      <div class="pr-quick-card"><div class="pr-quick-card__lbl">Backed by</div><div class="pr-quick-card__val">Y Combinator W26</div><div class="pr-quick-card__sub">+ Neo, AI Grant, South Park Commons</div></div>
+    </div>
+  </section>
+
+  <section class="pr-section">
+    <h2 class="pr-section__h">The boilerplate</h2>
+    <p class="pr-section__p">Drop-in description, ~50 words.</p>
+    <div style="padding: 22px; background: var(--surface-sunken); border-radius: 10px; font-size: 14.5px; line-height: 1.65; color: var(--text);">
+      <b>ElevAIte</b> is a warm, keyboard-first calendar built for students and startup teams. Founded in 2024 in Palo Alto, the company is backed by Y Combinator (W26), Neo, AI Grant, and South Park Commons. ElevAIte is free for personal use, free forever for students with a .edu, and $6/seat for teams.
+    </div>
+  </section>
+
+  <section class="pr-section">
+    <h2 class="pr-section__h">Logos</h2>
+    <p class="pr-section__p">SVG, PNG, and dark/light variations. Don't modify the mark or place it on busy backgrounds.</p>
+    <div class="pr-logo-grid">
+      <div class="pr-logo">
+        <div class="pr-logo__mark">E</div>
+        <div class="pr-logo__name">ElevAIte</div>
+        <div class="pr-logo__caption">Default · light</div>
+        <div class="pr-logo__dl"><a href="#">SVG</a><a href="#">PNG</a></div>
+      </div>
+      <div class="pr-logo pr-logo--dark">
+        <div class="pr-logo__mark">E</div>
+        <div class="pr-logo__name">ElevAIte</div>
+        <div class="pr-logo__caption">Dark mode</div>
+        <div class="pr-logo__dl"><a href="#">SVG</a><a href="#">PNG</a></div>
+      </div>
+      <div class="pr-logo pr-logo--coral">
+        <div class="pr-logo__mark">E</div>
+        <div class="pr-logo__name">ElevAIte</div>
+        <div class="pr-logo__caption">Coral background</div>
+        <div class="pr-logo__dl"><a href="#">SVG</a><a href="#">PNG</a></div>
+      </div>
+    </div>
+    <div class="pr-download">
+      <div class="pr-download__icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></div>
+      <div class="pr-download__txt">
+        <div class="pr-download__h">Brand kit (16 MB)</div>
+        <div class="pr-download__p">Logos · screenshots · type · color tokens · Figma file</div>
+      </div>
+      <a class="cta-primary" href="#" style="padding: 8px 14px;">Download kit →</a>
+    </div>
+  </section>
+
+  <section class="pr-section">
+    <h2 class="pr-section__h">Brand colors</h2>
+    <p class="pr-section__p">Coral is the primary. Cream and warm-near-black do most of the work.</p>
+    <div class="pr-colors">
+      <div class="pr-color"><div class="pr-color__sw" style="background: #D97757;"></div><div class="pr-color__name">Coral</div><div class="pr-color__hex">#D97757</div></div>
+      <div class="pr-color"><div class="pr-color__sw" style="background: #FAF9F5; box-shadow: inset 0 0 0 1px var(--hairline-strong);"></div><div class="pr-color__name">Cream</div><div class="pr-color__hex">#FAF9F5</div></div>
+      <div class="pr-color"><div class="pr-color__sw" style="background: #1F1E1B;"></div><div class="pr-color__name">Warm black</div><div class="pr-color__hex">#1F1E1B</div></div>
+      <div class="pr-color"><div class="pr-color__sw" style="background: #F4E5DC;"></div><div class="pr-color__name">Coral subtle</div><div class="pr-color__hex">#F4E5DC</div></div>
+    </div>
+  </section>
+
+  <section class="pr-section">
+    <h2 class="pr-section__h">Typography</h2>
+    <p class="pr-section__p">Geist for everything. Geist Mono for time digits, codes, and metadata.</p>
+    <div style="padding: 22px; background: var(--surface-sunken); border-radius: 10px;">
+      <div style="font-size: 36px; font-weight: 600; letter-spacing: -0.025em; margin-bottom: 6px;">Geist · Regular &amp; Semibold</div>
+      <div style="font-family: 'Geist Mono'; font-size: 22px; color: var(--coral); letter-spacing: -0.005em;">Geist Mono · 09:30 → 14:48</div>
+    </div>
+  </section>
+
+  <section class="pr-section">
+    <h2 class="pr-section__h">In the news</h2>
+    <div class="pr-coverage">
+      <a class="pr-cov" href="#"><span class="pr-cov__src">TechCrunch</span><span class="pr-cov__title">ElevAIte raises $4M to take on Calendly with a warmer calendar</span><span class="pr-cov__date">May 8</span></a>
+      <a class="pr-cov" href="#"><span class="pr-cov__src">The Verge</span><span class="pr-cov__title">The new calendar startup students are switching to</span><span class="pr-cov__date">Apr 22</span></a>
+      <a class="pr-cov" href="#"><span class="pr-cov__src">Sifted</span><span class="pr-cov__title">Why design-led tools are eating productivity SaaS</span><span class="pr-cov__date">Mar 30</span></a>
+      <a class="pr-cov" href="#"><span class="pr-cov__src">Hacker News</span><span class="pr-cov__title">Show HN: ElevAIte — a calmer calendar (487 comments)</span><span class="pr-cov__date">Feb 12</span></a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="container mini-foot">
+  <span>© 2026 ElevAIte, Inc.</span>
+  <span class="spacer"></span>
+  <a href="about.html">About</a>
+  <a href="contact.html">Contact</a>
+  <a href="careers.html">Careers</a>
+</footer>
+
+<script src="reveal.js"></script>
+<!-- Page index navigator -->
+<a href="all-pages.html" class="page-nav" data-elevaite-page-nav aria-label="View all pages">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+  <span>All pages</span>
+</a>
+<style>
+.page-nav{position:fixed;bottom:20px;right:20px;z-index:9999;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;background:rgba(250,249,245,0.92);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(31,30,27,0.12);border-radius:999px;color:#1F1E1B;font-family:'Geist',ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:500;letter-spacing:-0.005em;text-decoration:none;box-shadow:0 4px 16px rgba(31,30,27,0.06),0 1px 2px rgba(31,30,27,0.04);opacity:0;transform:translateY(8px);animation:elevaite-pn-in 420ms cubic-bezier(0.32,0.72,0,1) 0.5s forwards;transition:transform 180ms cubic-bezier(0.32,0.72,0,1),border-color 180ms cubic-bezier(0.32,0.72,0,1),color 180ms cubic-bezier(0.32,0.72,0,1)}
+@media (hover:hover){.page-nav:hover{transform:translateY(-2px);border-color:#D97757;color:#D97757}}
+@keyframes elevaite-pn-in{to{opacity:1;transform:none}}
+[data-theme="dark"] .page-nav,html[data-theme="dark"] .page-nav,body[data-theme="dark"] .page-nav{background:rgba(35,34,32,0.92);color:#F5F4ED;border-color:rgba(245,244,237,0.14)}
+@media (prefers-reduced-motion:reduce){.page-nav{animation:none;opacity:1;transform:none;transition:none}}
+@media (max-width:520px){.page-nav span{display:none}.page-nav{padding:9px}}
+</style>
+
+</body>
+</html>

@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pricing — ElevAIte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="motion.css" />
+  <style>
+    body { font-family: 'Geist'; }
+    .nav-cta { padding: 7px 14px; font-size: 13px; }
+    .pricing-hero {
+      padding: 84px 0 32px; text-align: center; position: relative; overflow: hidden;
+    }
+    .pricing-hero__bloom {
+      position: absolute; inset: -20% -10% 0 -10%;
+      background: radial-gradient(ellipse at 50% 30%, rgba(217,119,87,0.18) 0%, transparent 60%);
+      filter: blur(50px); pointer-events: none;
+      animation: bloom 9s ease-in-out infinite alternate;
+    }
+    .pricing-hero > * { position: relative; z-index: 1; }
+    .pricing-hero__pill {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 5px 12px; border-radius: 999px;
+      background: var(--coral-subtle); color: var(--coral-strong);
+      font-size: 12px; font-weight: 500;
+      margin-bottom: 22px;
+      animation: pill-in 700ms var(--ease) both;
+    }
+    .pricing-hero__pill-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--coral); animation: dot-pulse 2s var(--ease) infinite; }
+    .pricing-hero h1 {
+      font-size: clamp(48px, 6vw, 76px);
+      font-weight: 600; line-height: 1.0; letter-spacing: -0.028em;
+      margin: 0 0 18px;
+    }
+    .pricing-hero h1 em { font-style: normal; color: var(--coral); }
+    .pricing-hero p { font-size: 18px; color: var(--text-2); line-height: 1.5; max-width: 560px; margin: 0 auto 36px;
+      animation: fade-up 700ms var(--ease) 0.9s both; }
+
+    .billing-toggle {
+      display: inline-flex; padding: 3px;
+      background: var(--surface); border: 1px solid var(--hairline-strong);
+      border-radius: 9px;
+      margin-bottom: 56px;
+      position: relative;
+      animation: fade-up 700ms var(--ease) 1.05s both;
+    }
+    .billing-toggle button {
+      padding: 8px 18px; border-radius: 7px;
+      font-size: 13px; color: var(--text-2); font-weight: 500;
+      position: relative; z-index: 1;
+      transition: color 180ms var(--ease);
+      background: none; border: 0; cursor: pointer;
+    }
+    .billing-toggle button.on { color: var(--text); }
+    .billing-toggle__pill {
+      position: absolute; top: 3px; bottom: 3px;
+      background: var(--bg); border-radius: 7px;
+      box-shadow: 0 1px 2px rgba(31,30,27,0.06);
+      transition: left 280ms var(--ease), width 280ms var(--ease);
+    }
+    .billing-toggle__save {
+      display: inline-block; margin-left: 6px;
+      padding: 1px 5px; border-radius: 3px;
+      background: var(--coral); color: #fff;
+      font-size: 9.5px; font-weight: 700; letter-spacing: .04em;
+    }
+
+    .pricing-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+      max-width: 1180px; margin: 0 auto; padding: 0 32px 60px;
+    }
+    .pcard {
+      padding: 28px 26px;
+      background: var(--bg);
+      border: 1px solid var(--hairline-strong);
+      border-radius: 16px;
+      position: relative;
+      transition: transform 240ms var(--ease), box-shadow 240ms var(--ease);
+      display: flex; flex-direction: column;
+    }
+    .pcard:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+    .pcard--feat { background: var(--text); color: var(--bg); border-color: var(--text); }
+    .pcard--feat .pcard__num, .pcard--feat .pcard__h, .pcard--feat .pcard__small { color: var(--bg); }
+    .pcard--feat .pcard__p, .pcard--feat li, .pcard--feat .pcard__num small { color: rgba(245, 244, 237, 0.65); }
+    .pcard--feat li svg { color: var(--coral); }
+    .pcard__tag {
+      position: absolute; top: -10px; left: 26px;
+      font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+      padding: 3px 10px; border-radius: 999px;
+      background: var(--coral); color: #fff;
+      white-space: nowrap;
+    }
+    .pcard__h { font-size: 14.5px; font-weight: 600; letter-spacing: -0.005em; margin: 0 0 4px; color: var(--text); }
+    .pcard__p { font-size: 12.5px; color: var(--text-2); margin: 0 0 22px; line-height: 1.45; }
+    .pcard__num { font-size: 42px; font-weight: 600; letter-spacing: -0.025em; line-height: 1; color: var(--text); white-space: nowrap; }
+    .pcard__num small { font-size: 13px; color: var(--text-3); font-weight: 500; letter-spacing: 0; margin-left: 4px; }
+    .pcard__small { font-size: 11.5px; color: var(--text-3); margin-top: 6px; }
+    .pcard ul { list-style: none; padding: 0; margin: 24px 0 24px; flex: 1; }
+    .pcard li { padding: 6px 0; font-size: 12.5px; color: var(--text); display: flex; gap: 9px; align-items: flex-start; }
+    .pcard li svg { color: var(--coral); flex-shrink: 0; margin-top: 3px; }
+    .pcard__cta {
+      display: block; text-align: center; padding: 10px 14px; border-radius: 8px;
+      background: var(--coral); color: var(--text-on-coral); font-size: 13.5px; font-weight: 600;
+      text-decoration: none;
+      transition: background 120ms var(--ease);
+    }
+    .pcard__cta:hover { background: var(--coral-hover); }
+    .pcard--ghost .pcard__cta { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+    .pcard--ghost .pcard__cta:hover { background: var(--surface-sunken); }
+
+    /* Compare table */
+    .compare { padding: 60px 0; background: var(--surface); }
+    .compare h2 { font-size: clamp(32px, 4vw, 44px); font-weight: 600; letter-spacing: -0.022em; line-height: 1.1; margin: 0 0 12px; text-align: center; }
+    .compare__lede { text-align: center; font-size: 16px; color: var(--text-2); margin: 0 0 40px; max-width: 520px; margin-left: auto; margin-right: auto; }
+    .compare-table { max-width: 1100px; margin: 0 auto; padding: 0 32px; }
+    .compare-row {
+      display: grid; grid-template-columns: 2fr repeat(4, 1fr);
+      align-items: center; padding: 14px 18px;
+      border-bottom: 1px solid var(--hairline);
+      font-size: 13px;
+    }
+    .compare-row--head { font-weight: 600; color: var(--text); border-bottom: 1.5px solid var(--border); }
+    .compare-row--section { color: var(--text-3); text-transform: uppercase; font-size: 10.5px; font-weight: 600; letter-spacing: .06em; border: 0; padding-bottom: 6px; padding-top: 28px; }
+    .compare-row > div { padding: 0 4px; }
+    .compare-row > div:first-child { color: var(--text); }
+    .compare-row > div:not(:first-child) { text-align: center; font-family: 'Geist Mono', monospace; color: var(--text-2); font-size: 12.5px; }
+    .compare-row .check { color: var(--coral); }
+
+    /* FAQ */
+    .pricing-faq { padding: 80px 32px; max-width: 760px; margin: 0 auto; }
+    .pricing-faq h2 { font-size: clamp(28px, 4vw, 38px); font-weight: 600; letter-spacing: -0.022em; margin: 0 0 28px; text-align: center; }
+    .pricing-faq details { border-top: 1px solid var(--hairline-strong); }
+    .pricing-faq details:last-child { border-bottom: 1px solid var(--hairline-strong); }
+    .pricing-faq summary {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 0; cursor: pointer; font-size: 15.5px; font-weight: 500;
+      list-style: none;
+    }
+    .pricing-faq summary::-webkit-details-marker { display: none; }
+    .pricing-faq .ans { font-size: 14px; color: var(--text-2); line-height: 1.55; padding: 0 0 22px; max-width: 640px; }
+    .pricing-faq svg.chev { transition: transform 280ms var(--ease); color: var(--text-3); }
+    .pricing-faq details[open] svg.chev { transform: rotate(180deg); }
+
+    .cta-band {
+      padding: 80px 0; text-align: center;
+      background: var(--text); color: var(--bg);
+      position: relative; overflow: hidden;
+    }
+    .cta-band::before {
+      content: ''; position: absolute; inset: -50%;
+      background: radial-gradient(ellipse at center, rgba(217,119,87,0.22), transparent 60%);
+      animation: bloom 7s ease-in-out infinite alternate;
+    }
+    .cta-band > * { position: relative; z-index: 1; }
+    .cta-band h2 { font-size: clamp(34px, 4.5vw, 48px); font-weight: 600; letter-spacing: -0.025em; margin: 0 0 18px; color: var(--bg); }
+    .cta-band p { font-size: 16px; color: rgba(245, 244, 237, 0.7); margin: 0 0 28px; }
+
+    @media (max-width: 920px) {
+      .pricing-grid { grid-template-columns: 1fr 1fr; }
+      .compare-row { grid-template-columns: 1.6fr repeat(4, 1fr); font-size: 12px; }
+    }
+    @media (max-width: 620px) {
+      .pricing-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="shell">
+
+<header class="mini-nav">
+  <div class="container mini-nav__inner">
+    <a href="landing.html" class="mini-nav__brand"><span class="topbar__brand-mark">E</span> ElevAIte</a>
+    <nav class="mini-nav__links">
+      <a href="landing.html#features">Product</a>
+      <a href="pricing.html" style="color:var(--text);">Pricing</a>
+      <a href="landing.html#students">Students</a>
+      <a href="changelog.html">Changelog</a>
+    </nav>
+    <span class="mini-nav__spacer"></span>
+    <a href="auth.html?mode=signin" style="font-size:13.5px;color:var(--text-2);text-decoration:none;">Sign in</a>
+    <a class="cta-primary nav-cta" href="auth.html?mode=signup">Get free</a>
+  </div>
+</header>
+
+<section class="pricing-hero">
+  <div class="pricing-hero__bloom"></div>
+  <div class="pricing-hero__pill">
+    <span class="pricing-hero__pill-dot"></span>
+    Free for individuals, free for students
+  </div>
+  <h1 class="words" aria-label="Honest pricing. No surprises.">
+    <span class="word">Honest</span>
+    <span class="word">pricing.</span>
+    <span class="word"><em>No</em></span>
+    <span class="word"><em>surprises.</em></span>
+  </h1>
+  <p>No seat-based tax on individuals. No surprise upgrades. Free forever if you’re a student with a .edu.</p>
+
+  <div class="billing-toggle">
+    <span class="billing-toggle__pill" id="toggle-pill" style="left:3px;width:calc(50% - 3px);"></span>
+    <button class="on" id="btn-monthly">Monthly</button>
+    <button id="btn-yearly">Annual <span class="billing-toggle__save">SAVE 20%</span></button>
+  </div>
+</section>
+
+<section class="pricing-grid">
+  <!-- Personal -->
+  <div class="pcard pcard--ghost" data-reveal>
+    <h3 class="pcard__h">Personal</h3>
+    <p class="pcard__p">For your own life.</p>
+    <div class="pcard__num">$0<small>/forever</small></div>
+    <div class="pcard__small">No credit card required</div>
+    <ul>
+      <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> All calendar features</li>
+      <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Unlimited connected accounts</li>
+      <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> 3 scheduling links</li>
+      <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Mac, Windows, iOS, Web</li>
+    </ul>
+    <a class="pcard__cta" href="auth.html?mode=signup">Get started</a>
+  </div>
+
+  <!-- Student (featured) -->
+  <div class="pcard pcard--feat" data-reveal data-delay="1">
+    <span class="pcard__tag">🎓 Free for students</span>
+    <h3 class="pcard__h">Student</h3>
+    <p class="pcard__p">100% free with a .edu address.</p>
+    <div class="pcard__num">$0<small>/forever with .edu</small></div>
+    <div class="pcard__small">Renews each term with active .edu</div>
+    <ul>
+      <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Everything in Personal</li>
+      <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Unlimited scheduling links</li>
+      <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Recurring class schedules</li>
+      <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Group-project availability</li>
+      <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Priority support</li>
+    </ul>
+    <a class="pcard__cta" href="auth.html?mode=signup">Claim with .edu</a>
+  </div>
+
+  <!-- Team -->
+  <div class="pcard" data-reveal data-delay="2">
+    <h3 class="pcard__h">Team</h3>
+    <p class="pcard__p">For startups + small teams.</p>
+    <div class="pcard__num" id="team-price">$6<small>/user/mo</small></div>
+    <div class="pcard__small">Up to 25 users · billed monthly</div>
+    <ul>
+      <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Everything in Personal</li>
+      <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Team availability + round-robin</li>
+      <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> SSO (Google Workspace, Okta)</li>
+      <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Admin controls + audit log</li>
+      <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Shared scheduling links</li>
+    </ul>
+    <a class="pcard__cta" href="auth.html?mode=signup">Start a team</a>
+  </div>
+
+  <!-- Enterprise -->
+  <div class="pcard pcard--ghost" data-reveal data-delay="3">
+    <h3 class="pcard__h">Enterprise</h3>
+    <p class="pcard__p">For large orgs.</p>
+    <div class="pcard__num">Custom</div>
+    <div class="pcard__small">Volume pricing · SLA · dedicated CSM</div>
+    <ul>
+      <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Everything in Team</li>
+      <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> SAML SSO + SCIM</li>
+      <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Data residency (US / EU)</li>
+      <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Custom contracts</li>
+      <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg> Onboarding + training</li>
+    </ul>
+    <a class="pcard__cta" href="#contact">Talk to sales</a>
+  </div>
+</section>
+
+<!-- Comparison table -->
+<section class="compare">
+  <h2 data-reveal>Compare plans</h2>
+  <p class="compare__lede" data-reveal data-delay="1">Every feature, on every plan.</p>
+  <div class="compare-table" data-reveal data-delay="2">
+    <div class="compare-row compare-row--head">
+      <div>Feature</div>
+      <div>Personal</div>
+      <div>Student</div>
+      <div>Team</div>
+      <div>Enterprise</div>
+    </div>
+
+    <div class="compare-row compare-row--section">
+      <div>Calendar</div><div></div><div></div><div></div><div></div>
+    </div>
+    <div class="compare-row"><div>Connected accounts</div><div>Unlimited</div><div>Unlimited</div><div>Unlimited</div><div>Unlimited</div></div>
+    <div class="compare-row"><div>Time zones (visible)</div><div>4</div><div>4</div><div>4</div><div>Unlimited</div></div>
+    <div class="compare-row"><div>Mobile + desktop apps</div><div class="check">✓</div><div class="check">✓</div><div class="check">✓</div><div class="check">✓</div></div>
+    <div class="compare-row"><div>Recurring schedules</div><div>—</div><div class="check">✓</div><div class="check">✓</div><div class="check">✓</div></div>
+
+    <div class="compare-row compare-row--section">
+      <div>Scheduling</div><div></div><div></div><div></div><div></div>
+    </div>
+    <div class="compare-row"><div>Scheduling links</div><div>3</div><div>Unlimited</div><div>Unlimited</div><div>Unlimited</div></div>
+    <div class="compare-row"><div>Round-robin</div><div>—</div><div>—</div><div class="check">✓</div><div class="check">✓</div></div>
+    <div class="compare-row"><div>Group bookings</div><div>—</div><div class="check">✓</div><div class="check">✓</div><div class="check">✓</div></div>
+    <div class="compare-row"><div>Team availability heatmap</div><div>—</div><div>—</div><div class="check">✓</div><div class="check">✓</div></div>
+
+    <div class="compare-row compare-row--section">
+      <div>Admin</div><div></div><div></div><div></div><div></div>
+    </div>
+    <div class="compare-row"><div>SSO (Google, Okta)</div><div>—</div><div>—</div><div class="check">✓</div><div class="check">✓</div></div>
+    <div class="compare-row"><div>SCIM provisioning</div><div>—</div><div>—</div><div>—</div><div class="check">✓</div></div>
+    <div class="compare-row"><div>Audit logs</div><div>—</div><div>—</div><div class="check">✓</div><div class="check">✓</div></div>
+    <div class="compare-row"><div>Custom data residency</div><div>—</div><div>—</div><div>—</div><div class="check">✓</div></div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="pricing-faq">
+  <h2 data-reveal>Pricing FAQs</h2>
+  <details open data-reveal data-delay="1">
+    <summary>Is the Personal plan really free forever?<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 9l6 6 6-6"/></svg></summary>
+    <div class="ans">Yes, no asterisks. We make money from teams. We never plan to add ads, sell your data, or downgrade Personal features.</div>
+  </details>
+  <details data-reveal data-delay="2">
+    <summary>What if my .edu expires (graduation)?<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 9l6 6 6-6"/></svg></summary>
+    <div class="ans">We give you a 6-month grace period after your .edu stops verifying, then you’re automatically moved to Personal (which is still free). Your data and scheduling links stay intact.</div>
+  </details>
+  <details data-reveal data-delay="3">
+    <summary>Can I switch plans later?<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 9l6 6 6-6"/></svg></summary>
+    <div class="ans">Upgrade or downgrade anytime. Team is pro-rated daily. No annual lock-in.</div>
+  </details>
+  <details data-reveal data-delay="4">
+    <summary>Do you offer refunds?<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 9l6 6 6-6"/></svg></summary>
+    <div class="ans">30-day money-back for Team and Enterprise. Just email <a href="#" style="color:var(--coral);">billing@elevaite.so</a> — no forms, no friction.</div>
+  </details>
+</section>
+
+<section class="cta-band">
+  <div class="container">
+    <h2 data-reveal>Start free. Stay free if you’re a student.</h2>
+    <p data-reveal data-delay="1">2 minutes to set up. 0 dollars to try.</p>
+    <a class="cta-primary" href="auth.html?mode=signup" style="background:var(--coral);" data-reveal data-delay="2">Get ElevAIte free →</a>
+  </div>
+</section>
+
+<footer class="container mini-foot">
+  <span>© 2026 ElevAIte, Inc.</span>
+  <span class="spacer"></span>
+  <a href="privacy.html">Privacy</a>
+  <a href="terms.html">Terms</a>
+  <a href="help.html">Help</a>
+  <a href="changelog.html">Changelog</a>
+</footer>
+
+<script src="reveal.js"></script>
+<script>
+  // Billing toggle
+  const pill = document.getElementById('toggle-pill');
+  const m = document.getElementById('btn-monthly');
+  const y = document.getElementById('btn-yearly');
+  const teamPrice = document.getElementById('team-price');
+  function setMode(yearly) {
+    m.classList.toggle('on', !yearly);
+    y.classList.toggle('on',  yearly);
+    if (yearly) {
+      pill.style.left = '50%';
+      teamPrice.innerHTML = '$4.80<small>/user/mo</small>';
+    } else {
+      pill.style.left = '3px';
+      teamPrice.innerHTML = '$6<small>/user/mo</small>';
+    }
+  }
+  m.addEventListener('click', () => setMode(false));
+  y.addEventListener('click', () => setMode(true));
+</script>
+
+<!-- Page index navigator -->
+<a href="all-pages.html" class="page-nav" data-elevaite-page-nav aria-label="View all pages">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+  <span>All pages</span>
+</a>
+<style>
+.page-nav{position:fixed;bottom:20px;right:20px;z-index:9999;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;background:rgba(250,249,245,0.92);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(31,30,27,0.12);border-radius:999px;color:#1F1E1B;font-family:'Geist',ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:500;letter-spacing:-0.005em;text-decoration:none;box-shadow:0 4px 16px rgba(31,30,27,0.06),0 1px 2px rgba(31,30,27,0.04);opacity:0;transform:translateY(8px);animation:elevaite-pn-in 420ms cubic-bezier(0.32,0.72,0,1) 0.5s forwards;transition:transform 180ms cubic-bezier(0.32,0.72,0,1),border-color 180ms cubic-bezier(0.32,0.72,0,1),color 180ms cubic-bezier(0.32,0.72,0,1)}
+@media (hover:hover){.page-nav:hover{transform:translateY(-2px);border-color:#D97757;color:#D97757}}
+@keyframes elevaite-pn-in{to{opacity:1;transform:none}}
+[data-theme="dark"] .page-nav,html[data-theme="dark"] .page-nav,body[data-theme="dark"] .page-nav{background:rgba(35,34,32,0.92);color:#F5F4ED;border-color:rgba(245,244,237,0.14)}
+@media (prefers-reduced-motion:reduce){.page-nav{animation:none;opacity:1;transform:none;transition:none}}
+@media (max-width:520px){.page-nav span{display:none}.page-nav{padding:9px}}
+</style>
+
+</body>
+</html>

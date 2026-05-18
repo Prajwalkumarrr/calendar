@@ -4,11 +4,29 @@ const nextConfig = {
   async rewrites() {
     return {
       beforeFiles: [
-        // Landing page lives as static HTML in /public, served at root
+        // Landing at root
         { source: '/', destination: '/landing.html' },
+
+        // Clean URLs for marketing & legal pages — no .html visible to users
+        { source: '/pricing', destination: '/pricing.html' },
+        { source: '/about', destination: '/about.html' },
+        { source: '/careers', destination: '/careers.html' },
+        { source: '/blog', destination: '/blog.html' },
+        { source: '/press', destination: '/press.html' },
+        { source: '/security', destination: '/security.html' },
+        { source: '/status', destination: '/status.html' },
+        { source: '/terms', destination: '/terms.html' },
+        { source: '/privacy', destination: '/privacy.html' },
+        { source: '/help', destination: '/help.html' },
+        { source: '/contact', destination: '/contact.html' },
+        { source: '/changelog', destination: '/changelog.html' },
+        { source: '/signed-out', destination: '/signed-out.html' },
+        { source: '/api-docs', destination: '/api.html' }, // /api/* is reserved for backend
+        { source: '/mobile-preview', destination: '/mobile.html' },
+        { source: '/pages', destination: '/all-pages.html' },
       ],
-      // `fallback` runs AFTER dynamic routes, so /api/auth/[...nextauth] wins
-      // and unmatched /api/* requests get proxied to the Express backend.
+      // `fallback` runs AFTER dynamic routes, so /api/auth/[...nextauth] and other
+      // App Router routes win; unmatched /api/* requests get proxied to Express.
       fallback: [
         {
           source: '/api/:path*',

@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>All pages — ElevAIte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="motion.css" />
+  <style>
+    body { font-family: 'Geist'; padding: 56px 32px 80px; background: #f0eee9; min-height: 100vh; }
+    .hub { max-width: 1180px; margin: 0 auto; }
+    .hub__head { text-align: center; margin-bottom: 48px; }
+    .hub__eyebrow { font-size: 11.5px; font-weight: 600; letter-spacing: .08em; color: var(--coral); text-transform: uppercase; margin-bottom: 14px; animation: fade-in 600ms var(--ease) both; }
+    .hub__head h1 { font-size: clamp(34px, 5vw, 48px); font-weight: 600; letter-spacing: -0.022em; margin: 0 0 12px; animation: fade-up 700ms var(--ease) 0.1s both; }
+    .hub__head p { font-size: 16px; color: var(--text-2); max-width: 560px; margin: 0 auto; line-height: 1.55; animation: fade-up 700ms var(--ease) 0.25s both; }
+
+    .hub-section { margin-bottom: 44px; }
+    .hub-section__h { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); margin-bottom: 14px; }
+    .hub-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    @media (max-width: 980px) { .hub-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 680px) { .hub-grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .hub-card {
+      padding: 14px; background: var(--bg);
+      border: 1px solid var(--hairline-strong);
+      border-radius: 12px;
+      text-decoration: none; color: inherit;
+      transition: transform 220ms var(--ease), box-shadow 220ms var(--ease), border-color 220ms var(--ease);
+      display: flex; flex-direction: column; gap: 6px;
+      position: relative;
+    }
+    .hub-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); border-color: var(--coral); }
+    .hub-card__thumb {
+      height: 96px; border-radius: 8px;
+      background: var(--surface-sunken);
+      border: 1px solid var(--hairline);
+      overflow: hidden; position: relative;
+      margin-bottom: 4px;
+    }
+    .hub-card__h { font-size: 13.5px; font-weight: 600; letter-spacing: -0.005em; margin: 0; }
+    .hub-card__p { font-size: 11.5px; color: var(--text-2); margin: 0; line-height: 1.4; }
+    .hub-card__file { font-family: 'Geist Mono'; font-size: 10px; color: var(--text-3); margin-top: 4px; }
+
+    /* tiny illustration thumbs */
+    .t-cal { padding: 8px; display: grid; grid-template-columns: 20px repeat(3, 1fr); grid-template-rows: repeat(4, 1fr); gap: 2px; height: 100%; box-sizing: border-box; }
+    .t-cal > * { background: var(--hairline); border-radius: 2px; }
+    .t-cal .c { background: var(--coral) !important; }
+    .t-cal .p { background: var(--chip-plum-bar) !important; }
+    .t-cal .s { background: var(--chip-sand-bar) !important; }
+
+    .t-form { padding: 12px; display: flex; flex-direction: column; gap: 6px; height: 100%; box-sizing: border-box; }
+    .t-form .lbl { width: 30%; height: 4px; background: var(--text-3); border-radius: 2px; opacity: .5; }
+    .t-form .inp { height: 9px; background: var(--surface); border: 1px solid var(--hairline-strong); border-radius: 3px; }
+    .t-form .btn { margin-top: auto; align-self: flex-end; width: 40%; height: 9px; background: var(--coral); border-radius: 3px; }
+
+    .t-modal { display: grid; place-items: center; background: rgba(31,30,27,0.04); }
+    .t-modal .box { width: 78%; background: var(--bg); border: 1px solid var(--hairline-strong); border-radius: 6px; padding: 6px; display: flex; flex-direction: column; gap: 3px; }
+    .t-modal .box div { height: 4px; background: var(--hairline-strong); border-radius: 1px; }
+    .t-modal .box div:nth-child(1) { width: 50%; background: var(--coral); height: 5px; }
+    .t-modal .box div:nth-child(3) { width: 80%; }
+    .t-modal .box div:nth-child(4) { width: 60%; }
+    .t-modal .box div:nth-child(5) { width: 30%; background: var(--coral); margin-top: 2px; }
+
+    .t-phone { display: grid; place-items: center; background: var(--surface-sunken); }
+    .t-phone .dev { width: 38px; height: 66px; background: var(--text); border-radius: 7px; padding: 3px; box-shadow: 0 2px 6px rgba(0,0,0,.12); }
+    .t-phone .dev > div { width: 100%; height: 100%; background: var(--bg); border-radius: 4px; padding: 4px; display: flex; flex-direction: column; gap: 2px; }
+    .t-phone .dev div div { height: 3px; background: var(--hairline-strong); border-radius: 1px; }
+    .t-phone .dev div div:nth-child(1) { width: 60%; background: var(--coral); }
+    .t-phone .dev div div:nth-child(3) { width: 80%; }
+
+    .t-legal { padding: 12px; display: flex; flex-direction: column; gap: 3px; }
+    .t-legal div { height: 3px; background: var(--hairline-strong); border-radius: 1px; }
+    .t-legal div:first-child { width: 60%; height: 7px; background: var(--text); border-radius: 2px; margin-bottom: 3px; }
+    .t-legal div:nth-child(2) { width: 90%; }
+    .t-legal div:nth-child(3) { width: 80%; }
+    .t-legal div:nth-child(4) { width: 70%; background: var(--coral); margin-top: 2px; }
+
+    .t-404 { display: grid; place-items: center; font-family: 'Geist Mono'; font-size: 34px; font-weight: 700; color: var(--coral); letter-spacing: -0.02em; }
+
+    .t-list { padding: 8px; display: flex; flex-direction: column; gap: 3px; }
+    .t-list > div { display: flex; align-items: center; gap: 4px; padding: 3px 4px; background: var(--surface); border-radius: 3px; }
+    .t-list > div span:first-child { width: 5px; height: 5px; border-radius: 50%; background: var(--coral); flex-shrink: 0; }
+    .t-list > div span:last-child { flex: 1; height: 3px; background: var(--hairline-strong); border-radius: 1px; }
+    .t-list > div.read { opacity: .5; }
+    .t-list > div.read span:first-child { background: transparent; border: 1px solid var(--hairline-strong); }
+
+    .t-pricing { padding: 8px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3px; }
+    .t-pricing > div { background: var(--surface); border-radius: 3px; padding: 4px; display: flex; flex-direction: column; gap: 2px; }
+    .t-pricing > div.feat { background: var(--text); }
+    .t-pricing > div.feat div { background: var(--bg); }
+    .t-pricing > div .big { height: 8px; background: var(--coral); margin-bottom: 2px; }
+    .t-pricing > div div { height: 2px; background: var(--hairline-strong); border-radius: 1px; }
+
+    .t-split { display: grid; grid-template-columns: 1fr 1fr; gap: 0; height: 100%; }
+    .t-split > div { padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+    .t-split > div:first-child { background: var(--surface); border-right: 1px solid var(--hairline); }
+    .t-split div div { height: 3px; background: var(--hairline-strong); border-radius: 1px; }
+    .t-split div div:first-child { width: 50%; background: var(--coral); height: 5px; }
+
+    .t-grid {
+      padding: 8px; display: grid;
+      grid-template-columns: 24px repeat(7, 1fr);
+      grid-template-rows: 8px repeat(4, 1fr);
+      gap: 1px;
+      height: 100%; box-sizing: border-box;
+    }
+    .t-grid > div { background: var(--hairline); border-radius: 1px; min-height: 4px; }
+    .t-grid > .h { background: var(--text-3); opacity: .3; }
+    .t-grid > .a { background: var(--coral) !important; }
+    .t-grid > .b { background: var(--chip-plum-bar) !important; }
+    .t-grid > .c { background: var(--chip-sand-bar) !important; }
+    .t-grid > .d { background: var(--chip-sage-bar) !important; }
+
+    .t-cmd { padding: 10px; display: flex; flex-direction: column; gap: 5px; }
+    .t-cmd .bar { height: 10px; background: var(--bg); border: 1px solid var(--hairline-strong); border-radius: 3px; }
+    .t-cmd .lbl { font-size: 7px; font-weight: 600; color: var(--text-3); letter-spacing: .06em; text-transform: uppercase; margin-top: 2px; }
+    .t-cmd .row { display: flex; align-items: center; gap: 4px; padding: 3px 5px; border-radius: 3px; }
+    .t-cmd .row.sel { background: var(--coral-subtle); }
+    .t-cmd .row span:first-child { width: 6px; height: 6px; background: var(--text-3); opacity: .3; border-radius: 1px; flex-shrink: 0; }
+    .t-cmd .row.sel span:first-child { background: var(--coral); opacity: 1; }
+    .t-cmd .row span:last-child { flex: 1; height: 2px; background: var(--hairline-strong); border-radius: 1px; }
+
+    .t-pill-ring {
+      display: grid; place-items: center; background: var(--coral-subtle);
+    }
+    .t-pill-ring > div {
+      width: 36px; height: 36px; border-radius: 50%; background: var(--coral); color: #fff;
+      display: grid; place-items: center; font-size: 18px; font-weight: 700;
+      animation: dot-pulse 2s infinite;
+    }
+  </style>
+</head>
+<body>
+
+<div class="hub">
+  <div class="hub__head">
+    <div class="hub__eyebrow">ElevAIte Calendar · Design system</div>
+    <h1>Every page, every flow.</h1>
+    <p>27 surfaces across the product — from marketing to legal to keyboard shortcuts. Click any thumbnail to open.</p>
+  </div>
+
+  <div class="hub-section">
+    <h2 class="hub-section__h">Entry points · marketing</h2>
+    <div class="hub-grid">
+      <a class="hub-card" href="landing.html" data-reveal>
+        <div class="hub-card__thumb"><div class="t-split"><div><div></div><div></div><div></div></div><div><div style="background:var(--coral) !important; border-radius:3px; width:60%; height:30px !important;"></div></div></div></div>
+        <h3 class="hub-card__h">Landing page</h3>
+        <p class="hub-card__p">Long-scroll marketing. Hero, features, personas, pricing, FAQ.</p>
+        <div class="hub-card__file">landing.html</div>
+      </a>
+      <a class="hub-card" href="pricing.html" data-reveal data-delay="1">
+        <div class="hub-card__thumb"><div class="t-pricing"><div><div class="big"></div><div></div><div></div><div></div></div><div class="feat"><div class="big"></div><div></div><div></div><div></div></div><div><div class="big"></div><div></div><div></div><div></div></div></div></div>
+        <h3 class="hub-card__h">Pricing</h3>
+        <p class="hub-card__p">4 tiers · monthly/annual · comparison table.</p>
+        <div class="hub-card__file">pricing.html</div>
+      </a>
+      <a class="hub-card" href="help.html" data-reveal data-delay="2">
+        <div class="hub-card__thumb"><div class="t-list"><div><span></span><span></span></div><div class="read"><span></span><span></span></div><div class="read"><span></span><span></span></div><div class="read"><span></span><span></span></div></div></div>
+        <h3 class="hub-card__h">Help center</h3>
+        <p class="hub-card__p">6 topic categories · live chat · status.</p>
+        <div class="hub-card__file">help.html</div>
+      </a>
+      <a class="hub-card" href="changelog.html" data-reveal data-delay="3">
+        <div class="hub-card__thumb"><div class="t-list"><div><span></span><span></span></div><div><span></span><span></span></div><div class="read"><span></span><span></span></div><div class="read"><span></span><span></span></div></div></div>
+        <h3 class="hub-card__h">Changelog</h3>
+        <p class="hub-card__p">Vertical timeline of releases.</p>
+        <div class="hub-card__file">changelog.html</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="hub-section">
+    <h2 class="hub-section__h">Auth flow</h2>
+    <div class="hub-grid">
+      <a class="hub-card" href="auth.html?mode=signup" data-reveal>
+        <div class="hub-card__thumb"><div class="t-split"><div><div></div><div></div><div></div></div><div><div></div><div></div><div></div><div style="background:var(--coral) !important;width:50%;"></div></div></div></div>
+        <h3 class="hub-card__h">Sign up</h3>
+        <p class="hub-card__p">.edu detection · Google/Apple OAuth · magic link.</p>
+        <div class="hub-card__file">auth.html?mode=signup</div>
+      </a>
+      <a class="hub-card" href="auth.html?mode=signin" data-reveal data-delay="1">
+        <div class="hub-card__thumb"><div class="t-form"><div class="lbl"></div><div class="inp"></div><div class="lbl"></div><div class="inp"></div><div class="btn"></div></div></div>
+        <h3 class="hub-card__h">Sign in</h3>
+        <p class="hub-card__p">Tab-toggle with sign up. Side preview.</p>
+        <div class="hub-card__file">auth.html?mode=signin</div>
+      </a>
+      <a class="hub-card" href="forgot-password.html" data-reveal data-delay="2">
+        <div class="hub-card__thumb"><div class="t-modal"><div class="box"><div></div><div></div><div></div><div></div><div></div></div></div></div>
+        <h3 class="hub-card__h">Forgot password</h3>
+        <p class="hub-card__p">4 states — email → sent → reset → done.</p>
+        <div class="hub-card__file">forgot-password.html</div>
+      </a>
+      <a class="hub-card" href="verify-email.html" data-reveal data-delay="3">
+        <div class="hub-card__thumb"><div class="t-pill-ring"><div>✉</div></div></div>
+        <h3 class="hub-card__h">Verify email</h3>
+        <p class="hub-card__p">Pending · resent · verifying · success states.</p>
+        <div class="hub-card__file">verify-email.html</div>
+      </a>
+      <a class="hub-card" href="oauth-callback.html" data-reveal>
+        <div class="hub-card__thumb"><div class="t-list"><div><span></span><span></span></div><div><span></span><span></span></div><div class="read"><span></span><span></span></div><div><span></span><span></span></div></div></div>
+        <h3 class="hub-card__h">OAuth · calendar picker</h3>
+        <p class="hub-card__p">Pick which Google/iCloud calendars to import.</p>
+        <div class="hub-card__file">oauth-callback.html</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="hub-section">
+    <h2 class="hub-section__h">Main app · calendar views</h2>
+    <div class="hub-grid">
+      <a class="hub-card" href="index.html" data-reveal>
+        <div class="hub-card__thumb"><div class="t-grid"><div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div><div></div><div class="a"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="b"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="c"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div>
+        <h3 class="hub-card__h">Week view</h3>
+        <p class="hub-card__p">The hero — drag to create · ⌘K · event panel.</p>
+        <div class="hub-card__file">index.html</div>
+      </a>
+      <a class="hub-card" href="day.html" data-reveal data-delay="1">
+        <div class="hub-card__thumb"><div class="t-cal"><div></div><div></div><div></div><div></div><div></div><div class="c"></div><div></div><div></div><div></div><div></div><div></div><div class="s"></div><div class="s"></div><div></div><div></div><div></div><div></div></div></div>
+        <h3 class="hub-card__h">Day view</h3>
+        <p class="hub-card__p">Single-day focus · sidebar with mini-cal.</p>
+        <div class="hub-card__file">day.html</div>
+      </a>
+      <a class="hub-card" href="month.html" data-reveal data-delay="2">
+        <div class="hub-card__thumb"><div class="t-grid"><div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="a"></div><div></div><div></div><div></div><div class="b"></div><div></div><div></div><div></div><div class="c"></div><div class="a"></div><div></div><div></div><div></div><div class="d"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div>
+        <h3 class="hub-card__h">Month view</h3>
+        <p class="hub-card__p">Grid · all-day spans · stats sidebar.</p>
+        <div class="hub-card__file">month.html</div>
+      </a>
+      <a class="hub-card" href="mobile.html" data-reveal data-delay="3">
+        <div class="hub-card__thumb"><div class="t-phone"><div class="dev"><div><div></div><div></div><div></div><div></div></div></div></div></div>
+        <h3 class="hub-card__h">Mobile screens</h3>
+        <p class="hub-card__p">Settings · event detail · ⌘K search.</p>
+        <div class="hub-card__file">mobile.html</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="hub-section">
+    <h2 class="hub-section__h">Scheduling links · invitee flow</h2>
+    <div class="hub-grid">
+      <a class="hub-card" href="scheduling-create.html" data-reveal>
+        <div class="hub-card__thumb"><div class="t-split"><div><div></div><div></div><div></div><div></div></div><div style="background:var(--surface-sunken);"><div></div><div></div><div></div></div></div></div>
+        <h3 class="hub-card__h">Create / edit link</h3>
+        <p class="hub-card__p">Two-pane editor with live booking preview.</p>
+        <div class="hub-card__file">scheduling-create.html</div>
+      </a>
+      <a class="hub-card" href="booked.html" data-reveal data-delay="1">
+        <div class="hub-card__thumb"><div class="t-pill-ring"><div>✓</div></div></div>
+        <h3 class="hub-card__h">Booking confirmed</h3>
+        <p class="hub-card__p">What invitees see after picking a slot.</p>
+        <div class="hub-card__file">booked.html</div>
+      </a>
+      <a class="hub-card" href="reschedule.html" data-reveal data-delay="2">
+        <div class="hub-card__thumb"><div class="t-grid"><div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="a"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div>
+        <h3 class="hub-card__h">Reschedule / cancel</h3>
+        <p class="hub-card__p">Invitee tab-toggle · cancel with reason.</p>
+        <div class="hub-card__file">reschedule.html</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="hub-section">
+    <h2 class="hub-section__h">Settings</h2>
+    <div class="hub-grid">
+      <a class="hub-card" href="settings.html#profile" data-reveal>
+        <div class="hub-card__thumb"><div class="t-form"><div class="lbl"></div><div class="inp"></div><div class="lbl"></div><div class="inp"></div><div class="btn"></div></div></div>
+        <h3 class="hub-card__h">Profile</h3>
+        <p class="hub-card__p">Name · avatar · handle · time zone.</p>
+        <div class="hub-card__file">settings.html#profile</div>
+      </a>
+      <a class="hub-card" href="settings.html#accounts" data-reveal data-delay="1">
+        <div class="hub-card__thumb"><div class="t-list"><div><span></span><span></span></div><div><span></span><span></span></div><div class="read"><span></span><span></span></div></div></div>
+        <h3 class="hub-card__h">Calendar accounts</h3>
+        <p class="hub-card__p">Google · Apple · Outlook · sync settings.</p>
+        <div class="hub-card__file">settings.html#accounts</div>
+      </a>
+      <a class="hub-card" href="settings.html#notifications" data-reveal data-delay="2">
+        <div class="hub-card__thumb"><div class="t-form"><div class="lbl"></div><div class="inp"></div><div class="lbl"></div><div class="inp"></div><div class="lbl"></div><div class="inp"></div></div></div>
+        <h3 class="hub-card__h">Notifications</h3>
+        <p class="hub-card__p">Desktop · email · push · SMS · digest.</p>
+        <div class="hub-card__file">settings.html#notifications</div>
+      </a>
+      <a class="hub-card" href="settings.html#appearance" data-reveal data-delay="3">
+        <div class="hub-card__thumb"><div class="t-cmd"><div class="row sel"><span></span><span></span></div><div class="row"><span></span><span></span></div><div class="row"><span></span><span></span></div></div></div>
+        <h3 class="hub-card__h">Appearance</h3>
+        <p class="hub-card__p">Theme · accent color · density · chips.</p>
+        <div class="hub-card__file">settings.html#appearance</div>
+      </a>
+      <a class="hub-card" href="settings.html#keyboard" data-reveal>
+        <div class="hub-card__thumb"><div class="t-list"><div><span></span><span></span></div><div><span></span><span></span></div><div><span></span><span></span></div><div><span></span><span></span></div></div></div>
+        <h3 class="hub-card__h">Keyboard shortcuts</h3>
+        <p class="hub-card__p">Searchable cheat sheet · 30+ shortcuts.</p>
+        <div class="hub-card__file">settings.html#keyboard</div>
+      </a>
+      <a class="hub-card" href="settings.html#billing" data-reveal data-delay="1">
+        <div class="hub-card__thumb"><div class="t-pricing" style="grid-template-columns: 1fr;"><div class="feat"><div class="big"></div><div></div><div></div></div></div></div>
+        <h3 class="hub-card__h">Account &amp; billing</h3>
+        <p class="hub-card__p">Plan card · payment · invoices.</p>
+        <div class="hub-card__file">settings.html#billing</div>
+      </a>
+      <a class="hub-card" href="settings.html#workspace" data-reveal data-delay="2">
+        <div class="hub-card__thumb"><div class="t-list"><div><span></span><span></span></div><div><span></span><span></span></div><div><span></span><span></span></div><div class="read"><span></span><span></span></div></div></div>
+        <h3 class="hub-card__h">Workspace · team</h3>
+        <p class="hub-card__p">Members · roles · SSO · audit log.</p>
+        <div class="hub-card__file">settings.html#workspace</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="hub-section">
+    <h2 class="hub-section__h">Modals &amp; overlays</h2>
+    <div class="hub-grid">
+      <a class="hub-card" href="search.html" data-reveal>
+        <div class="hub-card__thumb"><div class="t-cmd"><div class="bar"></div><div class="lbl"></div><div class="row sel"><span></span><span></span></div><div class="row"><span></span><span></span></div></div></div>
+        <h3 class="hub-card__h">Search results · ⌘F</h3>
+        <p class="hub-card__p">Events · people · links · with filters.</p>
+        <div class="hub-card__file">search.html</div>
+      </a>
+      <a class="hub-card" href="recurring.html" data-reveal data-delay="1">
+        <div class="hub-card__thumb"><div class="t-modal"><div class="box"><div></div><div></div><div></div><div></div><div></div></div></div></div>
+        <h3 class="hub-card__h">Recurring picker</h3>
+        <p class="hub-card__p">Daily/weekly/RRULE · skip holidays.</p>
+        <div class="hub-card__file">recurring.html</div>
+      </a>
+      <a class="hub-card" href="find-time.html" data-reveal data-delay="2">
+        <div class="hub-card__thumb"><div class="t-grid"><div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div><div class="h"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div class="a"></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div>
+        <h3 class="hub-card__h">Find a time</h3>
+        <p class="hub-card__p">Heatmap across team's availability.</p>
+        <div class="hub-card__file">find-time.html</div>
+      </a>
+      <a class="hub-card" href="timezones.html" data-reveal data-delay="3">
+        <div class="hub-card__thumb"><div class="t-list"><div><span></span><span></span></div><div><span></span><span></span></div><div><span></span><span></span></div><div><span></span><span></span></div></div></div>
+        <h3 class="hub-card__h">Time zones</h3>
+        <p class="hub-card__p">Drag-reorder · add by city · 4 visible.</p>
+        <div class="hub-card__file">timezones.html</div>
+      </a>
+      <a class="hub-card" href="inbox.html" data-reveal>
+        <div class="hub-card__thumb"><div class="t-split"><div><div></div><div></div><div></div><div></div></div><div><div></div><div></div><div></div><div></div></div></div></div>
+        <h3 class="hub-card__h">Inbox · notifications</h3>
+        <p class="hub-card__p">3-pane · invites · RSVPs · bookings · AI.</p>
+        <div class="hub-card__file">inbox.html</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="hub-section">
+    <h2 class="hub-section__h">Public booking flow</h2>
+    <div class="hub-grid">
+      <a class="hub-card" href="book.html" data-reveal>
+        <div class="hub-card__thumb"><div class="t-split"><div><div></div><div></div><div></div></div><div><div></div><div></div><div style="background:var(--coral) !important; width: 70%;"></div></div></div></div>
+        <h3 class="hub-card__h">Public booking page</h3>
+        <p class="hub-card__p">Invitee picks slot · 2-step (date → details).</p>
+        <div class="hub-card__file">book.html</div>
+      </a>
+      <a class="hub-card" href="profile.html" data-reveal data-delay="1">
+        <div class="hub-card__thumb"><div class="t-list"><div><span></span><span></span></div><div><span></span><span></span></div><div><span></span><span></span></div></div></div>
+        <h3 class="hub-card__h">Public profile · /prem</h3>
+        <p class="hub-card__p">All scheduling links in one place.</p>
+        <div class="hub-card__file">profile.html</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="hub-section">
+    <h2 class="hub-section__h">Onboarding &amp; team</h2>
+    <div class="hub-grid">
+      <a class="hub-card" href="onboarding.html" data-reveal>
+        <div class="hub-card__thumb"><div class="t-cmd"><div class="lbl"></div><div class="row sel"><span></span><span></span></div><div class="row"><span></span><span></span></div><div class="row"><span></span><span></span></div></div></div>
+        <h3 class="hub-card__h">Onboarding · 3 steps</h3>
+        <p class="hub-card__p">Persona fork → calendars → tour.</p>
+        <div class="hub-card__file">onboarding.html</div>
+      </a>
+      <a class="hub-card" href="empty.html" data-reveal data-delay="1">
+        <div class="hub-card__thumb"><div class="t-modal"><div class="box"><div></div><div></div><div></div><div></div><div></div></div></div></div>
+        <h3 class="hub-card__h">Empty state</h3>
+        <p class="hub-card__p">First-load · suggested actions.</p>
+        <div class="hub-card__file">empty.html</div>
+      </a>
+      <a class="hub-card" href="invite.html" data-reveal data-delay="2">
+        <div class="hub-card__thumb"><div class="t-pill-ring"><div>✉</div></div></div>
+        <h3 class="hub-card__h">Team invite</h3>
+        <p class="hub-card__p">Teammate accepts workspace invite.</p>
+        <div class="hub-card__file">invite.html</div>
+      </a>
+      <a class="hub-card" href="signed-out.html" data-reveal data-delay="3">
+        <div class="hub-card__thumb"><div class="t-pill-ring" style="background: var(--surface);"><div style="background: var(--text);">→</div></div></div>
+        <h3 class="hub-card__h">Signed out</h3>
+        <p class="hub-card__p">Logout confirmation.</p>
+        <div class="hub-card__file">signed-out.html</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="hub-section">
+    <h2 class="hub-section__h">Commerce</h2>
+    <div class="hub-grid">
+      <a class="hub-card" href="checkout.html" data-reveal>
+        <div class="hub-card__thumb"><div class="t-split"><div><div></div><div></div><div></div><div></div></div><div><div></div><div></div><div style="background:var(--coral) !important; width: 50%;"></div></div></div></div>
+        <h3 class="hub-card__h">Checkout</h3>
+        <p class="hub-card__p">Stripe · seats · monthly/annual.</p>
+        <div class="hub-card__file">checkout.html</div>
+      </a>
+      <a class="hub-card" href="integrations.html" data-reveal data-delay="1">
+        <div class="hub-card__thumb"><div class="t-pricing" style="grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr 1fr;"><div><div class="big" style="height:6px;"></div></div><div><div class="big" style="height:6px;"></div></div><div><div class="big" style="height:6px;"></div></div><div class="feat"><div class="big" style="height:6px;"></div></div><div><div class="big" style="height:6px;"></div></div><div><div class="big" style="height:6px;"></div></div></div></div>
+        <h3 class="hub-card__h">Integrations</h3>
+        <p class="hub-card__p">Zoom · Slack · Notion · Linear · GitHub.</p>
+        <div class="hub-card__file">integrations.html</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="hub-section">
+    <h2 class="hub-section__h">Company &amp; trust</h2>
+    <div class="hub-grid">
+      <a class="hub-card" href="about.html" data-reveal>
+        <div class="hub-card__thumb"><div class="t-list"><div><span></span><span></span></div><div><span></span><span></span></div><div class="read"><span></span><span></span></div><div class="read"><span></span><span></span></div></div></div>
+        <h3 class="hub-card__h">About / Team</h3>
+        <p class="hub-card__p">Mission · 8 people · values · backers.</p>
+        <div class="hub-card__file">about.html</div>
+      </a>
+      <a class="hub-card" href="contact.html" data-reveal data-delay="1">
+        <div class="hub-card__thumb"><div class="t-form"><div class="lbl"></div><div class="inp"></div><div class="lbl"></div><div class="inp"></div><div class="btn"></div></div></div>
+        <h3 class="hub-card__h">Contact</h3>
+        <p class="hub-card__p">Topic chips · form · office address.</p>
+        <div class="hub-card__file">contact.html</div>
+      </a>
+      <a class="hub-card" href="careers.html" data-reveal data-delay="2">
+        <div class="hub-card__thumb"><div class="t-list"><div><span></span><span></span></div><div><span></span><span></span></div><div><span></span><span></span></div></div></div>
+        <h3 class="hub-card__h">Careers</h3>
+        <p class="hub-card__p">7 open roles · perks · grouped by team.</p>
+        <div class="hub-card__file">careers.html</div>
+      </a>
+      <a class="hub-card" href="press.html" data-reveal data-delay="3">
+        <div class="hub-card__thumb"><div class="t-pricing"><div><div class="big" style="height:8px;"></div></div><div class="feat"><div class="big" style="height:8px;"></div></div><div><div class="big" style="height:8px;"></div></div></div></div>
+        <h3 class="hub-card__h">Press / Brand</h3>
+        <p class="hub-card__p">Logos · colors · facts · coverage.</p>
+        <div class="hub-card__file">press.html</div>
+      </a>
+      <a class="hub-card" href="security.html" data-reveal>
+        <div class="hub-card__thumb"><div class="t-pill-ring"><div style="background:var(--chip-sage-bar);">✓</div></div></div>
+        <h3 class="hub-card__h">Security &amp; Trust</h3>
+        <p class="hub-card__p">SOC 2 · GDPR · what we never do.</p>
+        <div class="hub-card__file">security.html</div>
+      </a>
+      <a class="hub-card" href="status.html" data-reveal data-delay="1">
+        <div class="hub-card__thumb"><div class="t-list"><div style="background: var(--chip-sage-bg);"><span style="background:var(--chip-sage-bar);"></span><span></span></div><div style="background: var(--chip-sage-bg);"><span style="background:var(--chip-sage-bar);"></span><span></span></div><div style="background: var(--chip-sage-bg);"><span style="background:var(--chip-sage-bar);"></span><span></span></div></div></div>
+        <h3 class="hub-card__h">Status page</h3>
+        <p class="hub-card__p">Live uptime · 90-day bars · incidents.</p>
+        <div class="hub-card__file">status.html</div>
+      </a>
+      <a class="hub-card" href="blog.html" data-reveal data-delay="2">
+        <div class="hub-card__thumb"><div class="t-split"><div><div></div><div></div><div></div></div><div><div></div><div></div></div></div></div>
+        <h3 class="hub-card__h">Blog</h3>
+        <p class="hub-card__p">Long-form posts · featured + grid.</p>
+        <div class="hub-card__file">blog.html</div>
+      </a>
+      <a class="hub-card" href="api.html" data-reveal data-delay="3">
+        <div class="hub-card__thumb"><div style="padding: 8px; font-family: 'Geist Mono'; font-size: 8px; color: var(--text-3); line-height: 1.4;"><div style="color:var(--coral);">GET /v1/events</div><div>POST /v1/events</div><div>POST /v1/bookings</div></div></div>
+        <h3 class="hub-card__h">API / Developers</h3>
+        <p class="hub-card__p">REST · OAuth · webhooks · SDKs.</p>
+        <div class="hub-card__file">api.html</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="hub-section">
+    <h2 class="hub-section__h">Error &amp; legal</h2>
+    <div class="hub-grid">
+      <a class="hub-card" href="404.html" data-reveal>
+        <div class="hub-card__thumb"><div class="t-404">404</div></div>
+        <h3 class="hub-card__h">404</h3>
+        <p class="hub-card__p">"This event was never on the calendar."</p>
+        <div class="hub-card__file">404.html</div>
+      </a>
+      <a class="hub-card" href="privacy.html" data-reveal data-delay="1">
+        <div class="hub-card__thumb"><div class="t-legal"><div></div><div></div><div></div><div></div><div></div><div></div></div></div>
+        <h3 class="hub-card__h">Privacy Policy</h3>
+        <p class="hub-card__p">TL;DR + 10 sections · sticky TOC.</p>
+        <div class="hub-card__file">privacy.html</div>
+      </a>
+      <a class="hub-card" href="terms.html" data-reveal data-delay="2">
+        <div class="hub-card__thumb"><div class="t-legal"><div></div><div></div><div></div><div></div><div></div><div></div></div></div>
+        <h3 class="hub-card__h">Terms of Service</h3>
+        <p class="hub-card__p">TL;DR + 11 sections · scroll-spy TOC.</p>
+        <div class="hub-card__file">terms.html</div>
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<script src="reveal.js"></script>
+</body>
+</html>

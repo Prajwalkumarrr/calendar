@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Signed out — ElevAIte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="motion.css" />
+  <style>
+    body { font-family: 'Geist'; min-height: 100vh; }
+    .so-page { min-height: 100vh; display: grid; place-items: center; padding: 40px 24px; position: relative; overflow: hidden; }
+    .so-bloom { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 30%, rgba(217,119,87,0.12), transparent 60%); filter: blur(40px); animation: bloom 9s ease-in-out infinite alternate; }
+    .so-wrap { position: relative; z-index: 1; max-width: 440px; width: 100%; text-align: center; animation: fade-up 700ms var(--ease) both; }
+    .so-brand { display: inline-flex; align-items: center; gap: 9px; font-weight: 600; font-size: 14px; text-decoration: none; color: inherit; margin-bottom: 28px; }
+    .so-icon { width: 70px; height: 70px; border-radius: 50%; background: var(--coral-subtle); color: var(--coral); display: grid; place-items: center; margin: 0 auto 18px; animation: scale-in 600ms var(--ease) 0.2s both; }
+    .so-h { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; margin: 0 0 10px; animation: fade-up 600ms var(--ease) 0.35s both; }
+    .so-h em { font-style: normal; color: var(--coral); }
+    .so-p { font-size: 14.5px; color: var(--text-2); margin: 0 0 30px; line-height: 1.55; animation: fade-up 600ms var(--ease) 0.45s both; }
+    .so-quote { padding: 20px; background: var(--surface); border-radius: 12px; margin-bottom: 28px; animation: fade-up 600ms var(--ease) 0.55s both; }
+    .so-quote p { font-size: 13px; color: var(--text); line-height: 1.5; margin: 0 0 10px; font-style: italic; }
+    .so-quote__attr { font-size: 11.5px; color: var(--text-3); }
+    .so-btns { display: flex; gap: 10px; justify-content: center; animation: fade-up 600ms var(--ease) 0.65s both; }
+    .so-tip { margin-top: 22px; font-size: 11.5px; color: var(--text-3); animation: fade-up 600ms var(--ease) 0.75s both; }
+    .so-tip a { color: var(--text-2); text-decoration: none; }
+    .so-tip a:hover { color: var(--coral); }
+  </style>
+</head>
+<body class="shell">
+
+<main class="so-page">
+  <div class="so-bloom"></div>
+  <div class="so-wrap">
+    <a class="so-brand" href="landing.html"><span class="topbar__brand-mark">E</span> ElevAIte</a>
+    <div class="so-icon">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </div>
+    <h1 class="so-h">You're <em>signed out</em>.</h1>
+    <p class="so-p">Your session ended cleanly. Your data is safe and waiting whenever you come back.</p>
+
+    <div class="so-quote">
+      <p>"Calendars are the only software you have to use every day for the rest of your career. They should feel calm."</p>
+      <div class="so-quote__attr">— Prem, on a Tuesday</div>
+    </div>
+
+    <div class="so-btns">
+      <a class="cta-primary" href="auth.html?mode=signin">Sign back in</a>
+      <a class="cta-ghost" href="landing.html">Back to site</a>
+    </div>
+
+    <div class="so-tip">
+      Need help getting back in? <a href="help.html">Visit the help center</a>
+    </div>
+  </div>
+</main>
+
+<script src="reveal.js"></script>
+<!-- Page index navigator -->
+<a href="all-pages.html" class="page-nav" data-elevaite-page-nav aria-label="View all pages">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+  <span>All pages</span>
+</a>
+<style>
+.page-nav{position:fixed;bottom:20px;right:20px;z-index:9999;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;background:rgba(250,249,245,0.92);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(31,30,27,0.12);border-radius:999px;color:#1F1E1B;font-family:'Geist',ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:500;letter-spacing:-0.005em;text-decoration:none;box-shadow:0 4px 16px rgba(31,30,27,0.06),0 1px 2px rgba(31,30,27,0.04);opacity:0;transform:translateY(8px);animation:elevaite-pn-in 420ms cubic-bezier(0.32,0.72,0,1) 0.5s forwards;transition:transform 180ms cubic-bezier(0.32,0.72,0,1),border-color 180ms cubic-bezier(0.32,0.72,0,1),color 180ms cubic-bezier(0.32,0.72,0,1)}
+@media (hover:hover){.page-nav:hover{transform:translateY(-2px);border-color:#D97757;color:#D97757}}
+@keyframes elevaite-pn-in{to{opacity:1;transform:none}}
+[data-theme="dark"] .page-nav,html[data-theme="dark"] .page-nav,body[data-theme="dark"] .page-nav{background:rgba(35,34,32,0.92);color:#F5F4ED;border-color:rgba(245,244,237,0.14)}
+@media (prefers-reduced-motion:reduce){.page-nav{animation:none;opacity:1;transform:none;transition:none}}
+@media (max-width:520px){.page-nav span{display:none}.page-nav{padding:9px}}
+</style>
+
+</body>
+</html>

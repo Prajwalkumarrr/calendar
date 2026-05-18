@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Terms of Service — ElevAIte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="motion.css" />
+  <style>
+    body { font-family: 'Geist'; }
+    .legal-page { padding: 56px 0 96px; }
+    .legal-head { text-align: center; margin-bottom: 56px; padding: 0 32px; }
+    .legal-head__eyebrow { font-size: 11.5px; font-weight: 600; letter-spacing: 0.08em; color: var(--coral); text-transform: uppercase; margin-bottom: 14px; animation: fade-in 600ms var(--ease) both; }
+    .legal-head h1 { font-size: clamp(38px, 5vw, 56px); font-weight: 600; letter-spacing: -0.025em; line-height: 1.05; margin: 0 0 14px; animation: fade-up 700ms var(--ease) 0.15s both; }
+    .legal-head__meta { font-size: 13px; color: var(--text-3); font-family: 'Geist Mono', monospace; animation: fade-up 600ms var(--ease) 0.3s both; }
+    .legal-shell { display: grid; grid-template-columns: 240px 1fr; gap: 56px; max-width: 1080px; margin: 0 auto; padding: 0 32px; }
+    @media (max-width: 920px) { .legal-shell { grid-template-columns: 1fr; } .legal-toc { display: none; } }
+    .legal-toc { position: sticky; top: 80px; align-self: start; max-height: calc(100vh - 120px); overflow-y: auto; }
+    .legal-toc__lbl { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 12px; }
+    .legal-toc__link { display: block; padding: 6px 10px; font-size: 12.5px; color: var(--text-2); text-decoration: none; border-radius: 6px; border-left: 2px solid transparent; transition: background 120ms var(--ease), color 120ms var(--ease); }
+    .legal-toc__link:hover, .legal-toc__link.active { color: var(--text); background: var(--surface); border-left-color: var(--coral); }
+
+    .legal-body { font-size: 15px; line-height: 1.7; color: var(--text-2); }
+    .legal-body h2 { font-size: 22px; font-weight: 600; letter-spacing: -0.012em; color: var(--text); margin: 44px 0 12px; }
+    .legal-body h2:first-child { margin-top: 0; }
+    .legal-body p { margin: 0 0 14px; }
+    .legal-body ul, .legal-body ol { padding-left: 22px; margin: 0 0 18px; }
+    .legal-body li { padding: 3px 0; }
+    .legal-body strong { color: var(--text); font-weight: 600; }
+    .legal-body a { color: var(--coral); text-decoration: none; }
+    .legal-body a:hover { text-decoration: underline; }
+
+    .tldr { padding: 22px; background: var(--surface); border: 1px solid var(--hairline-strong); border-radius: 12px; margin-bottom: 36px; }
+    .tldr h3 { font-size: 13px; font-weight: 600; color: var(--coral); margin: 0 0 8px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .tldr p { font-size: 14.5px; color: var(--text); margin: 0; line-height: 1.6; }
+  </style>
+</head>
+<body class="shell">
+
+<header class="mini-nav">
+  <div class="container mini-nav__inner">
+    <a href="landing.html" class="mini-nav__brand"><span class="topbar__brand-mark">E</span> ElevAIte</a>
+    <nav class="mini-nav__links"><a href="landing.html#features">Product</a><a href="pricing.html">Pricing</a><a href="help.html">Help</a></nav>
+    <span class="mini-nav__spacer"></span>
+    <a href="auth.html?mode=signin" style="font-size:13.5px;color:var(--text-2);text-decoration:none;">Sign in</a>
+    <a class="cta-primary" href="auth.html?mode=signup" style="padding:7px 14px;font-size:13px;">Get free</a>
+  </div>
+</header>
+
+<main class="legal-page">
+  <div class="legal-head">
+    <div class="legal-head__eyebrow">Legal</div>
+    <h1>Terms of Service</h1>
+    <div class="legal-head__meta">Effective May 17, 2026 · v3.0</div>
+  </div>
+
+  <div class="legal-shell">
+    <nav class="legal-toc" data-reveal>
+      <div class="legal-toc__lbl">On this page</div>
+      <a class="legal-toc__link active" href="#tldr">TL;DR</a>
+      <a class="legal-toc__link" href="#accept">Acceptance</a>
+      <a class="legal-toc__link" href="#account">Your account</a>
+      <a class="legal-toc__link" href="#plans">Plans + billing</a>
+      <a class="legal-toc__link" href="#student">Student plan</a>
+      <a class="legal-toc__link" href="#use">Acceptable use</a>
+      <a class="legal-toc__link" href="#content">Your content</a>
+      <a class="legal-toc__link" href="#term">Termination</a>
+      <a class="legal-toc__link" href="#warranty">Warranties</a>
+      <a class="legal-toc__link" href="#liability">Liability</a>
+      <a class="legal-toc__link" href="#law">Governing law</a>
+      <a class="legal-toc__link" href="#changes">Changes</a>
+    </nav>
+
+    <article class="legal-body" data-reveal data-delay="1">
+      <div class="tldr">
+        <h3>TL;DR</h3>
+        <p>Use ElevAIte for lawful purposes. Be cool with your team. Pay your bills if you're on Team or Enterprise. We can suspend accounts that abuse the service. You own your data — you can leave with it at any time. If something breaks, our liability is capped at what you paid us in the last 12 months.</p>
+      </div>
+
+      <h2 id="accept">1. Acceptance of these terms</h2>
+      <p>By creating an account or using ElevAIte ("the Service"), you agree to these Terms of Service and our <a href="privacy.html">Privacy Policy</a>. If you don't agree, please don't use the Service.</p>
+
+      <h2 id="account">2. Your account</h2>
+      <p>You must be at least 13 years old. You're responsible for keeping your password (or OAuth credentials) secure. Notify us at <a href="mailto:security@elevaite.so">security@elevaite.so</a> immediately if you suspect unauthorized access.</p>
+
+      <h2 id="plans">3. Plans, billing, and refunds</h2>
+      <ul>
+        <li><strong>Personal</strong> is free forever for personal, non-commercial use.</li>
+        <li><strong>Student</strong> requires a valid .edu (or recognized educational equivalent) address. We may revoke Student access if your address stops verifying — you'll get a 6-month grace period before automatically moving to Personal.</li>
+        <li><strong>Team</strong> bills monthly or annually per seat. You can change plans, add seats, or cancel anytime — Team is pro-rated daily.</li>
+        <li><strong>Refunds:</strong> Team and Enterprise have a 30-day money-back guarantee. Email <a href="mailto:billing@elevaite.so">billing@elevaite.so</a> — no forms, no friction.</li>
+      </ul>
+
+      <h2 id="student">4. Student plan eligibility</h2>
+      <p>The Student plan is intended for currently-enrolled students. We verify by sending email confirmation to your .edu address. Misrepresenting student status (e.g., using a friend's .edu) may result in account suspension. We never disclose your student status to third parties.</p>
+
+      <h2 id="use">5. Acceptable use</h2>
+      <p>You agree not to:</p>
+      <ul>
+        <li>Use the Service to harass, threaten, or harm others</li>
+        <li>Scrape, mine, or reverse-engineer the Service</li>
+        <li>Resell or sublicense the Service without our written consent</li>
+        <li>Send spam, phishing, or unsolicited bulk messages via scheduling links</li>
+        <li>Upload malware or attempt to gain unauthorized access</li>
+      </ul>
+      <p>Violations may result in suspension or termination, with or without prior notice. We try to give notice when we reasonably can.</p>
+
+      <h2 id="content">6. Your content</h2>
+      <p>You retain full ownership of your events, descriptions, scheduling-link names, and other content you create. You grant us a limited license to display, sync, and process this content solely to provide the Service. We will never use your content for training AI or machine-learning models.</p>
+
+      <h2 id="term">7. Termination</h2>
+      <p>You can delete your account at any time from <strong>Settings → Account → Delete account</strong>. Your data is purged from active systems within 24 hours and from backups within 30 days. We can terminate your account for material breach of these Terms; we'll give you 14 days to fix the issue first when reasonable.</p>
+
+      <h2 id="warranty">8. Warranties + disclaimers</h2>
+      <p>The Service is provided "as is" and "as available." We don't warrant that the Service will be uninterrupted, error-free, or that it will meet your specific requirements. We aim for 99.9% uptime; the public status page is at <a href="#">status.elevaite.so</a>.</p>
+
+      <h2 id="liability">9. Limitation of liability</h2>
+      <p>To the maximum extent permitted by law, our total liability for any claim arising out of or relating to these Terms or the Service is limited to the amount you paid us in the 12 months before the claim. We aren't liable for indirect, incidental, or consequential damages.</p>
+
+      <h2 id="law">10. Governing law + disputes</h2>
+      <p>These Terms are governed by California law. Disputes are resolved in the state and federal courts of Santa Clara County, California. If you are an EU resident, mandatory consumer protections in your country of residence still apply.</p>
+
+      <h2 id="changes">11. Changes to these terms</h2>
+      <p>We can update these Terms. Material changes will be announced at least 30 days in advance via email and an in-app banner. Your continued use after the effective date constitutes acceptance.</p>
+
+      <p style="margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--hairline-strong); color: var(--text-3); font-size: 13px;">
+        Questions? Email <a href="mailto:legal@elevaite.so">legal@elevaite.so</a>. We try to respond within 2 business days.
+      </p>
+    </article>
+  </div>
+</main>
+
+<footer class="container mini-foot">
+  <span>© 2026 ElevAIte, Inc.</span>
+  <span class="spacer"></span>
+  <a href="privacy.html">Privacy</a>
+  <a href="terms.html" style="color:var(--text);">Terms</a>
+  <a href="help.html">Help</a>
+</footer>
+
+<script src="reveal.js"></script>
+<script>
+  const links = document.querySelectorAll('.legal-toc__link');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + id));
+      }
+    });
+  }, { rootMargin: '-30% 0px -55% 0px' });
+  document.querySelectorAll('.legal-body [id]').forEach(s => observer.observe(s));
+</script>
+
+<!-- Page index navigator -->
+<a href="all-pages.html" class="page-nav" data-elevaite-page-nav aria-label="View all pages">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+  <span>All pages</span>
+</a>
+<style>
+.page-nav{position:fixed;bottom:20px;right:20px;z-index:9999;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;background:rgba(250,249,245,0.92);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(31,30,27,0.12);border-radius:999px;color:#1F1E1B;font-family:'Geist',ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:500;letter-spacing:-0.005em;text-decoration:none;box-shadow:0 4px 16px rgba(31,30,27,0.06),0 1px 2px rgba(31,30,27,0.04);opacity:0;transform:translateY(8px);animation:elevaite-pn-in 420ms cubic-bezier(0.32,0.72,0,1) 0.5s forwards;transition:transform 180ms cubic-bezier(0.32,0.72,0,1),border-color 180ms cubic-bezier(0.32,0.72,0,1),color 180ms cubic-bezier(0.32,0.72,0,1)}
+@media (hover:hover){.page-nav:hover{transform:translateY(-2px);border-color:#D97757;color:#D97757}}
+@keyframes elevaite-pn-in{to{opacity:1;transform:none}}
+[data-theme="dark"] .page-nav,html[data-theme="dark"] .page-nav,body[data-theme="dark"] .page-nav{background:rgba(35,34,32,0.92);color:#F5F4ED;border-color:rgba(245,244,237,0.14)}
+@media (prefers-reduced-motion:reduce){.page-nav{animation:none;opacity:1;transform:none;transition:none}}
+@media (max-width:520px){.page-nav span{display:none}.page-nav{padding:9px}}
+</style>
+
+</body>
+</html>
