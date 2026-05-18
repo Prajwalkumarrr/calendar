@@ -10,10 +10,11 @@ import {
   IconCalendar, IconChevronLeft, IconChevronRight, IconClock, IconLink,
   IconMapPin, IconMoon, IconPlus, IconSearch, IconSettings, IconSidebar, IconUsers,
 } from '../calendar/Icons';
-import { DEFAULT_CALENDARS, DEFAULT_TZONES } from '../calendar/defaults';
+import { DEFAULT_CALENDARS } from '../calendar/defaults';
 import type { EventDTO } from '@/lib/events';
 import { useUnreadCount } from '@/lib/useUnreadCount';
 import { useAppearance } from '@/lib/useAppearance';
+import { useTimezones, useTzClocks, tzShortCode } from '@/lib/useTimezones';
 
 type Booking = {
   id: string;
@@ -236,17 +237,9 @@ export function HomePage({ userName, userEmail }: { userName: string; userEmail:
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
   });
 
-  // Time-zone clocks (live)
-  const tzClocks = useMemo(() => {
-    return DEFAULT_TZONES.map((z) => {
-      if (z.tz === 'local') {
-        return now.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
-      }
-      return now.toLocaleTimeString(undefined, {
-        hour: 'numeric', minute: '2-digit', timeZone: z.tz,
-      });
-    });
-  }, [now]);
+  // Time-zone strip — saved per-user, live clocks
+  const [tzList] = useTimezones();
+  const tzClocks = useTzClocks(tzList);
 
   const userInitial = (userName ?? userEmail ?? 'U').trim()[0]?.toUpperCase() ?? 'U';
   const firstName = userName?.split(' ')[0] ?? 'there';
@@ -341,11 +334,16 @@ export function HomePage({ userName, userEmail }: { userName: string; userEmail:
           </div>
 
           <div className="ho-sec">
-            <div className="ho-side__h">Time zones</div>
-            {DEFAULT_TZONES.map((z, i) => (
-              <div className="tz-row" key={z.name}>
-                <span className="tz-row__offset">{z.offset || 'LT'}</span>
-                <span className="tz-row__name">{z.name}</span>
+            <div className="ho-side__h" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span>Time zones</span>
+              <Link href="/timezones" title="Manage time zones" style={{ color: 'var(--text-3)', textDecoration: 'none', fontWeight: 400 }}>
+                Edit
+              </Link>
+            </div>
+            {tzList.map((z, i) => (
+              <div className="tz-row" key={`${z.tz}-${i}`}>
+                <span className="tz-row__offset">{tzShortCode(z.tz)}</span>
+                <span className="tz-row__name">{z.label}</span>
                 <span className="tz-row__time">{tzClocks[i]}</span>
               </div>
             ))}

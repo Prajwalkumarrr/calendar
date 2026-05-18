@@ -10,13 +10,14 @@ import {
   IconClock, IconEye, IconEyeOff, IconMoon, IconSidebar, IconMore, IconCalendar,
 } from './Icons';
 import {
-  DEFAULT_CALENDARS, DEFAULT_TZONES, DAY_NAMES, HOUR_START, HOUR_END,
+  DEFAULT_CALENDARS, DAY_NAMES, HOUR_START, HOUR_END,
   fmtTime, fmtTime24, type CalendarMeta,
 } from './defaults';
 import { EventPanel, type PanelDraft } from './EventPanel';
 import { CommandPaletteProto, type Cmd } from './CommandPaletteProto';
 import { useUnreadCount } from '@/lib/useUnreadCount';
 import { useAppearance } from '@/lib/useAppearance';
+import { useTimezones, useTzClocks, tzShortCode } from '@/lib/useTimezones';
 import type { ChipColor, EventDTO } from '@/lib/events';
 import { addDays, daysInWeek, endOfWeek, startOfWeek, isSameDay, MONTHS_FULL } from '@/lib/date';
 
@@ -111,7 +112,8 @@ export function CalendarApp() {
     const n = new Date();
     return n.getHours() * 60 + n.getMinutes();
   });
-  const [tzTimes, setTzTimes] = useState<string[]>(() => DEFAULT_TZONES.map(() => ''));
+  const [tzList] = useTimezones();
+  const tzTimes = useTzClocks(tzList);
   const [allDayCollapsed, setAllDayCollapsed] = useState(false);
   const [view, setView] = useState<'day' | 'week' | 'month'>('week');
   const unread = useUnreadCount();
@@ -134,19 +136,10 @@ export function CalendarApp() {
 
   // ── Tick now-line + tz clocks every minute ────────────────────────
   useEffect(() => {
+    // tz clocks are computed live via useTzClocks (above); this interval keeps the now-line in sync.
     const tick = () => {
       const n = new Date();
       setNowMin(n.getHours() * 60 + n.getMinutes());
-      setTzTimes(
-        DEFAULT_TZONES.map((z) => {
-          if (z.tz === 'local') {
-            return n.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-          }
-          return n.toLocaleTimeString(undefined, {
-            hour: '2-digit', minute: '2-digit', timeZone: z.tz, hourCycle: 'h23',
-          });
-        }),
-      );
     };
     tick();
     const id = setInterval(tick, 30_000);
@@ -438,12 +431,14 @@ export function CalendarApp() {
                 <div className="sb-section">
                   <div className="sb-section__head">
                     <span>Time zones</span>
-                    <button title="Add zone"><IconPlus size={12} /></button>
+                    <Link href="/timezones" title="Manage time zones" style={{ display: 'inline-flex', color: 'var(--text-3)' }}>
+                      <IconPlus size={12} />
+                    </Link>
                   </div>
-                  {DEFAULT_TZONES.map((z, i) => (
-                    <div className="tz-row" key={z.name}>
-                      <span className="tz-row__offset">{z.offset || 'LT'}</span>
-                      <span className="tz-row__name">{z.name}</span>
+                  {tzList.map((z, i) => (
+                    <div className="tz-row" key={`${z.tz}-${i}`}>
+                      <span className="tz-row__offset">{tzShortCode(z.tz)}</span>
+                      <span className="tz-row__name">{z.label}</span>
                       <span className="tz-row__time">{tzTimes[i]}</span>
                     </div>
                   ))}

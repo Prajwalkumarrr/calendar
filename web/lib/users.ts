@@ -4,6 +4,15 @@ import clientPromise from './mongodb';
 const DB_NAME = 'elevaite';
 const COLLECTION = 'users';
 
+export type SavedTimezone = {
+  tz: string;     // IANA name, or "local" for browser-local
+  label: string;  // user-chosen display, e.g. "Palo Alto"
+};
+
+export const DEFAULT_TIMEZONES: SavedTimezone[] = [
+  { tz: 'local', label: 'Local' },
+];
+
 export type AppearancePrefs = {
   theme: 'light' | 'dark' | 'system';
   density: 'compact' | 'regular' | 'comfy';
@@ -71,6 +80,7 @@ export type UserRecord = {
   timezone?: string;    // IANA, e.g. "America/Los_Angeles"
   notificationPrefs?: Partial<NotificationPrefs>;
   appearancePrefs?: Partial<AppearancePrefs>;
+  timezones?: SavedTimezone[];
   updatedAt?: Date;
 };
 
@@ -123,6 +133,22 @@ export async function getUserById(id: string): Promise<UserRecord | null> {
 export async function getNotificationPrefs(id: string): Promise<NotificationPrefs> {
   const u = await getUserById(id);
   return { ...DEFAULT_PREFS, ...(u?.notificationPrefs ?? {}) };
+}
+
+export async function getTimezones(id: string): Promise<SavedTimezone[]> {
+  const u = await getUserById(id);
+  const list = u?.timezones;
+  return Array.isArray(list) && list.length > 0 ? list : DEFAULT_TIMEZONES;
+}
+
+export async function updateTimezones(id: string, list: SavedTimezone[]): Promise<SavedTimezone[] | null> {
+  if (!ObjectId.isValid(id)) return null;
+  const c = await col();
+  await c.updateOne(
+    { _id: new ObjectId(id) },
+    { $set: { timezones: list, updatedAt: new Date() } },
+  );
+  return getTimezones(id);
 }
 
 export async function getAppearancePrefs(id: string): Promise<AppearancePrefs> {

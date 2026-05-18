@@ -1,0 +1,169 @@
+/* /timezones — manage your time-zone strip */
+
+.tz-shell {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  padding: 40px 24px 80px;
+}
+.tz-wrap {
+  max-width: 640px;
+  margin: 0 auto;
+}
+.tz-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.5px; color: var(--text-2);
+  padding: 6px 10px; margin-left: -10px;
+  border-radius: 7px;
+  text-decoration: none;
+  margin-bottom: 18px;
+}
+.tz-back:hover { background: var(--surface); color: var(--text); }
+
+.tz-h {
+  font-size: 28px; font-weight: 600;
+  letter-spacing: -0.018em;
+  margin: 0 0 8px;
+}
+.tz-sub {
+  font-size: 14px; color: var(--text-2);
+  margin: 0 0 28px;
+}
+
+.tz-card {
+  background: var(--surface-elevated);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.tz-row {
+  display: grid;
+  grid-template-columns: auto 50px 1fr 90px auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--hairline);
+}
+.tz-row:last-child { border-bottom: 0; }
+.tz-grip {
+  cursor: grab; color: var(--text-3);
+  padding: 4px;
+  font-family: 'Geist Mono', monospace;
+  font-size: 14px;
+  line-height: 1;
+  user-select: none;
+}
+.tz-grip:active { cursor: grabbing; }
+.tz-offset {
+  font-family: 'Geist Mono', monospace;
+  font-size: 11px; color: var(--text-3);
+  background: var(--surface);
+  padding: 3px 7px;
+  border-radius: 5px;
+  text-align: center;
+  font-feature-settings: 'tnum';
+}
+.tz-label-input {
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--text);
+  outline: none;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+.tz-label-input:focus { background: var(--surface-sunken); }
+.tz-time {
+  font-family: 'Geist Mono', monospace;
+  font-size: 13px;
+  color: var(--text);
+  text-align: right;
+  font-feature-settings: 'tnum';
+}
+.tz-move-btn, .tz-del-btn {
+  width: 24px; height: 24px;
+  border: 0; background: none;
+  color: var(--text-3); cursor: pointer;
+  border-radius: 5px;
+  display: grid; place-items: center;
+}
+.tz-move-btn:hover, .tz-del-btn:hover { background: var(--surface); color: var(--text); }
+.tz-del-btn:hover { color: var(--coral-strong, var(--coral)); }
+.tz-move-btn:disabled, .tz-del-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.tz-add {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 4px;
+}
+.tz-add input {
+  flex: 1;
+  padding: 9px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+}
+.tz-add input:focus { border-color: var(--coral); box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.15); }
+.tz-add button {
+  padding: 9px 14px;
+  background: var(--coral);
+  color: var(--text-on-coral);
+  border: 0; border-radius: 8px;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; font-family: inherit;
+}
+.tz-add button:hover { background: var(--coral-hover); }
+.tz-add button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.tz-suggestions {
+  margin-top: 8px;
+  display: flex; flex-direction: column;
+  gap: 2px;
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 8px;
+  background: var(--bg);
+}
+.tz-suggestion {
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 13px;
+  background: none; border: 0; color: var(--text);
+  cursor: pointer; font-family: inherit;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+.tz-suggestion:hover { background: var(--surface); }
+.tz-suggestion__tz { color: var(--text-3); font-family: 'Geist Mono', monospace; font-size: 11.5px; }
+
+.tz-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-3);
+  font-size: 13px;
+}
+
+.tz-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 12px; color: var(--text-3);
+  margin-top: 4px;
+}
+.tz-foot__saving { color: var(--coral); }
+.tz-err {
+  padding: 10px 12px;
+  background: var(--coral-subtle);
+  color: var(--coral-strong, var(--coral));
+  border-radius: 8px;
+  font-size: 12.5px;
+  margin-top: 10px;
+}

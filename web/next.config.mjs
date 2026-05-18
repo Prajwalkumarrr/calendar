@@ -30,7 +30,7 @@ const nextConfig = {
         { source: '/find-time', destination: '/find-time.html' },
         { source: '/search', destination: '/search.html' },
         { source: '/recurring', destination: '/recurring.html' },
-        { source: '/timezones', destination: '/timezones.html' },
+        // /timezones now has a real React management page; the static prototype html stays at /timezones.html for reference.
         { source: '/integrations', destination: '/integrations.html' },
         { source: '/empty', destination: '/empty.html' },
         { source: '/verify-email', destination: '/verify-email.html' },
