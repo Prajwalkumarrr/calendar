@@ -1,16 +1,18 @@
 'use client';
 
-// ⌘K command palette — faithful port of prototype/command-palette.jsx
+// ⌘K command palette — extends the prototype's design with live API search
+// against events / scheduling links / bookings.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   IconCalendar, IconClock, IconCommand, IconLink, IconMoon, IconPlus, IconSearch, IconSettings,
 } from './Icons';
 
-type CmdIconKind = 'plus' | 'cal' | 'moon' | 'link' | 'set' | 'event';
+type CmdIconKind = 'plus' | 'cal' | 'moon' | 'link' | 'set' | 'event' | 'search' | 'person';
 
 export type Cmd = {
-  section: 'Recent' | 'Actions' | 'Events' | 'Calendars';
+  section: 'Recent' | 'Actions' | 'Events' | 'Calendars' | 'Bookings' | 'Search';
   id: string;
   label: string;
   hint?: string;
@@ -21,14 +23,22 @@ export type Cmd = {
 
 function CmdIconView({ kind }: { kind: CmdIconKind }) {
   switch (kind) {
-    case 'plus': return <span className="cmdk__item-icon"><IconPlus size={15} /></span>;
-    case 'cal': return <span className="cmdk__item-icon"><IconCalendar size={15} /></span>;
-    case 'moon': return <span className="cmdk__item-icon"><IconMoon size={15} /></span>;
-    case 'link': return <span className="cmdk__item-icon"><IconLink size={15} /></span>;
-    case 'set': return <span className="cmdk__item-icon"><IconSettings size={15} /></span>;
-    case 'event': return <span className="cmdk__item-icon"><IconClock size={15} /></span>;
+    case 'plus':   return <span className="cmdk__item-icon"><IconPlus size={15} /></span>;
+    case 'cal':    return <span className="cmdk__item-icon"><IconCalendar size={15} /></span>;
+    case 'moon':   return <span className="cmdk__item-icon"><IconMoon size={15} /></span>;
+    case 'link':   return <span className="cmdk__item-icon"><IconLink size={15} /></span>;
+    case 'set':    return <span className="cmdk__item-icon"><IconSettings size={15} /></span>;
+    case 'event':  return <span className="cmdk__item-icon"><IconClock size={15} /></span>;
+    case 'search': return <span className="cmdk__item-icon"><IconSearch size={15} /></span>;
+    case 'person': return <span className="cmdk__item-icon">👤</span>;
   }
 }
+
+type SearchResults = {
+  events: { id: string; title: string; start: string }[];
+  links: { id: string; title: string; slug: string; durationMin: number }[];
+  bookings: { id: string; inviteeName: string; inviteeEmail: string; start: string; linkTitle?: string }[];
+};
 
 type Props = {
   open: boolean;
@@ -37,23 +47,101 @@ type Props = {
 };
 
 export function CommandPaletteProto({ open, onClose, commands }: Props) {
+  const router = useRouter();
   const [q, setQ] = useState('');
   const [idx, setIdx] = useState(0);
+  const [remote, setRemote] = useState<SearchResults>({ events: [], links: [], bookings: [] });
+  const [searching, setSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) {
       setQ('');
       setIdx(0);
+      setRemote({ events: [], links: [], bookings: [] });
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [open]);
 
-  const filtered = useMemo(() => {
-    return q.trim()
-      ? commands.filter((c) => c.label.toLowerCase().includes(q.toLowerCase()))
+  // Live API search — debounced
+  useEffect(() => {
+    if (!open) return;
+    const term = q.trim();
+    if (term.length < 2) {
+      setRemote({ events: [], links: [], bookings: [] });
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    let cancelled = false;
+    const id = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(term)}&limit=5`);
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (!cancelled) setRemote(data);
+      } finally {
+        if (!cancelled) setSearching(false);
+      }
+    }, 180);
+    return () => { cancelled = true; clearTimeout(id); };
+  }, [q, open]);
+
+  // Merge static commands with live API results.
+  const filtered: Cmd[] = useMemo(() => {
+    const term = q.trim();
+    const staticMatched = term
+      ? commands.filter((c) => c.label.toLowerCase().includes(term.toLowerCase()))
       : commands;
-  }, [q, commands]);
+
+    if (!term) return staticMatched;
+
+    const dynamic: Cmd[] = [];
+
+    for (const e of remote.events) {
+      const d = new Date(e.start);
+      dynamic.push({
+        section: 'Events',
+        id: `ev-${e.id}`,
+        label: e.title,
+        hint: d.toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' }),
+        icon: 'event',
+        run: () => router.push('/calendar'),
+      });
+    }
+    for (const l of remote.links) {
+      dynamic.push({
+        section: 'Calendars',
+        id: `ln-${l.id}`,
+        label: l.title,
+        hint: `/book/${l.slug}`,
+        icon: 'link',
+        run: () => router.push(`/book/${l.slug}`),
+      });
+    }
+    for (const b of remote.bookings) {
+      dynamic.push({
+        section: 'Bookings',
+        id: `bk-${b.id}`,
+        label: b.inviteeName,
+        hint: b.linkTitle ? `${b.inviteeEmail} · ${b.linkTitle}` : b.inviteeEmail,
+        icon: 'person',
+        run: () => router.push(`/booked/${b.id}`),
+      });
+    }
+
+    // Always offer "Search everything for…" as the last item
+    const goSearch: Cmd = {
+      section: 'Search',
+      id: 'go-search',
+      label: `Search everything for "${term}"`,
+      icon: 'search',
+      kbd: ['↵'],
+      run: () => router.push(`/search?q=${encodeURIComponent(term)}`),
+    };
+
+    return [...staticMatched, ...dynamic, goSearch];
+  }, [q, commands, remote, router]);
 
   useEffect(() => {
     if (idx >= filtered.length) setIdx(Math.max(0, filtered.length - 1));
@@ -78,32 +166,39 @@ export function CommandPaletteProto({ open, onClose, commands }: Props) {
     return () => document.removeEventListener('keydown', onKey);
   }, [open, filtered, idx, onClose]);
 
-  // group by section
+  // group by section, preserving the order each section first appears in
+  const sectionOrder: string[] = [];
   const groups: Record<string, Cmd[]> = {};
   for (const c of filtered) {
-    (groups[c.section] = groups[c.section] || []).push(c);
+    if (!groups[c.section]) {
+      groups[c.section] = [];
+      sectionOrder.push(c.section);
+    }
+    groups[c.section].push(c);
   }
 
+  if (!open) return null;
+
   return (
-    <div className={`cmdk-backdrop ${open ? 'cmdk-backdrop--open' : ''}`} onClick={onClose}>
+    <div className="cmdk-backdrop cmdk-backdrop--open" onClick={onClose}>
       <div className="cmdk" onClick={(e) => e.stopPropagation()}>
         <div className="cmdk__input-wrap">
           <IconSearch size={18} style={{ color: 'var(--text-3)' }} />
           <input
             ref={inputRef}
             className="cmdk__input"
-            placeholder="Type a command or search…"
+            placeholder="Search or run a command…"
             value={q}
             onChange={(e) => { setQ(e.target.value); setIdx(0); }}
           />
-          <span className="cmdk__hint">esc to close</span>
+          <span className="cmdk__hint">{searching ? 'Searching…' : 'esc to close'}</span>
         </div>
 
         <div className="cmdk__list">
-          {Object.entries(groups).map(([section, items]) => (
+          {sectionOrder.map((section) => (
             <div key={section}>
               <div className="cmdk__section-lbl">{section}</div>
-              {items.map((c) => {
+              {groups[section].map((c) => {
                 const i = filtered.indexOf(c);
                 return (
                   <div
