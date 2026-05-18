@@ -4,8 +4,8 @@ const nextConfig = {
   async rewrites() {
     return {
       beforeFiles: [
-        // Landing at root
-        { source: '/', destination: '/landing.html' },
+        // NOTE: `/` is handled by app/page.tsx (signed-in → /home, else → /landing.html).
+        // Don't rewrite `/` here — it would skip the auth check.
 
         // Clean URLs for marketing & legal pages — no .html visible to users
         { source: '/pricing', destination: '/pricing.html' },
