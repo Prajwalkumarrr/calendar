@@ -532,7 +532,7 @@ export function CalendarApp() {
                     .map((e) => (
                       <div
                         key={e.id}
-                        className="all-day-chip event--tinted"
+                        className={`all-day-chip event--${appearance.chipStyle}`}
                         style={
                           {
                             ['--chip-bg' as never]: `var(--chip-${e.color}-bg)`,
@@ -590,7 +590,7 @@ export function CalendarApp() {
                       return (
                         <div
                           key={e.id}
-                          className={`event event--tinted ${h < 24 ? 'event--short' : ''}`}
+                          className={`event event--${appearance.chipStyle} ${h < 24 ? 'event--short' : ''}`}
                           style={{
                             top,
                             height: h - 2,
@@ -602,7 +602,13 @@ export function CalendarApp() {
                           onClick={(ev) => { ev.stopPropagation(); openEdit(e.raw); }}
                         >
                           <div className="event__title">{e.title}</div>
-                          {h > 38 && <div className="event__meta">{fmtTime(e.start)} – {fmtTime(e.end)}</div>}
+                          {h > 38 && (
+                            <div className="event__meta">
+                              {appearance.timeFormat === '24'
+                                ? `${fmtTime24(e.start)} – ${fmtTime24(e.end)}`
+                                : `${fmtTime(e.start)} – ${fmtTime(e.end)}`}
+                            </div>
+                          )}
                           {h > 70 && e.loc && <div className="event__loc">{e.loc}</div>}
                         </div>
                       );
@@ -617,7 +623,9 @@ export function CalendarApp() {
                           <div>
                             <div style={{ fontWeight: 600 }}>New event</div>
                             <div className="mono" style={{ fontSize: 10.5, opacity: 0.8, marginTop: 1 }}>
-                              {fmtTime(sH)} – {fmtTime(eH)}
+                              {appearance.timeFormat === '24'
+                                ? `${fmtTime24(sH)} – ${fmtTime24(eH)}`
+                                : `${fmtTime(sH)} – ${fmtTime(eH)}`}
                             </div>
                           </div>
                         </div>
