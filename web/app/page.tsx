@@ -1,10 +1,12 @@
-// This route is rewritten to /landing.html via next.config.mjs.
-// This file exists only as a fallback if the rewrite is disabled.
-export default function Home() {
-  return (
-    <main style={{ padding: 48, fontFamily: 'Geist, sans-serif' }}>
-      <h1>ElevAIte Calendar</h1>
-      <p>If you can see this, the landing rewrite is not active. Visit /landing.html directly.</p>
-    </main>
-  );
+import { redirect } from 'next/navigation';
+import { getCurrentUser } from '@/lib/session';
+
+/**
+ * Smart root: signed-in users go to the app home, everyone else sees the
+ * marketing landing page (served as static HTML from /public/landing.html).
+ */
+export default async function Root() {
+  const user = await getCurrentUser();
+  if (user) redirect('/home');
+  redirect('/landing.html');
 }

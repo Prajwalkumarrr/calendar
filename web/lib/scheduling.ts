@@ -270,6 +270,25 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingD
   return bookingToDTO({ ...doc, _id: res.insertedId }, input.link);
 }
 
+export async function listBookingsForHost(
+  ownerId: string,
+  limit = 50,
+): Promise<BookingDTO[]> {
+  const c = await bookingsCol();
+  const docs = await c
+    .find({ ownerId })
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .toArray();
+  if (docs.length === 0) return [];
+  const linkIds = Array.from(new Set(docs.map((d) => d.linkId.toHexString())));
+  const linksC = await linksCol();
+  const linkDocs = await linksC.find({ _id: { $in: linkIds.map((s) => new ObjectId(s)) } }).toArray();
+  const linkMap = new Map<string, SchedulingLinkDoc>();
+  for (const l of linkDocs) linkMap.set(l._id!.toHexString(), l);
+  return docs.map((d) => bookingToDTO(d, linkMap.get(d.linkId.toHexString())));
+}
+
 export async function getBooking(id: string): Promise<BookingDTO | null> {
   if (!ObjectId.isValid(id)) return null;
   const c = await bookingsCol();
