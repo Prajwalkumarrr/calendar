@@ -1,0 +1,169 @@
+.ft-shell {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  padding: 36px 24px 80px;
+}
+.ft-wrap { max-width: 920px; margin: 0 auto; }
+
+.ft-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.5px; color: var(--text-2);
+  padding: 6px 10px; margin-left: -10px;
+  border-radius: 7px; text-decoration: none;
+  margin-bottom: 18px;
+}
+.ft-back:hover { background: var(--surface); color: var(--text); }
+
+.ft-h {
+  font-size: 28px; font-weight: 600;
+  letter-spacing: -0.018em;
+  margin: 0 0 8px;
+}
+.ft-sub {
+  font-size: 14px; color: var(--text-2);
+  margin: 0 0 28px;
+}
+
+.ft-card {
+  background: var(--surface-elevated);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+.ft-card__h {
+  font-size: 13.5px; font-weight: 600;
+  margin: 0 0 12px;
+}
+
+.ft-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 18px;
+}
+@media (max-width: 720px) { .ft-controls { grid-template-columns: 1fr; } }
+
+.ft-control { display: flex; flex-direction: column; gap: 6px; }
+.ft-control__lbl {
+  font-size: 11.5px; font-weight: 500;
+  color: var(--text-2);
+}
+.ft-input, .ft-select {
+  padding: 9px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+}
+.ft-input:focus, .ft-select:focus {
+  border-color: var(--coral);
+  box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.15);
+}
+
+.ft-members {
+  display: flex; flex-wrap: wrap;
+  gap: 6px;
+  padding: 6px 0;
+}
+.ft-member {
+  display: inline-flex; align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: var(--surface);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--text);
+}
+.ft-member.on {
+  background: var(--coral-subtle);
+  color: var(--coral-strong, var(--coral));
+  border-color: var(--coral);
+}
+.ft-member__avatar {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #9A7B98, #D97757);
+  color: #fff; font-size: 9.5px; font-weight: 600;
+  display: grid; place-items: center;
+}
+
+.ft-search-btn {
+  padding: 10px 18px;
+  background: var(--coral);
+  color: var(--text-on-coral);
+  border: 0; border-radius: 9px;
+  font-size: 13.5px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  margin-top: 8px;
+}
+.ft-search-btn:hover { background: var(--coral-hover); }
+.ft-search-btn:disabled { opacity: 0.6; cursor: progress; }
+
+.ft-day-h {
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--text-3);
+  margin: 18px 4px 8px;
+}
+
+.ft-slot {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 14px;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 9px;
+  margin-bottom: 4px;
+  cursor: pointer; font-family: inherit;
+  width: 100%;
+  text-align: left;
+  color: var(--text);
+  font-size: 13px;
+  transition: border-color 120ms;
+}
+.ft-slot:hover { border-color: var(--coral); }
+.ft-slot.best {
+  background: var(--coral-subtle);
+  border-color: var(--coral);
+  font-weight: 500;
+}
+.ft-slot__time {
+  font-family: 'Geist Mono', monospace;
+  font-feature-settings: 'tnum';
+}
+.ft-slot__pill {
+  font-size: 10.5px; font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: var(--chip-sage-bg);
+  color: var(--chip-sage-text);
+}
+.ft-slot.has-conflicts .ft-slot__pill {
+  background: var(--chip-ochre-bg);
+  color: var(--chip-ochre-text);
+}
+.ft-slot__arrow { color: var(--text-3); }
+
+.ft-empty {
+  padding: 30px 14px;
+  text-align: center;
+  color: var(--text-3); font-size: 13.5px;
+}
+.ft-err {
+  padding: 10px 14px;
+  background: var(--coral-subtle);
+  color: var(--coral-strong, var(--coral));
+  border-radius: 8px;
+  font-size: 12.5px;
+  margin: 10px 0;
+}

@@ -27,7 +27,7 @@ const nextConfig = {
 
         // App pages that still live as static HTML (will be ported to React later)
         // NOTE: /inbox now has a real React page; the static prototype html stays at /inbox.html for reference.
-        { source: '/find-time', destination: '/find-time.html' },
+        // /find-time now has a real React page; the static prototype html stays at /find-time.html for reference.
         // /search now has a real React page; the static prototype html stays at /search.html for reference.
         { source: '/recurring', destination: '/recurring.html' },
         // /timezones now has a real React management page; the static prototype html stays at /timezones.html for reference.
