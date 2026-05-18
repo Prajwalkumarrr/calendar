@@ -8,7 +8,7 @@ import styles from './sign-in.module.css';
 
 function SignInInner() {
   const params = useSearchParams();
-  const callbackUrl = params.get('callbackUrl') ?? '/dashboard';
+  const callbackUrl = params.get('callbackUrl') ?? '/home';
   const errorParam = params.get('error');
   const [loading, setLoading] = useState(false);
 

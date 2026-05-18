@@ -41,7 +41,17 @@ export function OnboardingFlow({ userEmail }: { userEmail: string }) {
     setFinishing(true);
     localStorage.setItem('elevaite.persona', persona);
     localStorage.setItem('elevaite.onboarded', '1');
-    router.push('/calendar');
+    // Persist to user record so we don't re-prompt on next sign-in
+    try {
+      await fetch('/api/me/onboarding', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ persona }),
+      });
+    } catch {
+      /* network error — we still proceed; the localStorage flag carries us */
+    }
+    router.push('/home');
   }
 
   return (

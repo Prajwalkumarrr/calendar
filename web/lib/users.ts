@@ -81,6 +81,8 @@ export type UserRecord = {
   notificationPrefs?: Partial<NotificationPrefs>;
   appearancePrefs?: Partial<AppearancePrefs>;
   timezones?: SavedTimezone[];
+  persona?: 'student' | 'startup' | 'solo';
+  onboardedAt?: Date;
   updatedAt?: Date;
 };
 
@@ -133,6 +135,20 @@ export async function getUserById(id: string): Promise<UserRecord | null> {
 export async function getNotificationPrefs(id: string): Promise<NotificationPrefs> {
   const u = await getUserById(id);
   return { ...DEFAULT_PREFS, ...(u?.notificationPrefs ?? {}) };
+}
+
+export async function markOnboarded(id: string, persona?: 'student' | 'startup' | 'solo'): Promise<boolean> {
+  if (!ObjectId.isValid(id)) return false;
+  const c = await col();
+  const set: Record<string, unknown> = { onboardedAt: new Date(), updatedAt: new Date() };
+  if (persona && ['student', 'startup', 'solo'].includes(persona)) set.persona = persona;
+  await c.updateOne({ _id: new ObjectId(id) }, { $set: set });
+  return true;
+}
+
+export async function isOnboarded(id: string): Promise<boolean> {
+  const u = await getUserById(id);
+  return !!u?.onboardedAt;
 }
 
 export async function getTimezones(id: string): Promise<SavedTimezone[]> {
