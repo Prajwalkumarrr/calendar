@@ -277,10 +277,10 @@ export function HomePage({ userName, userEmail }: { userName: string; userEmail:
       {/* Topbar (re-using .topbar from proto.css) */}
       <header className="topbar">
         <button className="icon-btn" title="Toggle sidebar"><IconSidebar /></button>
-        <div className="topbar__brand">
+        <Link href="/home" className="topbar__brand" style={{ textDecoration: 'none', color: 'inherit' }}>
           <div className="topbar__brand-mark">E</div>
           ElevAIte
-        </div>
+        </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <button className="icon-btn"><IconChevronLeft /></button>
           <button className="icon-btn"><IconChevronRight /></button>
@@ -319,13 +319,17 @@ export function HomePage({ userName, userEmail }: { userName: string; userEmail:
               <IconCalendar size={14} />
               Calendar
             </Link>
+            <Link className="ho-nav-item" href="/inbox">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></svg>
+              Inbox
+            </Link>
             <Link className="ho-nav-item" href="/scheduling">
               <IconLink size={14} />
               Scheduling links
             </Link>
-            <Link className="ho-nav-item" href="/onboarding">
+            <Link className="ho-nav-item" href="/settings">
               <IconSettings size={14} />
-              Onboarding
+              Settings
             </Link>
           </div>
 

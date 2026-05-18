@@ -24,6 +24,20 @@ const nextConfig = {
         { source: '/api-docs', destination: '/api.html' }, // /api/* is reserved for backend
         { source: '/mobile-preview', destination: '/mobile.html' },
         { source: '/pages', destination: '/all-pages.html' },
+
+        // App pages that still live as static HTML (will be ported to React later)
+        { source: '/inbox', destination: '/inbox.html' },
+        { source: '/find-time', destination: '/find-time.html' },
+        { source: '/search', destination: '/search.html' },
+        { source: '/recurring', destination: '/recurring.html' },
+        { source: '/timezones', destination: '/timezones.html' },
+        { source: '/integrations', destination: '/integrations.html' },
+        { source: '/empty', destination: '/empty.html' },
+        { source: '/verify-email', destination: '/verify-email.html' },
+        { source: '/forgot-password', destination: '/forgot-password.html' },
+        { source: '/oauth-callback', destination: '/oauth-callback.html' },
+        { source: '/invite', destination: '/invite.html' },
+        { source: '/checkout', destination: '/checkout.html' },
       ],
       // `fallback` runs AFTER dynamic routes, so /api/auth/[...nextauth] and other
       // App Router routes win; unmatched /api/* requests get proxied to Express.

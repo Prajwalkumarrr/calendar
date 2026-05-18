@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { signOut, useSession } from 'next-auth/react';
+import Link from 'next/link';
 import './proto.css';
+import { MonthView } from './MonthView';
 import {
   IconChevronLeft, IconChevronRight, IconChevronDown, IconSearch, IconPlus,
   IconClock, IconEye, IconEyeOff, IconMoon, IconSidebar, IconMore, IconCalendar,
@@ -51,13 +53,13 @@ function layoutDay(evs: GridEvent[]): LaidOutEvent[] {
   return out;
 }
 
-function eventsToGrid(events: EventDTO[], weekStart: Date): GridEvent[] {
+function eventsToGrid(events: EventDTO[], gridStart: Date, numDays: number): GridEvent[] {
   return events
     .map((e) => {
       const s = new Date(e.start);
       const en = new Date(e.end);
-      const dayIdx = Math.floor((s.getTime() - weekStart.getTime()) / 86_400_000);
-      if (dayIdx < 0 || dayIdx > 6) return null;
+      const dayIdx = Math.floor((s.getTime() - gridStart.getTime()) / 86_400_000);
+      if (dayIdx < 0 || dayIdx >= numDays) return null;
       const startH = s.getHours() + s.getMinutes() / 60;
       const endH = en.getHours() + en.getMinutes() / 60;
       // Treat events spanning >= 23 hours as all-day
@@ -106,13 +108,17 @@ export function CalendarApp() {
   });
   const [tzTimes, setTzTimes] = useState<string[]>(() => DEFAULT_TZONES.map(() => ''));
   const [allDayCollapsed, setAllDayCollapsed] = useState(false);
+  const [view, setView] = useState<'day' | 'week' | 'month'>('week');
   const scrollRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ day: number; startY: number; column: HTMLDivElement } | null>(null);
   const [dragGhost, setDragGhost] = useState<{ day: number; top: number; height: number } | null>(null);
 
   const weekStart = useMemo(() => startOfWeek(anchor), [anchor]);
   const weekEnd = useMemo(() => endOfWeek(anchor), [anchor]);
-  const days = useMemo(() => daysInWeek(weekStart), [weekStart]);
+  const days = useMemo(() => {
+    if (view === 'day') return [new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate())];
+    return daysInWeek(weekStart);
+  }, [view, anchor, weekStart]);
   const now = new Date();
   const todayIdx = days.findIndex((d) => isSameDay(d, now));
 
@@ -278,7 +284,8 @@ export function CalendarApp() {
     e.preventDefault();
   }
 
-  const gridEvents = useMemo(() => eventsToGrid(events, weekStart), [events, weekStart]);
+  const gridStart = useMemo(() => (view === 'day' ? days[0] : weekStart), [view, days, weekStart]);
+  const gridEvents = useMemo(() => eventsToGrid(events, gridStart, days.length), [events, gridStart, days.length]);
   const visibleCalIds = new Set(calendars.filter((c) => c.visible).map((c) => c.id));
   const visible = gridEvents.filter((e) => visibleCalIds.has(e.calendar));
   const allDayEvs = visible.filter((e) => e.allDay);
@@ -314,10 +321,10 @@ export function CalendarApp() {
           <IconSidebar />
         </button>
 
-        <div className="topbar__brand">
+        <Link href="/home" className="topbar__brand" style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
           <div className="topbar__brand-mark">E</div>
           ElevAIte
-        </div>
+        </Link>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <button className="icon-btn" onClick={() => setAnchor((a) => addDays(a, -7))} title="Previous week">
@@ -348,9 +355,9 @@ export function CalendarApp() {
         </button>
 
         <div className="view-picker">
-          <button aria-pressed="false">D</button>
-          <button aria-pressed="true">W</button>
-          <button aria-pressed="false">M</button>
+          <button aria-pressed={view === 'day'} onClick={() => setView('day')}>D</button>
+          <button aria-pressed={view === 'week'} onClick={() => setView('week')}>W</button>
+          <button aria-pressed={view === 'month'} onClick={() => setView('month')}>M</button>
         </div>
 
         <button className="icon-btn" onClick={toggleTheme} title="Toggle theme">
@@ -372,6 +379,56 @@ export function CalendarApp() {
           <aside className={`sidebar ${sidebarMode === 'collapsed' ? 'sidebar--collapsed' : ''}`}>
             {sidebarMode === 'expanded' ? (
               <>
+                <div className="sb-section" style={{ borderBottom: '1px solid var(--hairline)' }}>
+                  <Link
+                    href="/home"
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '7px 10px', marginBottom: 2,
+                      fontSize: 13, color: 'var(--text-2)',
+                      borderRadius: 7, textDecoration: 'none',
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 12l9-9 9 9M5 10v10h14V10" /></svg>
+                    Home
+                  </Link>
+                  <Link
+                    href="/inbox"
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '7px 10px', marginBottom: 2,
+                      fontSize: 13, color: 'var(--text-2)',
+                      borderRadius: 7, textDecoration: 'none',
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></svg>
+                    Inbox
+                  </Link>
+                  <Link
+                    href="/scheduling"
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '7px 10px', marginBottom: 2,
+                      fontSize: 13, color: 'var(--text-2)',
+                      borderRadius: 7, textDecoration: 'none',
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1" /><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1" /></svg>
+                    Scheduling links
+                  </Link>
+                  <Link
+                    href="/settings"
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '7px 10px',
+                      fontSize: 13, color: 'var(--text-2)',
+                      borderRadius: 7, textDecoration: 'none',
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="3" /></svg>
+                    Settings
+                  </Link>
+                </div>
                 <div className="sb-section">
                   <div className="sb-section__head">
                     <span>Time zones</span>
@@ -423,10 +480,20 @@ export function CalendarApp() {
           </aside>
         )}
 
-        {/* ── Calendar Grid ────────────────────────────────────────── */}
+        {/* ── Calendar area: Month view OR day/week grid ─────────────── */}
+        {view === 'month' ? (
+          <div style={{ flex: 1, overflow: 'hidden' }}>
+            <MonthView
+              anchor={anchor}
+              events={events}
+              onPickDate={(d) => { setAnchor(d); setView('day'); }}
+              onPickEvent={openEdit}
+            />
+          </div>
+        ) : (
         <div className="cal-wrap">
           {/* Day headers */}
-          <div className="cal-day-headers">
+          <div className="cal-day-headers" style={{ gridTemplateColumns: `var(--gutter-w) repeat(${days.length}, 1fr)` }}>
             <div className="cal-day-headers__gutter" />
             {days.map((d, i) => (
               <div
@@ -440,7 +507,7 @@ export function CalendarApp() {
           </div>
 
           {/* All-day row */}
-          <div className="all-day-row" style={{ minHeight: allDayCollapsed ? 24 : undefined }}>
+          <div className="all-day-row" style={{ minHeight: allDayCollapsed ? 24 : undefined, gridTemplateColumns: `var(--gutter-w) repeat(${days.length}, 1fr)` }}>
             <div
               className="all-day-row__label"
               onClick={() => setAllDayCollapsed((v) => !v)}
@@ -478,7 +545,7 @@ export function CalendarApp() {
 
           {/* Scrollable grid */}
           <div className="cal-scroll" ref={scrollRef}>
-            <div className="cal-grid">
+            <div className="cal-grid" style={{ gridTemplateColumns: `var(--gutter-w) repeat(${days.length}, 1fr)` }}>
               {/* Gutter */}
               <div className="cal-gutter">
                 {Array.from({ length: HOUR_END - HOUR_START + 1 }, (_, k) => HOUR_START + k).map((h) => (
@@ -567,12 +634,13 @@ export function CalendarApp() {
                 >
                   <div className="now-line__label">{fmtTime24(nowMin / 60)}</div>
                   <div className="now-line__bar" />
-                  <div className="now-line__dot" style={{ left: `${(100 / 7) * todayIdx}%` }} />
+                  <div className="now-line__dot" style={{ left: `${(100 / days.length) * todayIdx}%` }} />
                 </div>
               )}
             </div>
           </div>
         </div>
+        )}
       </div>
 
       <EventPanel

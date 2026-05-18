@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Search — ElevAIte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="motion.css" />
+  <style>
+    body { overflow: hidden; }
+    .se-shell { min-height: 100vh; position: relative; display: grid; place-items: start center; padding-top: 8vh; }
+    .se-bg { position: absolute; inset: 0; background: var(--bg); opacity: 0.4; }
+    .se-bg__grid { position: absolute; inset: 0; background-image: linear-gradient(to right, var(--hairline) 1px, transparent 1px), linear-gradient(to bottom, var(--hairline) 1px, transparent 1px); background-size: 14% 56px; }
+    .se-overlay { position: absolute; inset: 0; background: rgba(31, 30, 27, 0.36); backdrop-filter: blur(8px) saturate(120%); animation: fade-in 250ms var(--ease) both; }
+
+    .se-modal {
+      position: relative; z-index: 1;
+      width: min(720px, calc(100vw - 32px));
+      max-height: 80vh;
+      background: var(--bg);
+      border: 1px solid var(--hairline-strong);
+      border-radius: 14px;
+      box-shadow: var(--shadow-lg);
+      animation: scale-in 350ms var(--ease) both, fade-up 350ms var(--ease) both;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+
+    .se-input-wrap { display: flex; align-items: center; gap: 12px; padding: 18px 22px; border-bottom: 1px solid var(--hairline); }
+    .se-input-wrap svg { color: var(--text-3); }
+    .se-input { flex: 1; border: 0; outline: none; background: transparent; font-size: 17px; font-weight: 400; letter-spacing: -0.005em; color: var(--text); }
+    .se-input::placeholder { color: var(--text-3); }
+    .se-shortcut-hint { font-size: 11px; color: var(--text-3); }
+
+    .se-filters { display: flex; gap: 6px; padding: 10px 14px; border-bottom: 1px solid var(--hairline); flex-wrap: wrap; background: var(--surface-sunken); }
+    .se-filter { padding: 5px 10px; border-radius: 7px; font-size: 12px; color: var(--text-2); cursor: pointer; border: 1px solid transparent; background: transparent; transition: all 120ms var(--ease); }
+    .se-filter.on { background: var(--bg); color: var(--text); border-color: var(--hairline-strong); font-weight: 500; }
+    .se-filter:hover { color: var(--text); }
+    .se-filter .count { margin-left: 5px; color: var(--text-3); font-family: 'Geist Mono'; font-size: 10.5px; }
+
+    .se-results { flex: 1; overflow-y: auto; padding: 6px 6px 8px; }
+    .se-section { padding: 8px 12px 4px; font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+
+    .se-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; cursor: pointer; }
+    .se-item.sel { background: var(--coral-subtle); }
+    .se-item:hover { background: var(--coral-subtle); }
+    .se-item__icon { width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center; flex-shrink: 0; }
+    .se-item__title { font-size: 13.5px; color: var(--text); flex: 1; }
+    .se-item__title mark { background: var(--coral-subtle); color: var(--coral-strong); padding: 0 2px; border-radius: 2px; font-weight: 600; }
+    .se-item__meta { font-size: 11.5px; color: var(--text-3); font-family: 'Geist Mono'; margin-left: 8px; white-space: nowrap; }
+    .se-item__kbd { display: inline-flex; gap: 3px; }
+
+    .se-foot { display: flex; align-items: center; gap: 14px; padding: 9px 18px; border-top: 1px solid var(--hairline); font-size: 11px; color: var(--text-3); background: var(--surface-sunken); }
+    .se-foot__item { display: inline-flex; align-items: center; gap: 5px; }
+  </style>
+</head>
+<body class="shell">
+
+<div class="se-shell">
+  <div class="se-bg"><div class="se-bg__grid"></div></div>
+  <div class="se-overlay"></div>
+
+  <div class="se-modal">
+    <div class="se-input-wrap">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input class="se-input" value="roadmap" placeholder="Search events, people, scheduling links…" />
+      <span class="se-shortcut-hint"><span class="kbd">⌘F</span> · <span class="kbd">Esc</span> close</span>
+    </div>
+
+    <div class="se-filters">
+      <button class="se-filter on">All <span class="count">14</span></button>
+      <button class="se-filter">Events <span class="count">6</span></button>
+      <button class="se-filter">People <span class="count">3</span></button>
+      <button class="se-filter">Scheduling links <span class="count">1</span></button>
+      <button class="se-filter">Calendars <span class="count">2</span></button>
+      <button class="se-filter">Notes <span class="count">2</span></button>
+      <span style="flex:1"></span>
+      <button class="se-filter">Past 7 days</button>
+    </div>
+
+    <div class="se-results">
+      <div class="se-section">Top result</div>
+      <div class="se-item sel">
+        <div class="se-item__icon" style="background:var(--chip-coral-bg);color:var(--chip-coral-bar);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
+        <span class="se-item__title"><mark>Roadmap</mark> review · Q3</span>
+        <span class="se-item__meta">Wed, May 20 · 11:30 AM</span>
+        <span class="se-item__kbd"><span class="kbd">↵</span></span>
+      </div>
+
+      <div class="se-section">Events · 5 more</div>
+      <div class="se-item">
+        <div class="se-item__icon" style="background:var(--chip-coral-bg);color:var(--chip-coral-bar);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
+        <span class="se-item__title">Q2 <mark>roadmap</mark> retro</span>
+        <span class="se-item__meta">Apr 28 · 3:00 PM</span>
+      </div>
+      <div class="se-item">
+        <div class="se-item__icon" style="background:var(--chip-plum-bg);color:var(--chip-plum-bar);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
+        <span class="se-item__title"><mark>Roadmap</mark> brainstorm w/ team</span>
+        <span class="se-item__meta">Apr 14 · 10:00 AM</span>
+      </div>
+      <div class="se-item">
+        <div class="se-item__icon" style="background:var(--chip-sand-bg);color:var(--chip-sand-bar);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
+        <span class="se-item__title">Focus · ship <mark>roadmap</mark> page</span>
+        <span class="se-item__meta">Wed, May 20 · 2:00 PM</span>
+      </div>
+      <div class="se-item">
+        <div class="se-item__icon" style="background:var(--chip-coral-bg);color:var(--chip-coral-bar);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
+        <span class="se-item__title">Q1 <mark>roadmap</mark> kickoff</span>
+        <span class="se-item__meta">Jan 6 · 2:00 PM</span>
+      </div>
+      <div class="se-item">
+        <div class="se-item__icon" style="background:var(--chip-coral-bg);color:var(--chip-coral-bar);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
+        <span class="se-item__title">Investor — <mark>roadmap</mark> chat</span>
+        <span class="se-item__meta">Dec 12, 2025</span>
+      </div>
+
+      <div class="se-section">People · 3</div>
+      <div class="se-item">
+        <div class="se-item__icon" style="background:linear-gradient(135deg,#88A188,#B89968);color:#fff;font-weight:600;font-size:11px;">M</div>
+        <span class="se-item__title">Maya Liu <small style="color: var(--text-3);">— <mark>roadmap</mark> lead</small></span>
+        <span class="se-item__meta">maya@elevaite.so</span>
+      </div>
+      <div class="se-item">
+        <div class="se-item__icon" style="background:linear-gradient(135deg,#7A8DA8,#9A7B98);color:#fff;font-weight:600;font-size:11px;">S</div>
+        <span class="se-item__title">Sam Chen <small style="color: var(--text-3);">— last met on <mark>roadmap</mark> review</small></span>
+        <span class="se-item__meta">sam@elevaite.so</span>
+      </div>
+      <div class="se-item">
+        <div class="se-item__icon" style="background:linear-gradient(135deg,#C0808C,#C28699);color:#fff;font-weight:600;font-size:11px;">A</div>
+        <span class="se-item__title">Alex Rivera <small style="color: var(--text-3);">— added comment on <mark>roadmap</mark> doc</small></span>
+        <span class="se-item__meta">alex@elevaite.so</span>
+      </div>
+
+      <div class="se-section">Scheduling links · 1</div>
+      <div class="se-item">
+        <div class="se-item__icon" style="background:var(--coral-subtle);color:var(--coral);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg></div>
+        <span class="se-item__title"><mark>Roadmap</mark> intake / 25 min</span>
+        <span class="se-item__meta">elevaite.so/prem/roadmap</span>
+      </div>
+
+      <div class="se-section">Calendars · 2</div>
+      <div class="se-item">
+        <div class="se-item__icon" style="background:var(--chip-coral-bar);"><span style="width:8px;height:8px;background:#fff;border-radius:2px;"></span></div>
+        <span class="se-item__title">ElevAIte (Work) <small style="color: var(--text-3);">— 6 <mark>roadmap</mark> events</small></span>
+        <span class="se-item__meta">prem@elevaite.so</span>
+      </div>
+      <div class="se-item">
+        <div class="se-item__icon" style="background:var(--chip-plum-bar);"><span style="width:8px;height:8px;background:#fff;border-radius:2px;"></span></div>
+        <span class="se-item__title">Stanford CS <small style="color: var(--text-3);">— 0 <mark>roadmap</mark> events</small></span>
+        <span class="se-item__meta">prem@stanford.edu</span>
+      </div>
+    </div>
+
+    <div class="se-foot">
+      <span class="se-foot__item"><span class="kbd">↑</span><span class="kbd">↓</span> navigate</span>
+      <span class="se-foot__item"><span class="kbd">↵</span> open</span>
+      <span class="se-foot__item"><span class="kbd">⌘</span><span class="kbd">↵</span> open in new tab</span>
+      <span style="flex:1"></span>
+      <span class="se-foot__item">14 results · 0.018s</span>
+    </div>
+  </div>
+</div>
+
+<script src="reveal.js"></script>
+<script>
+  document.querySelectorAll('.se-filter').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('.se-filter').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+  }));
+</script>
+<!-- Page index navigator -->
+<a href="all-pages.html" class="page-nav" data-elevaite-page-nav aria-label="View all pages">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+  <span>All pages</span>
+</a>
+<style>
+.page-nav{position:fixed;bottom:20px;right:20px;z-index:9999;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;background:rgba(250,249,245,0.92);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(31,30,27,0.12);border-radius:999px;color:#1F1E1B;font-family:'Geist',ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:500;letter-spacing:-0.005em;text-decoration:none;box-shadow:0 4px 16px rgba(31,30,27,0.06),0 1px 2px rgba(31,30,27,0.04);opacity:0;transform:translateY(8px);animation:elevaite-pn-in 420ms cubic-bezier(0.32,0.72,0,1) 0.5s forwards;transition:transform 180ms cubic-bezier(0.32,0.72,0,1),border-color 180ms cubic-bezier(0.32,0.72,0,1),color 180ms cubic-bezier(0.32,0.72,0,1)}
+@media (hover:hover){.page-nav:hover{transform:translateY(-2px);border-color:#D97757;color:#D97757}}
+@keyframes elevaite-pn-in{to{opacity:1;transform:none}}
+[data-theme="dark"] .page-nav,html[data-theme="dark"] .page-nav,body[data-theme="dark"] .page-nav{background:rgba(35,34,32,0.92);color:#F5F4ED;border-color:rgba(245,244,237,0.14)}
+@media (prefers-reduced-motion:reduce){.page-nav{animation:none;opacity:1;transform:none;transition:none}}
+@media (max-width:520px){.page-nav span{display:none}.page-nav{padding:9px}}
+</style>
+
+</body>
+</html>

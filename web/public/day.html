@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Day view — ElevAIte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="motion.css" />
+  <style>
+    body { overflow: hidden; }
+    .d-shell { display: flex; flex-direction: column; height: 100vh; }
+    .d-main { flex: 1; display: flex; min-height: 0; }
+    .d-side { width: 248px; border-right: 1px solid var(--hairline-strong); padding: 18px 14px; overflow-y: auto; flex-shrink: 0; animation: slide-right 600ms var(--ease) both; }
+    .d-side__h { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); padding: 6px 4px 8px; }
+    .d-mini-cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; margin-bottom: 12px; }
+    .d-mini-cal__head { text-align: center; font-size: 10px; color: var(--text-3); font-weight: 500; padding: 4px 0; }
+    .d-mini-cal__day { width: 26px; height: 26px; display: grid; place-items: center; font-size: 11.5px; font-family: 'Geist Mono'; cursor: pointer; border-radius: 50%; transition: background 120ms var(--ease); border: 0; background: none; color: var(--text); }
+    .d-mini-cal__day.faded { color: var(--text-3); }
+    .d-mini-cal__day:hover { background: var(--surface); }
+    .d-mini-cal__day.sel { background: var(--coral); color: #fff; font-weight: 600; }
+    .d-mini-cal__day.hasEvents::after { content: ''; width: 4px; height: 4px; background: var(--coral); border-radius: 50%; position: absolute; transform: translateY(10px); }
+    .d-mini-cal__day { position: relative; }
+
+    .d-cal-list { padding: 10px 4px; }
+    .d-cal-item { display: flex; align-items: center; gap: 9px; padding: 6px 6px; font-size: 12.5px; border-radius: 6px; }
+    .d-cal-item:hover { background: var(--surface); }
+    .d-cal-item__sw { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+    .d-content { flex: 1; display: flex; flex-direction: column; min-width: 0; animation: fade-up 600ms var(--ease) 0.1s both; }
+
+    .d-grid { flex: 1; overflow-y: auto; position: relative; padding-bottom: 80px; }
+    .d-inner { display: grid; grid-template-columns: 80px 1fr; position: relative; }
+    .d-gutter { padding-right: 8px; }
+    .d-hour { height: 64px; position: relative; border-top: 1px solid var(--hairline); text-align: right; }
+    .d-hour:first-child { border-top: 0; }
+    .d-hour__lbl { font-family: 'Geist Mono'; font-size: 10.5px; color: var(--text-3); position: absolute; right: 8px; top: -6px; background: var(--bg); padding: 0 4px; white-space: nowrap; }
+
+    .d-col { border-left: 1px solid var(--hairline); position: relative; }
+    .d-col .d-hour { border-left: 0; }
+    .d-col .d-hour::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--hairline); opacity: 0.5; }
+
+    .d-event {
+      position: absolute; left: 6px; right: 6px;
+      border-radius: 6px;
+      padding: 6px 12px;
+      overflow: hidden;
+      cursor: pointer;
+      font-size: 13px; line-height: 1.3;
+      transition: transform 120ms var(--ease);
+      display: flex; flex-direction: column; gap: 2px;
+      background: var(--chip-bg);
+      color: var(--chip-text);
+      border-left: 3px solid var(--chip-bar);
+      padding-left: 12px;
+    }
+    .d-event:hover { transform: translateY(-1px); }
+    .d-event__title { font-weight: 500; }
+    .d-event__meta { font-family: 'Geist Mono'; font-size: 11px; opacity: 0.75; }
+    .d-event__loc { font-size: 11.5px; opacity: 0.7; }
+    .d-event__attendees { display: flex; align-items: center; margin-top: 4px; }
+    .d-event__av { width: 18px; height: 18px; border-radius: 50%; color: #fff; font-size: 9px; font-weight: 600; display: grid; place-items: center; border: 2px solid var(--bg); margin-left: -5px; }
+    .d-event__av:first-child { margin-left: 0; }
+
+    .d-now {
+      position: absolute; left: 80px; right: 0;
+      pointer-events: none; z-index: 4;
+    }
+    .d-now__bar { position: absolute; left: 0; right: 0; height: 1.5px; background: var(--coral); top: -1px; }
+    .d-now__dot { position: absolute; left: -4px; top: -4px; width: 9px; height: 9px; border-radius: 50%; background: var(--coral); animation: dot-pulse 2s infinite; }
+    .d-now__lbl { position: absolute; left: -64px; top: -7px; font-family: 'Geist Mono'; font-size: 10.5px; color: var(--coral); font-weight: 600; background: var(--bg); padding: 0 4px; white-space: nowrap; }
+
+    .d-sidebar-info {
+      padding: 18px 16px;
+      margin-top: 10px;
+      background: var(--coral-subtle); border-radius: 10px;
+      font-size: 12px; color: var(--coral-strong); line-height: 1.5;
+    }
+    .d-sidebar-info b { font-size: 13.5px; }
+  </style>
+</head>
+<body class="shell">
+
+<div class="d-shell">
+  <!-- Top bar (copies index.html style) -->
+  <header class="topbar">
+    <button class="icon-btn" title="Sidebar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg></button>
+    <div class="topbar__brand">
+      <div class="topbar__brand-mark">E</div> ElevAIte
+    </div>
+    <div style="display:flex; align-items:center; gap:6px;">
+      <button class="icon-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <button class="icon-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 18l6-6-6-6"/></svg></button>
+      <button class="today-btn">Today</button>
+    </div>
+    <div class="topbar__date" style="margin-left:2px;">Wednesday, May 20, 2026 <small>· Week 21</small></div>
+    <div style="flex:1"></div>
+    <a class="new-event-btn" href="#" style="text-decoration:none;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> New event <span class="kbd-on-coral">C</span>
+    </a>
+    <a class="search-trigger" href="search.html" style="text-decoration:none;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <span class="search-trigger__placeholder">Search or command…</span>
+      <span class="kbd">⌘K</span>
+    </a>
+    <div class="view-picker">
+      <a href="day.html" style="text-decoration:none;"><button aria-pressed="true">D</button></a>
+      <a href="index.html" style="text-decoration:none;"><button aria-pressed="false">W</button></a>
+      <a href="month.html" style="text-decoration:none;"><button aria-pressed="false">M</button></a>
+    </div>
+    <button class="icon-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></button>
+    <div class="avatar">P</div>
+  </header>
+
+  <main class="d-main">
+    <aside class="d-side">
+      <div class="d-side__h">May 2026</div>
+      <div class="d-mini-cal">
+        <div class="d-mini-cal__head">M</div><div class="d-mini-cal__head">T</div><div class="d-mini-cal__head">W</div><div class="d-mini-cal__head">T</div><div class="d-mini-cal__head">F</div><div class="d-mini-cal__head">S</div><div class="d-mini-cal__head">S</div>
+        <button class="d-mini-cal__day faded">27</button><button class="d-mini-cal__day faded">28</button><button class="d-mini-cal__day faded">29</button><button class="d-mini-cal__day faded">30</button>
+        <button class="d-mini-cal__day">1</button><button class="d-mini-cal__day">2</button><button class="d-mini-cal__day">3</button>
+        <button class="d-mini-cal__day">4</button><button class="d-mini-cal__day">5</button><button class="d-mini-cal__day">6</button><button class="d-mini-cal__day">7</button><button class="d-mini-cal__day">8</button><button class="d-mini-cal__day">9</button><button class="d-mini-cal__day">10</button>
+        <button class="d-mini-cal__day">11</button><button class="d-mini-cal__day">12</button><button class="d-mini-cal__day hasEvents">13</button><button class="d-mini-cal__day">14</button><button class="d-mini-cal__day">15</button><button class="d-mini-cal__day">16</button><button class="d-mini-cal__day">17</button>
+        <button class="d-mini-cal__day hasEvents">18</button><button class="d-mini-cal__day hasEvents">19</button><button class="d-mini-cal__day sel">20</button><button class="d-mini-cal__day hasEvents">21</button><button class="d-mini-cal__day hasEvents">22</button><button class="d-mini-cal__day">23</button><button class="d-mini-cal__day">24</button>
+        <button class="d-mini-cal__day hasEvents">25</button><button class="d-mini-cal__day">26</button><button class="d-mini-cal__day">27</button><button class="d-mini-cal__day">28</button><button class="d-mini-cal__day">29</button><button class="d-mini-cal__day faded">30</button><button class="d-mini-cal__day faded">31</button>
+      </div>
+
+      <div class="d-side__h" style="margin-top: 10px;">My calendars</div>
+      <div class="d-cal-list">
+        <div class="d-cal-item"><span class="d-cal-item__sw" style="background:#D97757"></span> ElevAIte (Work)</div>
+        <div class="d-cal-item"><span class="d-cal-item__sw" style="background:#7E9C7A"></span> Personal</div>
+        <div class="d-cal-item"><span class="d-cal-item__sw" style="background:#748AA6"></span> Stanford CS</div>
+        <div class="d-cal-item"><span class="d-cal-item__sw" style="background:#997594"></span> Lectures</div>
+      </div>
+
+      <div class="d-sidebar-info">
+        <b>Today's load</b><br/>
+        <span style="font-family:'Geist Mono';">7 events · 4.5h meetings · 2h focus</span>
+      </div>
+    </aside>
+
+    <section class="d-content">
+      <div class="d-grid">
+        <div class="d-inner">
+          <div class="d-gutter">
+            <div class="d-hour"><span class="d-hour__lbl">7&nbsp;AM</span></div>
+            <div class="d-hour"><span class="d-hour__lbl">8&nbsp;AM</span></div>
+            <div class="d-hour"><span class="d-hour__lbl">9&nbsp;AM</span></div>
+            <div class="d-hour"><span class="d-hour__lbl">10&nbsp;AM</span></div>
+            <div class="d-hour"><span class="d-hour__lbl">11&nbsp;AM</span></div>
+            <div class="d-hour"><span class="d-hour__lbl">12&nbsp;PM</span></div>
+            <div class="d-hour"><span class="d-hour__lbl">1&nbsp;PM</span></div>
+            <div class="d-hour"><span class="d-hour__lbl">2&nbsp;PM</span></div>
+            <div class="d-hour"><span class="d-hour__lbl">3&nbsp;PM</span></div>
+            <div class="d-hour"><span class="d-hour__lbl">4&nbsp;PM</span></div>
+            <div class="d-hour"><span class="d-hour__lbl">5&nbsp;PM</span></div>
+            <div class="d-hour"><span class="d-hour__lbl">6&nbsp;PM</span></div>
+            <div class="d-hour"><span class="d-hour__lbl">7&nbsp;PM</span></div>
+            <div class="d-hour"><span class="d-hour__lbl">8&nbsp;PM</span></div>
+            <div class="d-hour"><span class="d-hour__lbl">9&nbsp;PM</span></div>
+          </div>
+          <div class="d-col">
+            <div class="d-hour"></div><div class="d-hour"></div><div class="d-hour"></div><div class="d-hour"></div><div class="d-hour"></div><div class="d-hour"></div><div class="d-hour"></div><div class="d-hour"></div><div class="d-hour"></div><div class="d-hour"></div><div class="d-hour"></div><div class="d-hour"></div><div class="d-hour"></div><div class="d-hour"></div><div class="d-hour"></div>
+
+            <!-- events (7AM grid origin, 64px / hour) -->
+            <div class="d-event" style="top:128px; height:14px; --chip-bg:#F4E5DC; --chip-bar:#D97757; --chip-text:#7A3E26;">
+              <div class="d-event__title">Daily standup</div>
+            </div>
+            <div class="d-event" style="top:192px; height:42px; --chip-bg:#E3ECE0; --chip-bar:#7E9C7A; --chip-text:#3E5639;">
+              <div class="d-event__title">Coffee w/ Jamie</div>
+              <div class="d-event__meta">10:00 – 10:45 AM</div>
+              <div class="d-event__loc">Verve Coffee</div>
+            </div>
+            <div class="d-event" style="top:288px; height:64px; --chip-bg:#F4E5DC; --chip-bar:#D97757; --chip-text:#7A3E26;">
+              <div class="d-event__title">Roadmap review · Q3</div>
+              <div class="d-event__meta">11:30 AM – 12:30 PM · Meet</div>
+              <div class="d-event__attendees">
+                <span class="d-event__av" style="background:linear-gradient(135deg,#9A7B98,#D97757);">P</span>
+                <span class="d-event__av" style="background:linear-gradient(135deg,#88A188,#B89968);">M</span>
+                <span class="d-event__av" style="background:linear-gradient(135deg,#7A8DA8,#9A7B98);">S</span>
+                <span class="d-event__av" style="background:linear-gradient(135deg,#C8A057,#D97757);">J</span>
+                <span style="font-size:10px; color: currentColor; opacity:.6; margin-left:6px;">+ 1 more</span>
+              </div>
+            </div>
+            <div class="d-event" style="top:352px; height:64px; --chip-bg:#E3ECE0; --chip-bar:#7E9C7A; --chip-text:#3E5639;">
+              <div class="d-event__title">Team lunch</div>
+              <div class="d-event__meta">12:30 – 1:30 PM</div>
+              <div class="d-event__loc">Office kitchen · 9 people</div>
+            </div>
+            <div class="d-event" style="top:448px; height:128px; --chip-bg:#EFE7D5; --chip-bar:#B89460; --chip-text:#5F4A20;">
+              <div class="d-event__title">Focus · calendar grid</div>
+              <div class="d-event__meta">2:00 – 4:00 PM</div>
+              <div class="d-event__loc">Do not disturb · phone in drawer</div>
+            </div>
+            <div class="d-event" style="top:608px; height:32px; --chip-bg:#F4E5DC; --chip-bar:#D97757; --chip-text:#7A3E26;">
+              <div class="d-event__title">1:1 with Sam</div>
+              <div class="d-event__meta">4:30 – 5:00 PM · Office</div>
+            </div>
+            <div class="d-event" style="top:736px; height:96px; --chip-bg:#EBE0E8; --chip-bar:#997594; --chip-text:#4D384A;">
+              <div class="d-event__title">Founders drinks · YC W26</div>
+              <div class="d-event__meta">6:30 – 8:00 PM · Mission SF</div>
+            </div>
+
+            <!-- now line at 2:48 PM = 7h48m from 7AM = 7.8 * 64 = 499px -->
+            <div class="d-now" style="top: 499px;">
+              <span class="d-now__lbl">14:48</span>
+              <span class="d-now__bar"></span>
+              <span class="d-now__dot"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="reveal.js"></script>
+<!-- Page index navigator -->
+<a href="all-pages.html" class="page-nav" data-elevaite-page-nav aria-label="View all pages">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+  <span>All pages</span>
+</a>
+<style>
+.page-nav{position:fixed;bottom:20px;right:20px;z-index:9999;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;background:rgba(250,249,245,0.92);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(31,30,27,0.12);border-radius:999px;color:#1F1E1B;font-family:'Geist',ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:500;letter-spacing:-0.005em;text-decoration:none;box-shadow:0 4px 16px rgba(31,30,27,0.06),0 1px 2px rgba(31,30,27,0.04);opacity:0;transform:translateY(8px);animation:elevaite-pn-in 420ms cubic-bezier(0.32,0.72,0,1) 0.5s forwards;transition:transform 180ms cubic-bezier(0.32,0.72,0,1),border-color 180ms cubic-bezier(0.32,0.72,0,1),color 180ms cubic-bezier(0.32,0.72,0,1)}
+@media (hover:hover){.page-nav:hover{transform:translateY(-2px);border-color:#D97757;color:#D97757}}
+@keyframes elevaite-pn-in{to{opacity:1;transform:none}}
+[data-theme="dark"] .page-nav,html[data-theme="dark"] .page-nav,body[data-theme="dark"] .page-nav{background:rgba(35,34,32,0.92);color:#F5F4ED;border-color:rgba(245,244,237,0.14)}
+@media (prefers-reduced-motion:reduce){.page-nav{animation:none;opacity:1;transform:none;transition:none}}
+@media (max-width:520px){.page-nav span{display:none}.page-nav{padding:9px}}
+</style>
+
+</body>
+</html>

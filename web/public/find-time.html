@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Find a time — ElevAIte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="motion.css" />
+  <style>
+    body { overflow: hidden; }
+    .ft-shell { min-height: 100vh; position: relative; }
+    .ft-stage { position: absolute; inset: 0; background: var(--bg); opacity: 0.4; }
+    .ft-stage__grid { position: absolute; inset: 0; background-image: linear-gradient(to right, var(--hairline) 1px, transparent 1px), linear-gradient(to bottom, var(--hairline) 1px, transparent 1px); background-size: 14% 56px; }
+    .ft-overlay { position: absolute; inset: 0; background: rgba(31, 30, 27, 0.36); backdrop-filter: blur(6px) saturate(120%); animation: fade-in 300ms var(--ease) both; }
+
+    .ft-modal {
+      position: relative;
+      width: min(900px, calc(100vw - 32px));
+      max-height: 88vh;
+      margin: 6vh auto;
+      background: var(--bg);
+      border: 1px solid var(--hairline-strong);
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      animation: scale-in 400ms var(--ease) both, fade-up 400ms var(--ease) both;
+      display: grid; grid-template-rows: auto auto 1fr;
+      overflow: hidden;
+    }
+    .ft-head { display: flex; align-items: center; gap: 10px; padding: 16px 22px; border-bottom: 1px solid var(--hairline); }
+    .ft-head__icon { width: 30px; height: 30px; border-radius: 7px; background: var(--coral-subtle); color: var(--coral); display: grid; place-items: center; }
+    .ft-head__title { font-size: 15px; font-weight: 600; letter-spacing: -0.005em; flex: 1; }
+    .ft-head__hint { font-size: 11px; color: var(--text-3); }
+    .ft-head__close { width: 26px; height: 26px; border-radius: 6px; color: var(--text-3); border: 0; background: none; cursor: pointer; display: grid; place-items: center; }
+    .ft-head__close:hover { background: var(--surface); color: var(--text); }
+
+    .ft-controls {
+      padding: 14px 22px;
+      display: grid; grid-template-columns: auto 1fr auto auto; gap: 12px;
+      align-items: center;
+      border-bottom: 1px solid var(--hairline);
+      background: var(--surface-sunken);
+    }
+    .ft-participants {
+      display: flex; align-items: center; gap: 5px;
+      flex-wrap: wrap;
+    }
+    .ft-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 5px 4px 8px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 12px;
+    }
+    .ft-pill__avatar { width: 18px; height: 18px; border-radius: 50%; color: #fff; font-weight: 600; font-size: 9.5px; display: grid; place-items: center; }
+    .ft-pill__close { width: 14px; height: 14px; border-radius: 50%; background: var(--surface-sunken); color: var(--text-3); display: grid; place-items: center; cursor: pointer; }
+    .ft-pill__add { padding: 4px 10px; background: transparent; border: 1px dashed var(--border); border-radius: 999px; font-size: 11.5px; color: var(--text-3); cursor: pointer; }
+
+    .ft-controls__lbl { font-size: 11.5px; color: var(--text-3); font-weight: 500; white-space: nowrap; }
+    .ft-controls__select { padding: 5px 10px; border: 1px solid var(--border); background: var(--bg); border-radius: 6px; font-size: 12.5px; }
+
+    .ft-grid-wrap { overflow: auto; padding: 8px 22px 22px; }
+    .ft-grid {
+      display: grid; grid-template-columns: 80px repeat(5, 1fr);
+      gap: 0;
+      border-top: 1px solid var(--hairline);
+    }
+    .ft-grid__head { padding: 10px 8px; text-align: center; font-size: 11px; color: var(--text-3); font-weight: 500; letter-spacing: .04em; }
+    .ft-grid__head .num { font-family: 'Geist Mono'; font-size: 13px; color: var(--text); padding: 2px 6px; border-radius: 9px; }
+    .ft-grid__head.today .num { background: var(--coral); color: #fff; }
+
+    .ft-rows { grid-column: 1 / -1; display: grid; grid-template-columns: 80px repeat(5, 1fr); gap: 0; }
+    .ft-time {
+      font-family: 'Geist Mono'; font-size: 10.5px; color: var(--text-3);
+      padding: 4px 10px; text-align: right;
+      border-right: 1px solid var(--hairline);
+      height: 28px;
+    }
+    .ft-cell {
+      height: 28px;
+      border-right: 1px solid var(--hairline);
+      border-bottom: 1px solid var(--hairline);
+      position: relative;
+      background-size: 100% 100%;
+      cursor: pointer;
+      transition: background 120ms var(--ease);
+    }
+    .ft-cell:hover { outline: 1.5px solid var(--coral); outline-offset: -1px; z-index: 1; }
+
+    /* heatmap */
+    .h0 { background: var(--surface-sunken); }
+    .h1 { background: #F4E5DC; }
+    .h2 { background: #ECC9B5; }
+    .h3 { background: #E0A98F; }
+    .h4 { background: #C97557; color: #fff; }
+
+    .ft-cell--free {
+      background: var(--bg);
+      box-shadow: inset 0 0 0 1px rgba(126,156,122,0.4);
+    }
+    .ft-cell--sel { background: var(--coral); }
+    .ft-cell--sel::after { content: 'best for everyone'; position: absolute; top: -22px; left: 50%; transform: translateX(-50%); background: var(--text); color: var(--bg); font-size: 10px; font-weight: 600; padding: 3px 7px; border-radius: 4px; white-space: nowrap; animation: pop-in 300ms var(--ease) both; }
+
+    .ft-legend {
+      display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+      padding: 14px 22px;
+      border-top: 1px solid var(--hairline);
+      background: var(--surface-sunken);
+      font-size: 11px; color: var(--text-3);
+    }
+    .ft-legend__item { display: inline-flex; align-items: center; gap: 6px; }
+    .ft-legend__sw { width: 14px; height: 8px; border-radius: 3px; }
+
+    .ft-action {
+      padding: 14px 22px;
+      border-top: 1px solid var(--hairline);
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface-sunken);
+    }
+    .ft-summary {
+      padding: 7px 12px;
+      background: var(--bg); border: 1px solid var(--hairline-strong);
+      border-radius: 8px;
+      font-size: 12.5px;
+      font-family: 'Geist Mono';
+      flex: 1;
+    }
+    .ft-summary b { font-family: 'Geist'; color: var(--text); }
+  </style>
+</head>
+<body class="shell">
+
+<div class="ft-shell">
+  <div class="ft-stage"><div class="ft-stage__grid"></div></div>
+  <div class="ft-overlay"></div>
+
+  <div class="ft-modal">
+    <header class="ft-head">
+      <div class="ft-head__icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></div>
+      <div class="ft-head__title">Find a time</div>
+      <span class="ft-head__hint">Press <span class="kbd">F</span> anywhere · <span class="kbd">Esc</span> to close</span>
+      <button class="ft-head__close" onclick="history.back()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </header>
+
+    <div class="ft-controls">
+      <span class="ft-controls__lbl">With</span>
+      <div class="ft-participants">
+        <span class="ft-pill"><span class="ft-pill__avatar" style="background:linear-gradient(135deg,#9A7B98,#D97757);">P</span> Prem (you) <span class="ft-pill__close" style="opacity:0.4;cursor:not-allowed;"></span></span>
+        <span class="ft-pill"><span class="ft-pill__avatar" style="background:linear-gradient(135deg,#88A188,#B89968);">M</span> Maya Liu <span class="ft-pill__close">×</span></span>
+        <span class="ft-pill"><span class="ft-pill__avatar" style="background:linear-gradient(135deg,#7A8DA8,#9A7B98);">S</span> Sam Chen <span class="ft-pill__close">×</span></span>
+        <span class="ft-pill"><span class="ft-pill__avatar" style="background:linear-gradient(135deg,#C8A057,#D97757);">J</span> Jordan Park <span class="ft-pill__close">×</span></span>
+        <button class="ft-pill__add">+ Add person</button>
+      </div>
+      <span class="ft-controls__lbl">Duration</span>
+      <select class="ft-controls__select"><option>15 min</option><option>30 min</option><option selected>45 min</option><option>60 min</option></select>
+      <span class="ft-controls__lbl">Working hours only</span>
+      <label class="switch" style="vertical-align: middle;"><input type="checkbox" checked /><span class="switch__track"></span><span class="switch__thumb"></span></label>
+    </div>
+
+    <div class="ft-grid-wrap">
+      <div class="ft-grid">
+        <div class="ft-grid__head"></div>
+        <div class="ft-grid__head">MON <div class="num">18</div></div>
+        <div class="ft-grid__head">TUE <div class="num">19</div></div>
+        <div class="ft-grid__head today">WED <div class="num">20</div></div>
+        <div class="ft-grid__head">THU <div class="num">21</div></div>
+        <div class="ft-grid__head">FRI <div class="num">22</div></div>
+
+        <div class="ft-rows" id="ft-rows"></div>
+      </div>
+    </div>
+
+    <div class="ft-legend">
+      <div class="ft-legend__item"><span class="ft-legend__sw" style="background:var(--bg);box-shadow:inset 0 0 0 1px rgba(126,156,122,0.4);"></span> All free</div>
+      <div class="ft-legend__item"><span class="ft-legend__sw" style="background:#F4E5DC;"></span> 1 busy</div>
+      <div class="ft-legend__item"><span class="ft-legend__sw" style="background:#ECC9B5;"></span> 2 busy</div>
+      <div class="ft-legend__item"><span class="ft-legend__sw" style="background:#E0A98F;"></span> 3 busy</div>
+      <div class="ft-legend__item"><span class="ft-legend__sw" style="background:#C97557;"></span> All busy</div>
+      <span style="flex:1"></span>
+      <span>Time zone: <b style="color: var(--text-2); font-weight: 500;">America/Los_Angeles</b></span>
+    </div>
+
+    <div class="ft-action">
+      <div class="ft-summary">Best slot for everyone: <b>Wed, May 20 · 3:00–3:45 PM</b></div>
+      <button class="cta-ghost" style="padding:8px 12px; font-size:12.5px;">Copy times</button>
+      <button class="cta-primary" style="padding:8px 14px;">Send invite →</button>
+    </div>
+  </div>
+</div>
+
+<script src="reveal.js"></script>
+<script>
+  // Build a heatmap grid: 5 days × 18 half-hour rows (9 AM – 6 PM)
+  const rows = document.getElementById('ft-rows');
+  const startHour = 9;
+  const endHour = 18;
+  const slots = (endHour - startHour) * 2;
+  // Fake heatmap data
+  // 0 = all free, 1 = 1 busy, 2 = 2 busy, 3 = 3 busy, 4 = all busy
+  const data = [
+    /* 9:00 */ [4,4,4,4,4],
+    /* 9:30 */ [3,3,3,2,2],
+    /* 10:00 */[1,1,2,1,2],
+    /* 10:30 */[2,3,4,1,2],
+    /* 11:00 */[3,2,3,1,3],
+    /* 11:30 */[2,2,1,2,2],
+    /* 12:00 */[4,4,4,4,4],
+    /* 12:30 */[2,2,1,1,2],
+    /* 1:00 */ [1,3,1,1,2],
+    /* 1:30 */ [2,4,1,2,1],
+    /* 2:00 */ [1,3,2,1,1],
+    /* 2:30 */ [1,2,2,2,2],
+    /* 3:00 */ [1,1,'sel',1,3],
+    /* 3:30 */ [2,1,0,1,3],
+    /* 4:00 */ [3,2,1,2,1],
+    /* 4:30 */ [3,2,2,2,1],
+    /* 5:00 */ [2,1,1,1,3],
+    /* 5:30 */ [1,0,0,0,2],
+  ];
+  for (let r = 0; r < slots; r++) {
+    const hr = Math.floor(startHour + r / 2);
+    const mm = r % 2 === 0 ? '00' : '30';
+    const ampm = hr >= 12 ? 'PM' : 'AM';
+    const h12 = hr % 12 === 0 ? 12 : hr % 12;
+    const timeLabel = mm === '00' ? `${h12} ${ampm}` : '';
+    const timeEl = document.createElement('div');
+    timeEl.className = 'ft-time';
+    timeEl.textContent = timeLabel;
+    rows.appendChild(timeEl);
+    for (let c = 0; c < 5; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'ft-cell';
+      const v = data[r] && data[r][c] !== undefined ? data[r][c] : 0;
+      if (v === 'sel') cell.classList.add('ft-cell--sel');
+      else if (v === 0) cell.classList.add('ft-cell--free');
+      else cell.classList.add('h' + v);
+      rows.appendChild(cell);
+    }
+  }
+</script>
+<!-- Page index navigator -->
+<a href="all-pages.html" class="page-nav" data-elevaite-page-nav aria-label="View all pages">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+  <span>All pages</span>
+</a>
+<style>
+.page-nav{position:fixed;bottom:20px;right:20px;z-index:9999;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;background:rgba(250,249,245,0.92);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(31,30,27,0.12);border-radius:999px;color:#1F1E1B;font-family:'Geist',ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:500;letter-spacing:-0.005em;text-decoration:none;box-shadow:0 4px 16px rgba(31,30,27,0.06),0 1px 2px rgba(31,30,27,0.04);opacity:0;transform:translateY(8px);animation:elevaite-pn-in 420ms cubic-bezier(0.32,0.72,0,1) 0.5s forwards;transition:transform 180ms cubic-bezier(0.32,0.72,0,1),border-color 180ms cubic-bezier(0.32,0.72,0,1),color 180ms cubic-bezier(0.32,0.72,0,1)}
+@media (hover:hover){.page-nav:hover{transform:translateY(-2px);border-color:#D97757;color:#D97757}}
+@keyframes elevaite-pn-in{to{opacity:1;transform:none}}
+[data-theme="dark"] .page-nav,html[data-theme="dark"] .page-nav,body[data-theme="dark"] .page-nav{background:rgba(35,34,32,0.92);color:#F5F4ED;border-color:rgba(245,244,237,0.14)}
+@media (prefers-reduced-motion:reduce){.page-nav{animation:none;opacity:1;transform:none;transition:none}}
+@media (max-width:520px){.page-nav span{display:none}.page-nav{padding:9px}}
+</style>
+
+</body>
+</html>
