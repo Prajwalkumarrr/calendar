@@ -745,37 +745,353 @@ function Billing({ userEmail }: { userEmail: string }) {
   );
 }
 
+type WorkspaceDTO = { id: string; name: string; slug: string; ownerId: string; role: 'owner' | 'admin' | 'member' | 'guest'; memberCount: number };
+type MemberDTO = { userId: string; name?: string; email?: string; image?: string; role: 'owner' | 'admin' | 'member' | 'guest'; joinedAt: string };
+type InvitationDTO = { id: string; email: string; role: 'admin' | 'member' | 'guest'; token: string; createdAt: string; expiresAt: string };
+
 function Workspace() {
+  const [workspaces, setWorkspaces] = useState<WorkspaceDTO[] | null>(null);
+  const [activeWs, setActiveWs] = useState<WorkspaceDTO | null>(null);
+  const [members, setMembers] = useState<MemberDTO[]>([]);
+  const [invitations, setInvitations] = useState<InvitationDTO[]>([]);
+  const [creating, setCreating] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load workspaces
+  async function loadWorkspaces() {
+    const res = await fetch('/api/workspaces');
+    if (!res.ok) return;
+    const data = await res.json();
+    const list: WorkspaceDTO[] = data.workspaces ?? [];
+    setWorkspaces(list);
+    if (list.length > 0 && (!activeWs || !list.find((w) => w.id === activeWs.id))) {
+      setActiveWs(list[0]);
+    }
+    if (list.length === 0) setActiveWs(null);
+  }
+  useEffect(() => { loadWorkspaces(); /* eslint-disable-next-line */ }, []);
+
+  // Load members + invitations for the active workspace
+  async function loadDetails(wsId: string) {
+    const [mRes, iRes] = await Promise.all([
+      fetch(`/api/workspaces/${wsId}/members`),
+      fetch(`/api/workspaces/${wsId}/invitations`),
+    ]);
+    if (mRes.ok) {
+      const d = await mRes.json();
+      setMembers(d.members ?? []);
+    }
+    if (iRes.ok) {
+      const d = await iRes.json();
+      setInvitations(d.invitations ?? []);
+    }
+  }
+  useEffect(() => { if (activeWs) loadDetails(activeWs.id); }, [activeWs]);
+
+  async function createWs(name: string) {
+    setError(null);
+    const res = await fetch('/api/workspaces', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    if (!res.ok) { setError('Could not create workspace.'); return; }
+    setCreating(false);
+    await loadWorkspaces();
+  }
+
+  async function changeRole(userId: string, role: MemberDTO['role']) {
+    if (!activeWs) return;
+    await fetch(`/api/workspaces/${activeWs.id}/members`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ userId, role }),
+    });
+    loadDetails(activeWs.id);
+  }
+
+  async function removeMemberAction(userId: string) {
+    if (!activeWs) return;
+    if (!confirm('Remove this member?')) return;
+    await fetch(`/api/workspaces/${activeWs.id}/members?userId=${userId}`, { method: 'DELETE' });
+    loadDetails(activeWs.id);
+  }
+
+  async function inviteMember(email: string, role: InvitationDTO['role']) {
+    if (!activeWs) return;
+    setError(null);
+    const res = await fetch(`/api/workspaces/${activeWs.id}/invitations`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email, role }),
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setError(d.error === 'invalid_email' ? 'Enter a valid email.' : 'Could not invite.');
+      return;
+    }
+    setShowInvite(false);
+    loadDetails(activeWs.id);
+  }
+
+  function copyInviteLink(token: string) {
+    const url = `${window.location.origin}/invite/${token}`;
+    navigator.clipboard.writeText(url);
+  }
+
+  if (workspaces === null) {
+    return (
+      <>
+        <h1 className="ss-page-h">Workspace</h1>
+        <p className="ss-page-sub">Loading…</p>
+      </>
+    );
+  }
+
+  if (workspaces.length === 0) {
+    return (
+      <>
+        <h1 className="ss-page-h">Workspace</h1>
+        <p className="ss-page-sub">Create a workspace to invite teammates.</p>
+        <div className="ss-card">
+          <div className="ss-card__h">Create a workspace</div>
+          <p className="ss-card__sub">Name it after your company, your class, or your group.</p>
+          {creating ? (
+            <CreateWorkspaceForm onCreate={createWs} onCancel={() => setCreating(false)} />
+          ) : (
+            <button className="cta-primary" onClick={() => setCreating(true)}>+ Create workspace</button>
+          )}
+          {error && <div style={{ marginTop: 10, padding: '8px 12px', background: 'var(--coral-subtle)', color: 'var(--coral-strong, var(--coral))', borderRadius: 8, fontSize: 12.5 }}>{error}</div>}
+        </div>
+      </>
+    );
+  }
+
+  const canManage = activeWs && (activeWs.role === 'owner' || activeWs.role === 'admin');
+
   return (
     <>
-      <h1 className="ss-page-h">Workspace</h1>
-      <p className="ss-page-sub">Manage your team. <span className="acct__pill" style={{ marginLeft: 6 }}>Solo workspace</span></p>
+      <h1 className="ss-page-h">Workspace · {activeWs?.name}</h1>
+      <p className="ss-page-sub">
+        Manage your team.{' '}
+        <span className="acct__pill" style={{ marginLeft: 6 }}>
+          {activeWs?.memberCount} {activeWs?.memberCount === 1 ? 'member' : 'members'}
+        </span>
+        <span className="acct__pill" style={{ marginLeft: 6, background: 'var(--coral-subtle)', color: 'var(--coral-strong, var(--coral))' }}>
+          Your role: {activeWs?.role}
+        </span>
+      </p>
+
+      {workspaces.length > 1 && (
+        <div className="ss-card" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 12.5, color: 'var(--text-2)' }}>Switch workspace:</span>
+          <select
+            className="field-input"
+            value={activeWs?.id ?? ''}
+            onChange={(e) => {
+              const w = workspaces.find((x) => x.id === e.target.value);
+              if (w) setActiveWs(w);
+            }}
+            style={{ width: 'auto', minWidth: 240 }}
+          >
+            {workspaces.map((w) => (
+              <option key={w.id} value={w.id}>{w.name}</option>
+            ))}
+          </select>
+          <div style={{ flex: 1 }} />
+          <button className="cta-ghost" onClick={() => setCreating(true)}>+ New</button>
+        </div>
+      )}
+
+      {creating && (
+        <div className="ss-card">
+          <div className="ss-card__h">Create a workspace</div>
+          <CreateWorkspaceForm onCreate={createWs} onCancel={() => setCreating(false)} />
+        </div>
+      )}
 
       <div className="ss-card">
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 14 }}>
           <div>
             <div className="ss-card__h">Members</div>
             <p className="ss-card__sub" style={{ marginBottom: 0 }}>
-              Invite teammates and set their roles. (Upgrade to Team plan to add members.)
+              Members with admin or owner role can manage settings and invite others.
             </p>
           </div>
           <div style={{ flex: 1 }} />
-          <button className="cta-primary" disabled style={{ opacity: 0.5 }}>
-            + Invite member
-          </button>
+          {canManage && (
+            <button className="cta-primary" onClick={() => setShowInvite(true)}>+ Invite member</button>
+          )}
         </div>
-        <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-3)', fontSize: 13 }}>
-          You&apos;re the only member. Upgrade to invite teammates.
-        </div>
+
+        {members.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-3)', fontSize: 13 }}>
+            Loading members…
+          </div>
+        ) : (
+          members.map((m) => (
+            <div className="member" key={m.userId}>
+              <div className="member__avatar" style={{ background: 'linear-gradient(135deg, #9A7B98, #D97757)' }}>
+                {(m.name ?? m.email ?? '?').trim()[0]?.toUpperCase()}
+              </div>
+              <div>
+                <div className="member__name">
+                  {m.name ?? m.email ?? 'Member'}
+                  {m.role === 'owner' && (
+                    <span className="acct__pill" style={{ marginLeft: 6, background: 'var(--coral-subtle)', color: 'var(--coral-strong, var(--coral))' }}>
+                      Owner
+                    </span>
+                  )}
+                </div>
+                <div className="member__email">{m.email}</div>
+              </div>
+              <select
+                className="member__role-pick"
+                value={m.role}
+                disabled={!canManage || m.role === 'owner'}
+                onChange={(e) => changeRole(m.userId, e.target.value as MemberDTO['role'])}
+              >
+                <option value="owner" disabled>Owner</option>
+                <option value="admin">Admin</option>
+                <option value="member">Member</option>
+                <option value="guest">Guest</option>
+              </select>
+              <button
+                className="acct__btn"
+                disabled={!canManage || m.role === 'owner'}
+                onClick={() => removeMemberAction(m.userId)}
+                style={{ opacity: m.role === 'owner' || !canManage ? 0.4 : 1 }}
+              >
+                Remove
+              </button>
+            </div>
+          ))
+        )}
       </div>
+
+      {invitations.length > 0 && (
+        <div className="ss-card">
+          <div className="ss-card__h">Pending invitations</div>
+          <p className="ss-card__sub">Share the link with the invitee. Expires in 14 days.</p>
+          {invitations.map((inv) => (
+            <div className="member" key={inv.id}>
+              <div className="member__avatar" style={{ background: 'var(--surface-sunken)', color: 'var(--text-3)' }}>✉</div>
+              <div>
+                <div className="member__name">{inv.email}</div>
+                <div className="member__email">
+                  {inv.role} · expires {new Date(inv.expiresAt).toLocaleDateString()}
+                </div>
+              </div>
+              <button className="acct__btn" onClick={() => copyInviteLink(inv.token)}>Copy link</button>
+              <button className="acct__btn">Revoke</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {showInvite && activeWs && (
+        <InviteMemberModal
+          onClose={() => setShowInvite(false)}
+          onInvite={inviteMember}
+          error={error}
+        />
+      )}
 
       <div className="ss-card">
         <div className="ss-card__h">SSO &amp; security</div>
-        <SwitchRow title="Two-factor authentication" sub="Add an extra layer when signing in." on={false} onChange={() => {}} />
+        <SwitchRow title="Two-factor authentication" sub="Coming soon — for now, sign-in is gated by your provider's 2FA." on={false} onChange={() => {}} />
         <SwitchRow title="Google Workspace SSO" sub="Available on Team plan." on={false} onChange={() => {}} />
         <SwitchRow title="SAML SSO (Okta, Auth0)" sub="Available on Enterprise. Contact sales." on={false} onChange={() => {}} />
       </div>
     </>
+  );
+}
+
+function CreateWorkspaceForm({ onCreate, onCancel }: { onCreate: (name: string) => void; onCancel: () => void }) {
+  const [name, setName] = useState('');
+  return (
+    <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 6 }}>
+      <input
+        className="field-input"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="e.g. ElevAIte Inc."
+        autoFocus
+        onKeyDown={(e) => { if (e.key === 'Enter' && name.trim()) onCreate(name.trim()); }}
+      />
+      <button className="cta-primary" onClick={() => name.trim() && onCreate(name.trim())} disabled={!name.trim()}>
+        Create
+      </button>
+      <button className="cta-ghost" onClick={onCancel}>Cancel</button>
+    </div>
+  );
+}
+
+function InviteMemberModal({
+  onClose, onInvite, error,
+}: {
+  onClose: () => void;
+  onInvite: (email: string, role: InvitationDTO['role']) => void;
+  error: string | null;
+}) {
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState<InvitationDTO['role']>('member');
+  return (
+    <div
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      style={{
+        position: 'fixed', inset: 0,
+        background: 'rgba(31,30,27,0.32)',
+        backdropFilter: 'blur(2px)',
+        display: 'grid', placeItems: 'center', zIndex: 100,
+      }}
+    >
+      <div
+        style={{
+          background: 'var(--surface-elevated)',
+          border: '1px solid var(--hairline-strong)',
+          borderRadius: 14,
+          padding: 24,
+          width: '100%', maxWidth: 440,
+          boxShadow: 'var(--shadow)',
+        }}
+      >
+        <h2 style={{ fontSize: 17, fontWeight: 600, margin: '0 0 18px', letterSpacing: '-0.012em' }}>
+          Invite a teammate
+        </h2>
+        <label className="form-row__lbl" style={{ display: 'block', marginBottom: 6, fontSize: 12.5 }}>Email</label>
+        <input
+          className="field-input"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="teammate@company.com"
+          autoFocus
+        />
+        <label className="form-row__lbl" style={{ display: 'block', margin: '14px 0 6px', fontSize: 12.5 }}>Role</label>
+        <select
+          className="field-input"
+          value={role}
+          onChange={(e) => setRole(e.target.value as InvitationDTO['role'])}
+        >
+          <option value="member">Member — can see and create events</option>
+          <option value="admin">Admin — can manage members and settings</option>
+          <option value="guest">Guest — limited access (view only)</option>
+        </select>
+        {error && (
+          <div style={{ marginTop: 12, padding: '8px 12px', background: 'var(--coral-subtle)', color: 'var(--coral-strong, var(--coral))', borderRadius: 8, fontSize: 12.5 }}>
+            {error}
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20 }}>
+          <button className="cta-ghost" onClick={onClose}>Cancel</button>
+          <button className="cta-primary" disabled={!email.trim()} onClick={() => onInvite(email.trim(), role)}>
+            Send invite
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
