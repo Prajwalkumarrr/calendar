@@ -15,6 +15,7 @@ import {
 } from './defaults';
 import { EventPanel, type PanelDraft } from './EventPanel';
 import { CommandPaletteProto, type Cmd } from './CommandPaletteProto';
+import { useUnreadCount } from '@/lib/useUnreadCount';
 import type { ChipColor, EventDTO } from '@/lib/events';
 import { addDays, daysInWeek, endOfWeek, startOfWeek, isSameDay, MONTHS_FULL } from '@/lib/date';
 
@@ -109,6 +110,7 @@ export function CalendarApp() {
   const [tzTimes, setTzTimes] = useState<string[]>(() => DEFAULT_TZONES.map(() => ''));
   const [allDayCollapsed, setAllDayCollapsed] = useState(false);
   const [view, setView] = useState<'day' | 'week' | 'month'>('week');
+  const unread = useUnreadCount();
   const scrollRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ day: number; startY: number; column: HTMLDivElement } | null>(null);
   const [dragGhost, setDragGhost] = useState<{ day: number; top: number; height: number } | null>(null);
@@ -403,6 +405,17 @@ export function CalendarApp() {
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></svg>
                     Inbox
+                    {unread > 0 && (
+                      <span style={{
+                        marginLeft: 'auto',
+                        background: 'var(--coral)',
+                        color: '#fff',
+                        fontSize: 10.5, fontWeight: 600,
+                        padding: '1px 7px', borderRadius: 999,
+                      }}>
+                        {unread}
+                      </span>
+                    )}
                   </Link>
                   <Link
                     href="/scheduling"

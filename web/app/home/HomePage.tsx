@@ -12,6 +12,7 @@ import {
 } from '../calendar/Icons';
 import { DEFAULT_CALENDARS, DEFAULT_TZONES } from '../calendar/defaults';
 import type { EventDTO } from '@/lib/events';
+import { useUnreadCount } from '@/lib/useUnreadCount';
 
 type Booking = {
   id: string;
@@ -84,6 +85,7 @@ export function HomePage({ userName, userEmail }: { userName: string; userEmail:
   const [events, setEvents] = useState<EventDTO[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [links, setLinks] = useState<Link[]>([]);
+  const unread = useUnreadCount();
 
   // Tick every minute for now-line + countdowns
   useEffect(() => {
@@ -322,6 +324,17 @@ export function HomePage({ userName, userEmail }: { userName: string; userEmail:
             <Link className="ho-nav-item" href="/inbox">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></svg>
               Inbox
+              {unread > 0 && (
+                <span style={{
+                  marginLeft: 'auto',
+                  background: 'var(--coral)',
+                  color: '#fff',
+                  fontSize: 10.5, fontWeight: 600,
+                  padding: '1px 7px', borderRadius: 999,
+                }}>
+                  {unread}
+                </span>
+              )}
             </Link>
             <Link className="ho-nav-item" href="/scheduling">
               <IconLink size={14} />
