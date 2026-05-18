@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createBooking, generateSlots, getLinkBySlug } from '@/lib/scheduling';
 import { listEventsInRange } from '@/lib/events';
+import { getUserById } from '@/lib/users';
+import { sendBookingEmails } from '@/lib/email';
 
 // Public — invitee creates a booking.
 // POST /api/public/bookings { slug, startISO, name, email, note? }
@@ -40,6 +42,25 @@ export async function POST(req: NextRequest) {
       end,
       note: typeof note === 'string' ? note : undefined,
     });
+
+    // Fire-and-forget email send. We don't block the response on email delivery
+    // — the booking is already saved and the invitee will see the confirmation page.
+    const host = await getUserById(link.ownerId);
+    if (host?.email) {
+      void sendBookingEmails({
+        inviteeName: name,
+        inviteeEmail: email,
+        hostName: host.name ?? 'your host',
+        hostEmail: host.email,
+        linkTitle: link.title,
+        start,
+        end,
+        durationMin: link.durationMin,
+        bookingId: booking.id,
+        note: typeof note === 'string' ? note : undefined,
+      });
+    }
+
     return NextResponse.json({ booking }, { status: 201 });
   } catch (err) {
     console.error('[POST /api/public/bookings]', err);

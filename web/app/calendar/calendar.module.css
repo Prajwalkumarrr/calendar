@@ -148,6 +148,7 @@
   position: relative;
   border-right: 1px solid var(--hairline);
   cursor: crosshair;
+  user-select: none;
 }
 .day:last-child { border-right: 0; }
 
@@ -178,10 +179,9 @@
   border-radius: 50%;
 }
 
-/* Event chip */
+/* Event chip — left/width are set inline for overlap layout */
 .chip {
   position: absolute;
-  left: 3px; right: 3px;
   border-radius: var(--radius-chip, 5px);
   padding: 5px 8px 6px;
   font-size: 12px; line-height: 1.3;
@@ -191,6 +191,18 @@
   cursor: pointer;
   overflow: hidden;
   transition: transform 180ms var(--ease);
+  z-index: 1;
+}
+
+/* Drag-to-create ghost */
+.dragGhost {
+  position: absolute;
+  left: 3px; right: 3px;
+  border-radius: var(--radius-chip, 5px);
+  background: var(--coral-subtle);
+  border: 1px dashed var(--coral);
+  pointer-events: none;
+  z-index: 2;
 }
 @media (hover: hover) {
   .chip:hover { transform: translateY(-1px); }

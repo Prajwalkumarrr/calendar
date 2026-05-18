@@ -79,11 +79,40 @@ The Render free tier spins down after 15 min idle (~30–60s cold start on next 
 ## Phases
 
 - ✅ Phase 1 — Foundation: scaffolding, design tokens, landing served at /
-- ✅ **Phase 2 — Auth + DB** (you are here): NextAuth (Google), MongoDB adapter, sign-in page, protected dashboard
-- ⏳ Phase 3 — Calendar core: Event model, CRUD API, port week view
-- ⏳ Phase 4 — Scheduling links: Link/Booking models, port create/book/booked/reschedule
-- ⏳ Phase 5 — Settings + remaining pages: port settings, profile, mobile, etc.
+- ✅ Phase 2 — Auth + DB: NextAuth (Google), MongoDB adapter, sign-in page, protected dashboard
+- ✅ Phase 3 — Calendar core: Event model, CRUD API, week view at `/calendar`
+- ✅ Phase 4 — Scheduling links: Calendly-style flow at `/scheduling`, `/book/[slug]`, `/booked/[id]`
+- 🛠️ **Phase 5 (in progress)** — Polish + email + remaining pages
 - ⏳ Phase 6 — Deploy: push to Vercel + Render + connect Atlas + custom domain
+
+## Set up Resend (email confirmations for bookings)
+
+When someone books a meeting through your `/book/[slug]` link, ElevAIte emails both the invitee and the host. We use [Resend](https://resend.com) — free for 3,000 emails/month.
+
+1. Sign up at [resend.com](https://resend.com) (free, no credit card)
+2. Dashboard → **API Keys** → **+ Create API Key** → copy it
+3. Paste into `web/.env.local`:
+   ```
+   RESEND_API_KEY=re_...
+   ```
+4. Restart `npm run dev`
+
+### Dev mode catch you need to know
+
+Until you verify a custom domain in Resend, you can only send emails to **the address you signed up with**. So bookings from arbitrary invitee emails will silently fail to deliver. This is fine for development — book yourself to test.
+
+### Going to production
+
+When you're ready to send to anyone:
+1. Buy a domain (~$10/yr, e.g., through Hostinger or Namecheap) — say `elevaite.app`
+2. In Resend → **Domains** → add `elevaite.app` → add the 3 DNS records Resend gives you to your domain registrar
+3. Wait ~10 min for verification
+4. Update `EMAIL_FROM` in env to `ElevAIte <hi@elevaite.app>`
+5. Bookings now email anyone
+
+### What if I don't set RESEND_API_KEY?
+
+The booking flow still works — emails are just logged to the console with `[email]` prefix instead of being sent. No errors. Useful for local testing without an account.
 
 ## Set up Google OAuth
 

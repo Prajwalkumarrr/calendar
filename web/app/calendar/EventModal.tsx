@@ -41,6 +41,31 @@ export function EventModal({ draft, onClose, onSaved }: Props) {
   const [error, setError] = useState<string | null>(null);
   const titleRef = useRef<HTMLInputElement>(null);
 
+  // When the start changes, shift the end by the same delta so the duration is preserved.
+  function onStartChange(next: string) {
+    const oldStart = fromLocalInput(start);
+    const oldEnd = fromLocalInput(end);
+    const newStart = fromLocalInput(next);
+    if (!isNaN(+oldStart) && !isNaN(+oldEnd) && !isNaN(+newStart)) {
+      const durationMs = oldEnd.getTime() - oldStart.getTime();
+      const newEnd = new Date(newStart.getTime() + Math.max(durationMs, 5 * 60_000));
+      setEnd(toLocalInput(newEnd));
+    }
+    setStart(next);
+  }
+
+  // If the user manually sets an end before the start, bump it to start + 15min.
+  function onEndChange(next: string) {
+    const s = fromLocalInput(start);
+    const e = fromLocalInput(next);
+    if (!isNaN(+s) && !isNaN(+e) && e <= s) {
+      const bumped = new Date(s.getTime() + 15 * 60_000);
+      setEnd(toLocalInput(bumped));
+      return;
+    }
+    setEnd(next);
+  }
+
   useEffect(() => {
     titleRef.current?.focus();
     titleRef.current?.select();
@@ -122,7 +147,7 @@ export function EventModal({ draft, onClose, onSaved }: Props) {
               type="datetime-local"
               className={styles.input}
               value={start}
-              onChange={(e) => setStart(e.target.value)}
+              onChange={(e) => onStartChange(e.target.value)}
             />
           </div>
           <div>
@@ -131,7 +156,7 @@ export function EventModal({ draft, onClose, onSaved }: Props) {
               type="datetime-local"
               className={styles.input}
               value={end}
-              onChange={(e) => setEnd(e.target.value)}
+              onChange={(e) => onEndChange(e.target.value)}
             />
           </div>
         </div>
