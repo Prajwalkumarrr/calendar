@@ -119,8 +119,8 @@ export function CalendarApp() {
   const dragRef = useRef<{ day: number; startY: number; column: HTMLDivElement } | null>(null);
   const [dragGhost, setDragGhost] = useState<{ day: number; top: number; height: number } | null>(null);
 
-  const weekStart = useMemo(() => startOfWeek(anchor), [anchor]);
-  const weekEnd = useMemo(() => endOfWeek(anchor), [anchor]);
+  const weekStart = useMemo(() => startOfWeek(anchor, appearance.weekStart), [anchor, appearance.weekStart]);
+  const weekEnd = useMemo(() => endOfWeek(anchor, appearance.weekStart), [anchor, appearance.weekStart]);
   const days = useMemo(() => {
     if (view === 'day') return [new Date(anchor.getFullYear(), anchor.getMonth(), anchor.getDate())];
     return daysInWeek(weekStart);
@@ -504,9 +504,9 @@ export function CalendarApp() {
             {days.map((d, i) => (
               <div
                 key={i}
-                className={`cal-day ${isSameDay(d, now) ? 'cal-day--today' : ''} ${i >= 5 ? 'cal-day--weekend' : ''}`}
+                className={`cal-day ${isSameDay(d, now) ? 'cal-day--today' : ''} ${(d.getDay() === 0 || d.getDay() === 6) ? 'cal-day--weekend' : ''}`}
               >
-                <div className="cal-day__name">{DAY_NAMES[i]}</div>
+                <div className="cal-day__name">{['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][d.getDay()]}</div>
                 <div className="cal-day__num">{d.getDate()}</div>
               </div>
             ))}
@@ -571,7 +571,7 @@ export function CalendarApp() {
                   <div
                     key={i}
                     data-col={i}
-                    className={`cal-col ${isSameDay(d, now) ? 'cal-col--today' : ''} ${i >= 5 ? 'cal-col--weekend' : ''}`}
+                    className={`cal-col ${isSameDay(d, now) ? 'cal-col--today' : ''} ${(d.getDay() === 0 || d.getDay() === 6) ? 'cal-col--weekend' : ''}`}
                     onMouseDown={(e) => onColMouseDown(e, i)}
                     style={{ position: 'relative' }}
                   >

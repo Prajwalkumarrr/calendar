@@ -1,4 +1,11 @@
-/** Date helpers — Monday-first week, local time. */
+/** Date helpers — week start is configurable, local time. */
+
+export type WeekStart = 'mon' | 'sun' | 'sat';
+
+function startDayOfWeek(ws: WeekStart): number {
+  // The getDay() value where the week starts (0=Sun, 1=Mon, 6=Sat).
+  return ws === 'mon' ? 1 : ws === 'sat' ? 6 : 0;
+}
 
 export function startOfDay(d: Date): Date {
   const x = new Date(d);
@@ -6,16 +13,16 @@ export function startOfDay(d: Date): Date {
   return x;
 }
 
-export function startOfWeek(d: Date): Date {
+export function startOfWeek(d: Date, weekStart: WeekStart = 'mon'): Date {
   const x = startOfDay(d);
-  const day = x.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
-  const diff = day === 0 ? -6 : 1 - day;
-  x.setDate(x.getDate() + diff);
+  const day = x.getDay();
+  const diff = (day - startDayOfWeek(weekStart) + 7) % 7;
+  x.setDate(x.getDate() - diff);
   return x;
 }
 
-export function endOfWeek(d: Date): Date {
-  const start = startOfWeek(d);
+export function endOfWeek(d: Date, weekStart: WeekStart = 'mon'): Date {
+  const start = startOfWeek(d, weekStart);
   const end = new Date(start);
   end.setDate(end.getDate() + 7);
   return end; // exclusive
