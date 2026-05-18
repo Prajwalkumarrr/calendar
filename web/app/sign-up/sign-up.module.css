@@ -1,0 +1,228 @@
+/* /sign-up — reuses the visual language of /sign-in's two-column shell */
+
+.shell {
+  display: grid;
+  grid-template-columns: 1fr 1.05fr;
+  min-height: 100vh;
+  overflow: hidden;
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+@media (max-width: 880px) {
+  .shell { grid-template-columns: 1fr; }
+  .side { display: none; }
+}
+
+.form {
+  display: flex; flex-direction: column;
+  padding: 40px 56px;
+  background: var(--bg);
+  position: relative;
+  animation: form-in 700ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+@keyframes form-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+.back {
+  display: inline-flex; align-items: center; gap: 8px;
+  color: var(--text-2); font-size: 13px; font-weight: 500;
+  text-decoration: none;
+  width: fit-content;
+  padding: 6px 10px; margin-left: -10px;
+  border-radius: 8px;
+  transition: color 180ms, background 180ms;
+}
+.back:hover { color: var(--text); background: var(--surface); }
+
+.center {
+  flex: 1;
+  display: flex; flex-direction: column; justify-content: center;
+  max-width: 360px; width: 100%; margin: 0 auto;
+  padding: 32px 0;
+}
+
+.brand {
+  display: flex; align-items: center; gap: 10px;
+  font-weight: 600; font-size: 15px; letter-spacing: -0.01em;
+  margin-bottom: 24px;
+}
+.brandDot {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  background: var(--coral);
+  display: grid; place-items: center;
+  color: #fff; font-size: 11px; font-weight: 700;
+  font-family: 'Geist Mono', monospace;
+}
+
+.h1 {
+  font-size: 28px; font-weight: 600; letter-spacing: -0.022em;
+  margin: 0 0 10px;
+  line-height: 1.15;
+}
+.sub {
+  font-size: 14.5px; color: var(--text-2);
+  line-height: 1.55;
+  margin: 0 0 22px;
+}
+
+.field { display: block; margin-bottom: 12px; }
+.fieldLbl {
+  font-size: 12px; font-weight: 500; color: var(--text-2);
+  margin-bottom: 5px; display: block;
+}
+.input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--hairline-strong);
+  background: var(--bg);
+  border-radius: 9px;
+  font-size: 14px;
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 180ms;
+}
+.input:focus { border-color: var(--coral); box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.15); }
+.input:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.primary {
+  width: 100%;
+  height: 44px;
+  margin-top: 6px;
+  background: var(--text);
+  color: var(--bg);
+  border: 0; border-radius: 10px;
+  font-size: 14px; font-weight: 500; letter-spacing: -0.005em;
+  cursor: pointer;
+  transition: transform 180ms, opacity 180ms;
+  font-family: inherit;
+}
+@media (hover: hover) { .primary:hover { transform: translateY(-1px); } }
+.primary:disabled { opacity: 0.6; cursor: progress; transform: none; }
+
+.divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 18px 0;
+  font-size: 11.5px; color: var(--text-3);
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--hairline-strong);
+}
+
+.google {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px;
+  width: 100%;
+  height: 44px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 10px;
+  font-size: 14px; font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+}
+.google:hover { background: var(--surface); }
+.gicon {
+  width: 18px; height: 18px;
+  background: #fff;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 11px; font-weight: 700;
+  color: var(--text);
+}
+
+.note {
+  font-size: 12.5px; color: var(--text-3);
+  line-height: 1.55;
+  text-align: center;
+  margin-top: 22px;
+}
+.note a { color: var(--text-2); text-decoration: underline; text-underline-offset: 2px; }
+
+.error {
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: var(--coral-subtle);
+  color: var(--coral-strong, var(--coral));
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.success {
+  margin-top: 14px;
+  padding: 10px 14px;
+  background: var(--chip-sage-bg);
+  color: var(--chip-sage-text);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.codeRow {
+  display: flex; gap: 8px; justify-content: space-between;
+  margin: 8px 0 4px;
+}
+.codeCell {
+  flex: 1;
+  height: 56px;
+  text-align: center;
+  font-family: 'Geist Mono', monospace;
+  font-size: 22px; font-weight: 600;
+  border: 1.5px solid var(--hairline-strong);
+  background: var(--bg);
+  border-radius: 10px;
+  color: var(--text);
+  outline: none;
+}
+.codeCell:focus { border-color: var(--coral); box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.18); }
+
+.resend {
+  background: none; border: 0; padding: 0;
+  color: var(--coral);
+  font-size: 12.5px; font-weight: 500;
+  cursor: pointer; font-family: inherit;
+  margin-top: 6px;
+}
+.resend:hover { text-decoration: underline; }
+.resend:disabled { color: var(--text-3); cursor: not-allowed; text-decoration: none; }
+
+/* Side panel — reuse sign-in style */
+.side {
+  position: relative;
+  background:
+    radial-gradient(800px 500px at 80% 30%, rgba(217, 119, 87, 0.18), transparent 65%),
+    radial-gradient(600px 600px at 20% 80%, rgba(217, 119, 87, 0.10), transparent 60%),
+    var(--surface);
+  border-left: 1px solid var(--hairline-strong);
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  padding: 56px;
+  animation: side-in 900ms cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+@keyframes side-in { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: none; } }
+
+.sideInner { max-width: 420px; position: relative; z-index: 1; }
+.sideHead {
+  font-size: 28px; font-weight: 600; letter-spacing: -0.022em;
+  line-height: 1.2;
+  margin: 0 0 24px;
+}
+.coral { color: var(--coral); }
+.sideList {
+  display: flex; flex-direction: column;
+  gap: 14px;
+  font-size: 14px;
+  color: var(--text-2);
+}
+.sideList li {
+  display: flex; gap: 10px;
+  list-style: none;
+}
+.sideList li::before {
+  content: '✓';
+  color: var(--coral);
+  font-weight: 600;
+  flex-shrink: 0;
+}

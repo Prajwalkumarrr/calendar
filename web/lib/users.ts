@@ -83,6 +83,11 @@ export type UserRecord = {
   timezones?: SavedTimezone[];
   persona?: 'student' | 'startup' | 'solo';
   onboardedAt?: Date;
+  // Email + password credentials (alongside Google OAuth)
+  passwordHash?: string;
+  emailVerified?: Date | null;
+  verificationCode?: string;
+  verificationCodeExpiresAt?: Date;
   updatedAt?: Date;
 };
 
@@ -135,6 +140,61 @@ export async function getUserById(id: string): Promise<UserRecord | null> {
 export async function getNotificationPrefs(id: string): Promise<NotificationPrefs> {
   const u = await getUserById(id);
   return { ...DEFAULT_PREFS, ...(u?.notificationPrefs ?? {}) };
+}
+
+// ── Email + password helpers ────────────────────────────────────────
+
+export async function findUserByEmail(email: string): Promise<UserRecord | null> {
+  const c = await col();
+  return (await c.findOne({ email: email.toLowerCase().trim() })) as UserRecord | null;
+}
+
+export async function createCredentialsUser(input: {
+  email: string;
+  passwordHash: string;
+  name?: string;
+  verificationCode: string;
+  verificationCodeExpiresAt: Date;
+}): Promise<UserRecord> {
+  const c = await col();
+  const doc = {
+    email: input.email.toLowerCase().trim(),
+    name: input.name?.trim(),
+    passwordHash: input.passwordHash,
+    emailVerified: null,
+    verificationCode: input.verificationCode,
+    verificationCodeExpiresAt: input.verificationCodeExpiresAt,
+    updatedAt: new Date(),
+  };
+  const res = await c.insertOne(doc as unknown as UserRecord);
+  return { ...doc, _id: res.insertedId } as unknown as UserRecord;
+}
+
+export async function setVerificationCode(
+  userId: string,
+  code: string,
+  expiresAt: Date,
+): Promise<boolean> {
+  if (!ObjectId.isValid(userId)) return false;
+  const c = await col();
+  const res = await c.updateOne(
+    { _id: new ObjectId(userId) },
+    { $set: { verificationCode: code, verificationCodeExpiresAt: expiresAt, updatedAt: new Date() } },
+  );
+  return res.modifiedCount === 1;
+}
+
+export async function markEmailVerified(userId: string): Promise<boolean> {
+  if (!ObjectId.isValid(userId)) return false;
+  const c = await col();
+  await c.updateOne(
+    { _id: new ObjectId(userId) },
+    {
+      $set: { emailVerified: new Date(), updatedAt: new Date() },
+      $unset: { verificationCode: '', verificationCodeExpiresAt: '' },
+    },
+  );
+  return true;
 }
 
 export async function markOnboarded(id: string, persona?: 'student' | 'startup' | 'solo'): Promise<boolean> {
