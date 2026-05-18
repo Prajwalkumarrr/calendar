@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+/* ElevAIte design tokens — light is default, [data-theme="dark"] mirrors */
+@theme {
+  --color-coral: #D97757;
+  --color-coral-hover: #C26646;
+  --color-coral-subtle: #F4E5DC;
+  --color-coral-strong: #B85A3C;
+
+  --color-bg: #FAF9F5;
+  --color-surface: #F5F4ED;
+  --color-surface-sunken: #EFEDE4;
+  --color-surface-elevated: #FDFCF8;
+
+  --color-text: #1F1E1B;
+  --color-text-2: #6B6862;
+  --color-text-3: #A19D94;
+
+  --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', monospace;
+
+  --radius-chip: 5px;
+  --radius-card: 12px;
+  --radius-button: 8px;
+  --radius-popover: 14px;
+
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+:root {
+  --coral: #D97757;
+  --coral-hover: #C26646;
+  --coral-subtle: #F4E5DC;
+  --bg: #FAF9F5;
+  --surface: #F5F4ED;
+  --surface-sunken: #EFEDE4;
+  --surface-elevated: #FDFCF8;
+  --text: #1F1E1B;
+  --text-2: #6B6862;
+  --text-3: #A19D94;
+  --hairline: rgba(31, 30, 27, 0.06);
+  --hairline-strong: rgba(31, 30, 27, 0.10);
+  --border: rgba(31, 30, 27, 0.12);
+  --shadow: 0 4px 16px rgba(31, 30, 27, 0.08), 0 1px 2px rgba(31, 30, 27, 0.04);
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --ring: rgba(217, 119, 87, 0.45);
+}
+
+[data-theme="dark"] {
+  --coral: #E8896A;
+  --coral-hover: #F09A7D;
+  --coral-subtle: #3A2A22;
+  --bg: #1A1916;
+  --surface: #232220;
+  --surface-sunken: #1F1E1B;
+  --surface-elevated: #2A2926;
+  --text: #F5F4ED;
+  --text-2: #A8A49A;
+  --text-3: #6B6862;
+  --hairline: rgba(245, 244, 237, 0.06);
+  --hairline-strong: rgba(245, 244, 237, 0.10);
+  --border: rgba(245, 244, 237, 0.12);
+  --shadow: 0 4px 16px rgba(0, 0, 0, 0.30), 0 1px 2px rgba(0, 0, 0, 0.20);
+  --ring: rgba(232, 137, 106, 0.55);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-feature-settings: 'ss01', 'cv11';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.mono { font-family: var(--font-mono); font-feature-settings: 'tnum'; }
+
+:focus { outline: none; }
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: var(--radius-button); }
+
+::selection { background: var(--coral-subtle); color: var(--text); }

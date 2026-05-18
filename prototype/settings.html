@@ -1,0 +1,840 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Settings — ElevAIte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="motion.css" />
+  <style>
+    body { overflow: hidden; }
+    .settings-shell {
+      display: grid; grid-template-columns: 260px 1fr;
+      height: 100vh;
+      background: var(--bg);
+    }
+    .settings-sidebar {
+      padding: 22px 14px 16px;
+      border-right: 1px solid var(--hairline);
+      background: var(--bg);
+      display: flex; flex-direction: column;
+      animation: slide-right 600ms var(--ease) both;
+    }
+    .ss-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 9px; margin-bottom: 14px;
+      font-size: 12.5px; color: var(--text-2);
+      border-radius: 7px; text-decoration: none;
+      transition: background 120ms var(--ease), color 120ms var(--ease);
+    }
+    .ss-back:hover { background: var(--surface); color: var(--text); }
+    .ss-section {
+      font-size: 10.5px; font-weight: 600; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--text-3);
+      padding: 14px 10px 6px;
+    }
+    .ss-nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 10px;
+      font-size: 13px; color: var(--text-2);
+      border-radius: 7px; cursor: pointer;
+      transition: background 120ms var(--ease), color 120ms var(--ease);
+      background: none; border: 0; text-align: left; width: 100%;
+    }
+    .ss-nav-item:hover { background: var(--surface); color: var(--text); }
+    .ss-nav-item.on { background: var(--coral-subtle); color: var(--coral-strong); font-weight: 500; }
+    .ss-nav-item svg { color: currentColor; flex-shrink: 0; }
+    .ss-nav-item .badge { margin-left: auto; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 999px; background: var(--coral); color: #fff; }
+
+    .ss-user {
+      margin-top: auto; padding: 12px;
+      background: var(--surface); border-radius: 10px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 12.5px;
+    }
+    .ss-user__avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: linear-gradient(135deg, #9A7B98, #D97757);
+      color: #fff; font-weight: 600; font-size: 12px;
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .ss-user__name { font-weight: 500; }
+    .ss-user__email { font-size: 11px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
+
+    .settings-main {
+      overflow-y: auto;
+      padding: 36px 48px 80px;
+      animation: fade-up 600ms var(--ease) 0.1s both;
+    }
+    .settings-main__inner { max-width: 760px; }
+    .ss-page-h {
+      font-size: 26px; font-weight: 600; letter-spacing: -0.02em;
+      margin: 0 0 6px;
+    }
+    .ss-page-sub { font-size: 14px; color: var(--text-2); margin: 0 0 28px; }
+
+    .ss-card {
+      background: var(--bg);
+      border: 1px solid var(--hairline-strong);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+    .ss-card__h {
+      font-size: 14px; font-weight: 600; letter-spacing: -0.005em;
+      margin: 0 0 4px;
+    }
+    .ss-card__sub { font-size: 12.5px; color: var(--text-2); margin: 0 0 16px; }
+
+    .form-row {
+      display: grid; grid-template-columns: 220px 1fr; gap: 24px;
+      padding: 18px 0;
+      border-top: 1px solid var(--hairline);
+    }
+    .form-row:first-of-type { border-top: 0; padding-top: 0; }
+    .form-row__lbl { font-size: 13px; font-weight: 500; color: var(--text); }
+    .form-row__lbl small { display: block; font-size: 11.5px; color: var(--text-3); font-weight: 400; margin-top: 2px; line-height: 1.4; }
+    .form-row__control { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+
+    /* Segment toggle */
+    .seg {
+      display: inline-flex; padding: 2px;
+      background: var(--surface); border: 1px solid var(--hairline-strong);
+      border-radius: 8px; width: fit-content;
+      position: relative;
+    }
+    .seg button {
+      padding: 5px 12px; border-radius: 6px;
+      font-size: 12.5px; color: var(--text-2); font-weight: 500;
+      background: none; border: 0; cursor: pointer;
+      transition: color 180ms var(--ease);
+      position: relative; z-index: 1;
+    }
+    .seg button.on { color: var(--text); }
+    .seg__pill {
+      position: absolute; top: 2px; bottom: 2px;
+      background: var(--bg); border-radius: 6px;
+      box-shadow: 0 1px 2px rgba(31,30,27,0.06);
+      transition: left 240ms var(--ease), width 240ms var(--ease);
+    }
+
+    /* Toggle switch (coral) */
+    .switch { position: relative; width: 32px; height: 18px; flex-shrink: 0; cursor: pointer; }
+    .switch input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .switch__track { position: absolute; inset: 0; background: var(--border); border-radius: 999px; transition: background 200ms var(--ease); }
+    .switch__thumb { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: var(--bg); border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,.18); transition: transform 200ms var(--ease); }
+    .switch input:checked ~ .switch__track { background: var(--coral); }
+    .switch input:checked ~ .switch__thumb { transform: translateX(14px); }
+
+    /* Color/theme cards */
+    .theme-cards { display: flex; gap: 10px; }
+    .theme-card {
+      padding: 8px;
+      background: var(--bg); border: 1.5px solid var(--border);
+      border-radius: 10px; cursor: pointer; text-align: center;
+      transition: border-color 120ms var(--ease);
+    }
+    .theme-card.on { border-color: var(--coral); }
+    .theme-card__prev { width: 100px; height: 56px; border-radius: 6px; margin-bottom: 6px; padding: 8px; display: flex; flex-direction: column; gap: 3px; }
+    .theme-card__prev div { height: 4px; border-radius: 2px; }
+    .theme-card__lbl { font-size: 12px; font-weight: 500; }
+
+    .switch-row {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 12px 0;
+      border-top: 1px solid var(--hairline);
+    }
+    .switch-row:first-of-type { border-top: 0; }
+    .switch-row__txt { flex: 1; }
+    .switch-row__txt h4 { font-size: 13.5px; font-weight: 500; margin: 0; color: var(--text); }
+    .switch-row__txt p { font-size: 12.5px; color: var(--text-2); margin: 2px 0 0; line-height: 1.5; }
+
+    .danger-zone {
+      margin-top: 36px; padding-top: 28px;
+      border-top: 1px solid var(--hairline-strong);
+    }
+    .danger-zone h3 { font-size: 13px; font-weight: 600; color: var(--text-2); margin: 0 0 10px; }
+    .danger-btn {
+      padding: 8px 13px; border-radius: 7px;
+      border: 1px solid var(--border); background: var(--bg);
+      font-size: 12.5px; color: var(--text-2); font-weight: 500;
+      cursor: pointer; margin-right: 8px;
+      transition: all 120ms var(--ease);
+    }
+    .danger-btn:hover { color: var(--coral-strong); border-color: var(--coral); background: var(--coral-subtle); }
+
+    /* Calendar accounts list */
+    .acct {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 16px;
+      background: var(--bg);
+      border: 1px solid var(--hairline-strong);
+      border-radius: 10px;
+      margin-bottom: 8px;
+    }
+    .acct__provider { width: 36px; height: 36px; border-radius: 8px; background: #fff; display: grid; place-items: center; border: 1px solid var(--hairline-strong); flex-shrink: 0; }
+    .acct__email { font-size: 13.5px; font-weight: 500; }
+    .acct__type { font-size: 11.5px; color: var(--text-3); }
+    .acct__pill {
+      font-size: 10.5px; font-weight: 600; padding: 2px 8px;
+      border-radius: 4px; background: var(--chip-sage-bg); color: var(--chip-sage-text);
+    }
+    .acct__btn { padding: 6px 10px; font-size: 12px; color: var(--text-3); border: 1px solid var(--border); background: var(--bg); border-radius: 6px; cursor: pointer; }
+    .acct__btn:hover { color: var(--text); }
+
+    /* Keyboard shortcuts */
+    .kbd-search-wrap { position: relative; margin-bottom: 18px; }
+    .kbd-search { width: 100%; padding: 9px 12px 9px 36px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; font-size: 13.5px; }
+    .kbd-search:focus { outline: none; border-color: var(--coral); box-shadow: 0 0 0 3px rgba(217,119,87,0.15); }
+    .kbd-search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-3); }
+
+    .kbd-group { padding: 14px 0; border-top: 1px solid var(--hairline); }
+    .kbd-group:first-of-type { border-top: 0; padding-top: 0; }
+    .kbd-group__h { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 8px; }
+    .kbd-row { display: flex; align-items: center; padding: 7px 0; font-size: 13px; }
+    .kbd-row__lbl { flex: 1; color: var(--text); }
+    .kbd-row__keys { display: flex; gap: 4px; }
+
+    /* Billing */
+    .plan-card {
+      padding: 22px;
+      background: var(--text); color: var(--bg);
+      border-radius: 14px;
+      margin-bottom: 18px;
+      position: relative; overflow: hidden;
+    }
+    .plan-card::before {
+      content: ''; position: absolute; right: -40%; top: -40%; bottom: -40%; left: 40%;
+      background: radial-gradient(ellipse at center, rgba(217,119,87,0.3), transparent 60%);
+      animation: bloom 8s ease-in-out infinite alternate;
+    }
+    .plan-card > * { position: relative; z-index: 1; }
+    .plan-card__tag { display: inline-block; font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; background: var(--coral); color: #fff; margin-bottom: 8px; }
+    .plan-card__h { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 4px; color: var(--bg); }
+    .plan-card__sub { font-size: 13px; color: rgba(245, 244, 237, 0.7); margin: 0 0 12px; }
+    .plan-card__seats { font-family: 'Geist Mono', monospace; font-size: 12px; color: rgba(245, 244, 237, 0.8); }
+
+    .pay-card {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 16px;
+      background: var(--bg);
+      border: 1px solid var(--hairline-strong);
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+    .pay-card__icon { width: 42px; height: 28px; background: var(--text); color: var(--bg); border-radius: 5px; display: grid; place-items: center; font-family: 'Geist Mono'; font-size: 9px; font-weight: 600; letter-spacing: .04em; }
+    .pay-card__num { font-family: 'Geist Mono'; font-size: 13px; }
+    .pay-card__exp { font-size: 11px; color: var(--text-3); font-family: 'Geist Mono'; }
+
+    .invoice {
+      display: grid; grid-template-columns: 100px 1fr auto auto;
+      gap: 14px; align-items: center;
+      padding: 10px 0;
+      border-top: 1px solid var(--hairline);
+      font-size: 12.5px;
+    }
+    .invoice:first-of-type { border-top: 0; }
+    .invoice__date { font-family: 'Geist Mono'; color: var(--text-2); }
+    .invoice__amt { font-family: 'Geist Mono'; font-weight: 500; }
+    .invoice__btn { font-size: 12px; color: var(--text-3); text-decoration: none; }
+    .invoice__btn:hover { color: var(--coral); }
+    .invoice__status { font-size: 10.5px; font-weight: 600; padding: 1px 7px; border-radius: 3px; background: var(--chip-sage-bg); color: var(--chip-sage-text); text-transform: uppercase; letter-spacing: .04em; }
+
+    /* Workspace member rows */
+    .member {
+      display: grid; grid-template-columns: 32px 1fr auto auto;
+      gap: 12px; align-items: center;
+      padding: 12px 0;
+      border-top: 1px solid var(--hairline);
+    }
+    .member:first-of-type { border-top: 0; }
+    .member__avatar { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 600; font-size: 12px; }
+    .member__name { font-size: 13.5px; font-weight: 500; }
+    .member__email { font-size: 11.5px; color: var(--text-3); }
+    .member__role-pick {
+      padding: 4px 10px; border-radius: 6px;
+      border: 1px solid var(--border); background: var(--bg);
+      font-size: 12px; cursor: pointer; min-width: 80px;
+    }
+    .member__role-pick:focus { outline: none; border-color: var(--coral); }
+  </style>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body class="shell">
+
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+  const Icon = ({ children }) => (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{children}</svg>
+  );
+  const IconUser = () => <Icon><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></Icon>;
+  const IconCal = () => <Icon><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></Icon>;
+  const IconBell = () => <Icon><path d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 004 0"/></Icon>;
+  const IconPalette = () => <Icon><circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><circle cx="8.5" cy="7.5" r="1"/><circle cx="6.5" cy="12.5" r="1"/><path d="M12 2a10 10 0 1 0 0 20 4 4 0 0 0 0-8 4 4 0 1 1 4-4 10 10 0 0 0-4-8z"/></Icon>;
+  const IconKbd = () => <Icon><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M6 10v0M10 10v0M14 10v0M18 10v0M6 14v0M18 14v0M9 17h6"/></Icon>;
+  const IconCard = () => <Icon><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 11h18"/></Icon>;
+  const IconUsers = () => <Icon><path d="M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M21 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></Icon>;
+  const IconLock = () => <Icon><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></Icon>;
+  const IconArrow = () => <Icon><path d="M15 18l-6-6 6-6"/></Icon>;
+  const IconSearch = () => <Icon><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></Icon>;
+  const IconPlus = () => <Icon><path d="M12 5v14M5 12h14"/></Icon>;
+  const IconDots = () => <Icon><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></Icon>;
+
+  // ─── Reusable bits ───
+  const Switch = ({ on, onChange }) => (
+    <label className="switch">
+      <input type="checkbox" checked={on} onChange={(e) => onChange(e.target.checked)} />
+      <span className="switch__track"></span>
+      <span className="switch__thumb"></span>
+    </label>
+  );
+
+  function Seg({ value, options, onChange }) {
+    const wrap = React.useRef(null);
+    const [pill, setPill] = React.useState({ left: 2, width: 0 });
+    React.useEffect(() => {
+      const wrapEl = wrap.current; if (!wrapEl) return;
+      const active = wrapEl.querySelector(`button[data-v="${value}"]`);
+      if (active) setPill({ left: active.offsetLeft, width: active.offsetWidth });
+    }, [value]);
+    return (
+      <div className="seg" ref={wrap}>
+        <span className="seg__pill" style={pill}></span>
+        {options.map(o => (
+          <button key={o.v || o} data-v={o.v || o} className={value === (o.v || o) ? 'on' : ''} onClick={() => onChange(o.v || o)}>
+            {o.l || o}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  function SwitchRow({ title, sub, on, onChange }) {
+    return (
+      <div className="switch-row">
+        <div className="switch-row__txt">
+          <h4>{title}</h4>
+          {sub && <p>{sub}</p>}
+        </div>
+        <Switch on={on} onChange={onChange} />
+      </div>
+    );
+  }
+
+  function Row({ label, sub, children }) {
+    return (
+      <div className="form-row">
+        <div className="form-row__lbl">
+          {label}{sub && <small>{sub}</small>}
+        </div>
+        <div className="form-row__control">{children}</div>
+      </div>
+    );
+  }
+
+  // ─── Pages ───
+  function Profile() {
+    const [name, setName] = React.useState('Prem Sai');
+    const [bio, setBio] = React.useState('Founder of ElevAIte. CS student at Stanford. Caffeinated by Verve, soothed by Geist Mono.');
+    return (
+      <>
+        <h1 className="ss-page-h">Profile</h1>
+        <p className="ss-page-sub">How you appear inside ElevAIte and on your scheduling pages.</p>
+
+        <div className="ss-card">
+          <Row label="Display name">
+            <input className="field-input" value={name} onChange={(e) => setName(e.target.value)} />
+          </Row>
+          <Row label="Profile photo" sub="Shown on your booking page and to teammates.">
+            <div style={{display:'flex', alignItems:'center', gap: 14}}>
+              <div style={{width:56, height:56, borderRadius:'50%', background:'linear-gradient(135deg, #9A7B98, #D97757)', color:'#fff', fontWeight:600, fontSize:22, display:'grid', placeItems:'center'}}>P</div>
+              <button className="cta-ghost" style={{padding:'7px 12px', fontSize:12.5}}>Upload</button>
+              <button className="danger-btn">Remove</button>
+            </div>
+          </Row>
+          <Row label="Email" sub="This is your sign-in email and where notifications go.">
+            <input className="field-input" defaultValue="prem@elevaite.so" />
+            <small style={{fontSize: 11.5, color: 'var(--text-3)'}}>You also have <b style={{color:'var(--text-2)'}}>prem@stanford.edu</b> connected (Student plan).</small>
+          </Row>
+          <Row label="Bio" sub="Shown on your public booking page.">
+            <textarea className="field-input" value={bio} onChange={e => setBio(e.target.value)} style={{minHeight: 90, resize: 'vertical', fontFamily: 'inherit'}} />
+          </Row>
+          <Row label="Booking-page handle" sub="Your public URL for scheduling links.">
+            <div style={{display:'flex', gap: 0}}>
+              <span style={{padding: '10px 12px', background: 'var(--surface)', border: '1px solid var(--border)', borderRight: 0, borderRadius: '8px 0 0 8px', fontFamily: 'Geist Mono', fontSize: 13, color: 'var(--text-3)', display: 'flex', alignItems: 'center'}}>elevaite.so/</span>
+              <input className="field-input" defaultValue="prem" style={{borderRadius: '0 8px 8px 0', fontFamily: 'Geist Mono'}} />
+            </div>
+          </Row>
+          <Row label="Time zone">
+            <select className="field-input" defaultValue="LA">
+              <option value="LA">America/Los_Angeles (UTC −7)</option>
+              <option value="NY">America/New_York (UTC −4)</option>
+              <option value="LDN">Europe/London (UTC +1)</option>
+              <option value="SGP">Asia/Singapore (UTC +8)</option>
+            </select>
+          </Row>
+        </div>
+
+        <div style={{display:'flex', gap:10, justifyContent:'flex-end'}}>
+          <button className="cta-ghost">Discard</button>
+          <button className="cta-primary">Save changes</button>
+        </div>
+      </>
+    );
+  }
+
+  function Accounts() {
+    return (
+      <>
+        <h1 className="ss-page-h">Calendar accounts</h1>
+        <p className="ss-page-sub">Manage the calendars ElevAIte syncs with. We never store event data on our servers.</p>
+
+        <div className="acct" style={{animation: 'fade-up 500ms var(--ease) 0.1s both'}}>
+          <div className="acct__provider"><svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.76h3.56c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.56-2.76c-.99.66-2.25 1.05-3.72 1.05-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0012 23z"/><path fill="#FBBC05" d="M5.84 14.1A6.6 6.6 0 015.5 12c0-.73.13-1.44.34-2.1V7.06H2.18A11 11 0 001 12c0 1.77.42 3.45 1.18 4.94l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg></div>
+          <div style={{flex:1}}>
+            <div className="acct__email">prem@stanford.edu <span className="acct__pill" style={{marginLeft:6, background:'var(--coral-subtle)', color:'var(--coral-strong)'}}>🎓 Student</span></div>
+            <div className="acct__type">Google Calendar · 5 calendars · last synced 2 min ago</div>
+          </div>
+          <span className="acct__pill">Connected</span>
+          <button className="acct__btn">Manage</button>
+          <button className="acct__btn">Disconnect</button>
+        </div>
+
+        <div className="acct" style={{animation: 'fade-up 500ms var(--ease) 0.18s both'}}>
+          <div className="acct__provider"><svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.76h3.56c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.56-2.76c-.99.66-2.25 1.05-3.72 1.05-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0012 23z"/><path fill="#FBBC05" d="M5.84 14.1A6.6 6.6 0 015.5 12c0-.73.13-1.44.34-2.1V7.06H2.18A11 11 0 001 12c0 1.77.42 3.45 1.18 4.94l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg></div>
+          <div style={{flex:1}}>
+            <div className="acct__email">prem@elevaite.so</div>
+            <div className="acct__type">Google Calendar (Work) · 3 calendars · last synced 1 min ago</div>
+          </div>
+          <span className="acct__pill">Connected</span>
+          <button className="acct__btn">Manage</button>
+          <button className="acct__btn">Disconnect</button>
+        </div>
+
+        <div className="acct" style={{animation: 'fade-up 500ms var(--ease) 0.26s both'}}>
+          <div className="acct__provider" style={{background:'#000'}}><svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M17.05 12.04c0-2.94 2.42-4.36 2.53-4.42-1.38-2.02-3.53-2.3-4.3-2.33-1.83-.19-3.57 1.08-4.5 1.08-.92 0-2.35-1.05-3.86-1.02-1.99.03-3.82 1.15-4.84 2.93-2.07 3.58-.53 8.87 1.49 11.78 1 1.43 2.18 3.02 3.72 2.97 1.5-.06 2.06-.96 3.86-.96s2.31.96 3.88.93c1.6-.03 2.61-1.44 3.6-2.88 1.13-1.66 1.6-3.27 1.63-3.36-.04-.01-3.13-1.2-3.16-4.76zM14.83 4.42c.83-1 1.39-2.4 1.24-3.79-1.2.05-2.65.8-3.5 1.8-.77.88-1.44 2.31-1.26 3.67 1.33.1 2.69-.68 3.52-1.68z"/></svg></div>
+          <div style={{flex:1}}>
+            <div className="acct__email">iCloud · Family</div>
+            <div className="acct__type">Apple Calendar · 1 calendar · last synced 4 min ago</div>
+          </div>
+          <span className="acct__pill">Connected</span>
+          <button className="acct__btn">Manage</button>
+          <button className="acct__btn">Disconnect</button>
+        </div>
+
+        <button className="cta-ghost" style={{display:'flex', alignItems:'center', gap:6, marginTop: 10, padding: '10px 14px'}}>
+          <IconPlus /> Add another account
+        </button>
+
+        <div className="danger-zone">
+          <h3>Sync settings</h3>
+          <p style={{fontSize: 12.5, color: 'var(--text-3)', margin: '0 0 14px', lineHeight: 1.5}}>How aggressively ElevAIte fetches from your providers.</p>
+          <Seg value="real-time" options={[{v:'real-time', l:'Real-time'}, {v:'minute', l:'Every minute'}, {v:'5min', l:'Every 5 min'}]} onChange={()=>{}} />
+        </div>
+      </>
+    );
+  }
+
+  function Notifications() {
+    const [s, setS] = React.useState({
+      desktop: true, email: true, mobile: true, sms: false,
+      reminders: true, reminderTime: '10',
+      digest: true, digestTime: '8',
+      invites: true, rsvp: true, cancel: true, reschedule: true,
+      links: true, slack: false,
+    });
+    const set = (k, v) => setS(p => ({ ...p, [k]: v }));
+    return (
+      <>
+        <h1 className="ss-page-h">Notifications</h1>
+        <p className="ss-page-sub">Choose how and when we ping you. We default to "useful and warm".</p>
+
+        <div className="ss-card">
+          <div className="ss-card__h">Where to reach you</div>
+          <SwitchRow title="Desktop notifications"  sub="Native macOS / Windows alerts for upcoming events." on={s.desktop} onChange={(v)=>set('desktop',v)} />
+          <SwitchRow title="Email digest"           sub="One email per day with what's ahead." on={s.email}    onChange={(v)=>set('email',v)} />
+          <SwitchRow title="Mobile push"            sub="iOS app — Android coming soon." on={s.mobile}   onChange={(v)=>set('mobile',v)} />
+          <SwitchRow title="SMS (Team plan only)"   sub="For meeting reminders on the go." on={s.sms}      onChange={(v)=>set('sms',v)} />
+        </div>
+
+        <div className="ss-card">
+          <div className="ss-card__h">Event reminders</div>
+          <Row label="Reminder lead time" sub="How long before an event we nudge you.">
+            <Seg value={s.reminderTime} options={[{v:'1', l:'1 min'},{v:'5', l:'5 min'},{v:'10', l:'10 min'},{v:'15', l:'15 min'},{v:'30', l:'30 min'}]} onChange={v=>set('reminderTime',v)} />
+          </Row>
+          <SwitchRow title="Reminders for accepted events"  on={s.reminders} onChange={(v)=>set('reminders',v)} />
+          <SwitchRow title="Daily morning digest"           sub={`Sent at ${s.digestTime}:00 AM in your time zone.`} on={s.digest}    onChange={(v)=>set('digest',v)} />
+        </div>
+
+        <div className="ss-card">
+          <div className="ss-card__h">When others do things</div>
+          <SwitchRow title="New event invitations"    on={s.invites}     onChange={(v)=>set('invites',v)} />
+          <SwitchRow title="RSVPs to your events"     on={s.rsvp}        onChange={(v)=>set('rsvp',v)} />
+          <SwitchRow title="Event cancellations"      on={s.cancel}      onChange={(v)=>set('cancel',v)} />
+          <SwitchRow title="Event reschedules"        on={s.reschedule}  onChange={(v)=>set('reschedule',v)} />
+          <SwitchRow title="Bookings on scheduling links" sub="When someone books one of your /prem links." on={s.links}    onChange={(v)=>set('links',v)} />
+        </div>
+
+        <div className="ss-card">
+          <div className="ss-card__h">Integrations</div>
+          <SwitchRow title="Slack — post in #standup before your standup"  on={s.slack} onChange={(v)=>set('slack',v)} />
+          <SwitchRow title="Linear — link issues mentioned in events" on={false} onChange={()=>{}} />
+        </div>
+      </>
+    );
+  }
+
+  function Appearance() {
+    const [theme, setTheme] = React.useState('light');
+    const [density, setDensity] = React.useState('regular');
+    const [weekStart, setWeekStart] = React.useState('mon');
+    const [timeFormat, setTimeFormat] = React.useState('24');
+    const [chip, setChip] = React.useState('tinted');
+    const [accent, setAccent] = React.useState('#D97757');
+    return (
+      <>
+        <h1 className="ss-page-h">Appearance</h1>
+        <p className="ss-page-sub">Make ElevAIte look how you want.</p>
+
+        <div className="ss-card">
+          <Row label="Theme">
+            <div className="theme-cards">
+              {[
+                {k:'light',  l:'Light',  bg:'#FAF9F5', sk:'#F5F4ED'},
+                {k:'dark',   l:'Dark',   bg:'#1A1916', sk:'#232220'},
+                {k:'system', l:'System', bg:'linear-gradient(135deg, #FAF9F5 50%, #1A1916 50%)', sk:'#888'},
+              ].map(o => (
+                <div key={o.k} className={`theme-card ${theme===o.k?'on':''}`} onClick={() => setTheme(o.k)}>
+                  <div className="theme-card__prev" style={{background: o.bg}}>
+                    <div style={{width:'60%', background: o.sk}} />
+                    <div style={{width:'40%', background: o.sk}} />
+                    <div style={{height: 18, marginTop:'auto', background: accent, borderRadius: 3, opacity: .7}} />
+                  </div>
+                  <div className="theme-card__lbl">{o.l}</div>
+                </div>
+              ))}
+            </div>
+          </Row>
+
+          <Row label="Accent color" sub="Coral by default. Pick a different mood.">
+            <div style={{display:'flex', gap:8}}>
+              {['#D97757','#E37A6B','#C28699','#88A188','#7A8DA8'].map(c => (
+                <button key={c} aria-pressed={accent===c} onClick={()=>setAccent(c)} style={{
+                  width:28, height:28, borderRadius:7, background:c, border: 0, cursor: 'pointer',
+                  boxShadow: accent===c ? `0 0 0 2px var(--bg), 0 0 0 4px ${c}` : 'none',
+                  transition: 'box-shadow 140ms var(--ease)',
+                }} />
+              ))}
+            </div>
+          </Row>
+
+          <Row label="Density">
+            <Seg value={density} options={['compact', 'regular', 'comfy']} onChange={setDensity} />
+          </Row>
+
+          <Row label="Event chip style">
+            <Seg value={chip} options={['fill', 'tinted', 'outline']} onChange={setChip} />
+          </Row>
+        </div>
+
+        <div className="ss-card">
+          <div className="ss-card__h">Calendar defaults</div>
+          <Row label="Week starts on">
+            <Seg value={weekStart} options={[{v:'mon',l:'Monday'},{v:'sun',l:'Sunday'},{v:'sat',l:'Saturday'}]} onChange={setWeekStart} />
+          </Row>
+          <Row label="Time format">
+            <Seg value={timeFormat} options={[{v:'12',l:'12-hour'},{v:'24',l:'24-hour'}]} onChange={setTimeFormat} />
+          </Row>
+          <Row label="Show declined events">
+            <Seg value="hide" options={[{v:'show',l:'Show'},{v:'hide',l:'Hide'},{v:'dim',l:'Dim'}]} onChange={()=>{}} />
+          </Row>
+        </div>
+      </>
+    );
+  }
+
+  const SHORTCUTS = [
+    { group: 'Navigation', list: [
+      { l: 'Go to today',                  k: ['T'] },
+      { l: 'Next week / day',              k: ['→'] },
+      { l: 'Previous week / day',          k: ['←'] },
+      { l: 'Jump to date',                 k: ['G'] },
+      { l: 'Switch to day view',           k: ['1'] },
+      { l: 'Switch to week view',          k: ['2'] },
+      { l: 'Switch to month view',         k: ['3'] },
+    ]},
+    { group: 'Events', list: [
+      { l: 'Create new event',             k: ['C'] },
+      { l: 'Delete selected event',        k: ['⌫'] },
+      { l: 'Duplicate event',              k: ['⌘', 'D'] },
+      { l: 'Edit selected event',          k: ['E'] },
+      { l: 'Toggle all-day',               k: ['A'] },
+    ]},
+    { group: 'Search & commands', list: [
+      { l: 'Command palette',              k: ['⌘', 'K'] },
+      { l: 'Search events',                k: ['⌘', 'F'] },
+      { l: 'Find a time',                  k: ['F'] },
+    ]},
+    { group: 'Scheduling', list: [
+      { l: 'New scheduling link',          k: ['⌘', 'L'] },
+      { l: 'Copy availability — 5 days',   k: ['⌘', '⇧', 'A'] },
+      { l: 'Open inbox',                   k: ['I'] },
+    ]},
+    { group: 'App', list: [
+      { l: 'Toggle dark mode',             k: ['⌘', '⇧', 'D'] },
+      { l: 'Open settings',                k: ['⌘', ','] },
+      { l: 'Toggle sidebar',               k: ['⌘', '\\'] },
+      { l: 'Sign out',                     k: ['⌘', '⇧', 'Q'] },
+    ]},
+  ];
+
+  function Keyboard() {
+    const [q, setQ] = React.useState('');
+    const groups = SHORTCUTS.map(g => ({
+      ...g,
+      list: g.list.filter(s => s.l.toLowerCase().includes(q.toLowerCase()))
+    })).filter(g => g.list.length);
+    return (
+      <>
+        <h1 className="ss-page-h">Keyboard shortcuts</h1>
+        <p className="ss-page-sub">30+ shortcuts. <span style={{color: 'var(--text)'}}>⌘K</span> is the one you'll learn first.</p>
+
+        <div className="ss-card">
+          <div className="kbd-search-wrap">
+            <IconSearch />
+            <input className="kbd-search" placeholder="Search shortcuts…" value={q} onChange={e=>setQ(e.target.value)} />
+          </div>
+          {groups.map(g => (
+            <div className="kbd-group" key={g.group}>
+              <div className="kbd-group__h">{g.group}</div>
+              {g.list.map((s, i) => (
+                <div className="kbd-row" key={i}>
+                  <div className="kbd-row__lbl">{s.l}</div>
+                  <div className="kbd-row__keys">
+                    {s.k.map((k, j) => <span className="kbd" key={j}>{k}</span>)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+          {groups.length === 0 && (
+            <div style={{textAlign: 'center', padding: '40px 0', color: 'var(--text-3)', fontSize: 13}}>No shortcut matches "{q}".</div>
+          )}
+        </div>
+
+        <div className="ss-card">
+          <SwitchRow title="Show shortcut hints on hover" sub="Tooltips reveal the shortcut when you mouse over a button." on={true} onChange={()=>{}} />
+          <SwitchRow title="Vim-style navigation (j/k)" sub="Move event selection up/down with j and k." on={false} onChange={()=>{}} />
+        </div>
+      </>
+    );
+  }
+
+  function Billing() {
+    return (
+      <>
+        <h1 className="ss-page-h">Account & billing</h1>
+        <p className="ss-page-sub">Your plan, payment, and invoices.</p>
+
+        <div className="plan-card">
+          <span className="plan-card__tag">🎓 Free for students</span>
+          <div className="plan-card__h">Student plan</div>
+          <p className="plan-card__sub">Verified by prem@stanford.edu · renews each term</p>
+          <div className="plan-card__seats">$0 / forever with .edu · next verification on Sep 1, 2026</div>
+          <div style={{marginTop: 16, display: 'flex', gap: 8}}>
+            <button className="cta-ghost" style={{background:'rgba(255,255,255,0.1)', color:'#fff', borderColor:'rgba(255,255,255,0.18)'}}>Upgrade to Team</button>
+            <button className="cta-ghost" style={{background:'rgba(255,255,255,0.06)', color:'rgba(245,244,237,0.7)', borderColor:'rgba(255,255,255,0.1)'}}>Re-verify .edu</button>
+          </div>
+        </div>
+
+        <div className="ss-card">
+          <div className="ss-card__h">Payment method</div>
+          <p className="ss-card__sub">Used for any future upgrades or Team add-ons.</p>
+          <div className="pay-card">
+            <div className="pay-card__icon">VISA</div>
+            <div style={{flex:1}}>
+              <div className="pay-card__num">•••• •••• •••• 4242</div>
+              <div className="pay-card__exp">Expires 09/28 · billing.elevaite.so</div>
+            </div>
+            <button className="cta-ghost" style={{padding:'7px 12px', fontSize:12}}>Update</button>
+          </div>
+          <button className="cta-ghost" style={{padding:'7px 12px', fontSize:12}}>Add payment method</button>
+        </div>
+
+        <div className="ss-card">
+          <div className="ss-card__h">Billing history</div>
+          <p className="ss-card__sub">All invoices, paid and pending.</p>
+          <div className="invoice"><span className="invoice__date">May 1, 2026</span><span>Student plan · monthly</span><span className="invoice__amt">$0.00</span><a className="invoice__btn" href="#">Receipt ↗</a></div>
+          <div className="invoice"><span className="invoice__date">Apr 1, 2026</span><span>Student plan · monthly</span><span className="invoice__amt">$0.00</span><a className="invoice__btn" href="#">Receipt ↗</a></div>
+          <div className="invoice"><span className="invoice__date">Mar 1, 2026</span><span>Student plan · monthly</span><span className="invoice__amt">$0.00</span><a className="invoice__btn" href="#">Receipt ↗</a></div>
+          <div className="invoice"><span className="invoice__date">Feb 1, 2026</span><span>Personal → Student</span><span className="invoice__amt">$0.00</span><a className="invoice__btn" href="#">Receipt ↗</a></div>
+        </div>
+
+        <div className="ss-card">
+          <div className="ss-card__h">Billing details</div>
+          <Row label="Billing email"><input className="field-input" defaultValue="prem@elevaite.so" /></Row>
+          <Row label="VAT / tax ID"><input className="field-input" placeholder="e.g. EU123456789 (optional)" /></Row>
+          <Row label="Company name"><input className="field-input" placeholder="If invoicing a company" /></Row>
+        </div>
+
+        <div className="danger-zone">
+          <h3>Danger zone</h3>
+          <button className="danger-btn">Export all data</button>
+          <button className="danger-btn">Cancel subscription</button>
+          <button className="danger-btn">Delete account</button>
+        </div>
+      </>
+    );
+  }
+
+  function Workspace() {
+    const members = [
+      { name:'Prem Sai',    email:'prem@elevaite.so',    role:'Owner', av: 'linear-gradient(135deg, #9A7B98, #D97757)', init:'P' },
+      { name:'Maya Liu',    email:'maya@elevaite.so',    role:'Admin', av: 'linear-gradient(135deg, #88A188, #B89968)', init:'M' },
+      { name:'Sam Chen',    email:'sam@elevaite.so',     role:'Member',av: 'linear-gradient(135deg, #7A8DA8, #9A7B98)', init:'S' },
+      { name:'Jordan Park', email:'jordan@elevaite.so',  role:'Member',av: 'linear-gradient(135deg, #C8A057, #D97757)', init:'J' },
+      { name:'Alex Rivera', email:'alex@elevaite.so',    role:'Member',av: 'linear-gradient(135deg, #C0808C, #C28699)', init:'A' },
+    ];
+    return (
+      <>
+        <h1 className="ss-page-h">Workspace · ElevAIte Inc.</h1>
+        <p className="ss-page-sub">Manage your team. <span className="acct__pill" style={{marginLeft:6}}>5 of 25 seats</span></p>
+
+        <div className="ss-card">
+          <div style={{display:'flex', alignItems:'center', marginBottom:14}}>
+            <div>
+              <div className="ss-card__h">Members</div>
+              <p className="ss-card__sub" style={{marginBottom: 0}}>Invite teammates and set their roles.</p>
+            </div>
+            <div style={{flex:1}} />
+            <button className="cta-primary" style={{padding: '8px 14px', fontSize:13}}>+ Invite member</button>
+          </div>
+          {members.map((m, i) => (
+            <div className="member" key={m.email}>
+              <div className="member__avatar" style={{background: m.av}}>{m.init}</div>
+              <div>
+                <div className="member__name">{m.name}{m.role==='Owner' && <span className="acct__pill" style={{marginLeft:6, background:'var(--coral-subtle)', color:'var(--coral-strong)'}}>You</span>}</div>
+                <div className="member__email">{m.email}</div>
+              </div>
+              <select className="member__role-pick" defaultValue={m.role} disabled={m.role === 'Owner'}>
+                <option>Owner</option>
+                <option>Admin</option>
+                <option>Member</option>
+                <option>Guest</option>
+              </select>
+              <button className="acct__btn" disabled={m.role === 'Owner'} style={{opacity: m.role==='Owner'?0.4:1}}>Remove</button>
+            </div>
+          ))}
+          <button className="cta-ghost" style={{display:'flex', alignItems:'center', gap:6, marginTop: 14, padding: '8px 12px', fontSize:13}}>
+            <IconPlus /> Invite more people
+          </button>
+        </div>
+
+        <div className="ss-card">
+          <div className="ss-card__h">SSO &amp; security</div>
+          <SwitchRow title="Google Workspace SSO" sub="Members sign in via your Google Workspace account." on={true} onChange={()=>{}} />
+          <SwitchRow title="SAML SSO (Okta, Auth0)" sub="Available on Enterprise. Contact sales." on={false} onChange={()=>{}} />
+          <SwitchRow title="Two-factor for all members" sub="Force 2FA at next sign-in." on={false} onChange={()=>{}} />
+        </div>
+
+        <div className="ss-card">
+          <div className="ss-card__h">Audit log</div>
+          <p className="ss-card__sub">Every workspace event from the last 90 days.</p>
+          <div className="invoice"><span className="invoice__date">May 17, 11:42</span><span>Maya Liu invited alex@elevaite.so</span><span className="invoice__status">audit</span><a className="invoice__btn" href="#">Details</a></div>
+          <div className="invoice"><span className="invoice__date">May 16, 09:18</span><span>Prem Sai changed billing plan to Team</span><span className="invoice__status">audit</span><a className="invoice__btn" href="#">Details</a></div>
+          <div className="invoice"><span className="invoice__date">May 15, 16:02</span><span>Sam Chen connected Outlook account</span><span className="invoice__status">audit</span><a className="invoice__btn" href="#">Details</a></div>
+          <div style={{textAlign:'center', marginTop: 14}}>
+            <button className="cta-ghost" style={{padding:'7px 12px', fontSize:12}}>View full log</button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // ─── App shell ───
+  const TABS = [
+    { id: 'profile',       label: 'Profile',         icon: <IconUser/>,    section: 'Account',     Comp: Profile },
+    { id: 'accounts',      label: 'Calendar accounts', icon: <IconCal/>,   section: 'Account',     Comp: Accounts },
+    { id: 'notifications', label: 'Notifications',   icon: <IconBell/>,    section: 'Account',     Comp: Notifications, badge: 2 },
+    { id: 'appearance',    label: 'Appearance',      icon: <IconPalette/>, section: 'Customize',   Comp: Appearance },
+    { id: 'keyboard',      label: 'Keyboard shortcuts', icon: <IconKbd/>,  section: 'Customize',   Comp: Keyboard },
+    { id: 'billing',       label: 'Account & billing', icon: <IconCard/>,  section: 'Plan',        Comp: Billing },
+    { id: 'workspace',     label: 'Workspace',       icon: <IconUsers/>,   section: 'Team',        Comp: Workspace },
+  ];
+
+  function App() {
+    const initial = (location.hash || '#profile').slice(1);
+    const [active, setActive] = React.useState(TABS.find(t => t.id === initial)?.id || 'profile');
+    React.useEffect(() => { location.hash = active; }, [active]);
+    const Comp = TABS.find(t => t.id === active).Comp;
+
+    // group by section
+    const sections = {};
+    TABS.forEach(t => { (sections[t.section] = sections[t.section] || []).push(t); });
+
+    return (
+      <div className="settings-shell">
+        <aside className="settings-sidebar">
+          <a className="ss-back" href="index.html"><IconArrow /> Back to calendar</a>
+          {Object.entries(sections).map(([s, items]) => (
+            <React.Fragment key={s}>
+              <div className="ss-section">{s}</div>
+              {items.map(t => (
+                <button key={t.id} className={`ss-nav-item ${active === t.id ? 'on' : ''}`} onClick={() => setActive(t.id)}>
+                  {t.icon}
+                  {t.label}
+                  {t.badge && <span className="badge">{t.badge}</span>}
+                </button>
+              ))}
+            </React.Fragment>
+          ))}
+          <div className="ss-user">
+            <div className="ss-user__avatar">P</div>
+            <div style={{flex:1, minWidth: 0}}>
+              <div className="ss-user__name">Prem Sai</div>
+              <div className="ss-user__email">prem@stanford.edu</div>
+            </div>
+          </div>
+        </aside>
+
+        <main className="settings-main" key={active}>
+          <div className="settings-main__inner">
+            <Comp />
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+<!-- Page index navigator -->
+<a href="all-pages.html" class="page-nav" data-elevaite-page-nav aria-label="View all pages">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+  <span>All pages</span>
+</a>
+<style>
+.page-nav{position:fixed;bottom:20px;right:20px;z-index:9999;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;background:rgba(250,249,245,0.92);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(31,30,27,0.12);border-radius:999px;color:#1F1E1B;font-family:'Geist',ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:500;letter-spacing:-0.005em;text-decoration:none;box-shadow:0 4px 16px rgba(31,30,27,0.06),0 1px 2px rgba(31,30,27,0.04);opacity:0;transform:translateY(8px);animation:elevaite-pn-in 420ms cubic-bezier(0.32,0.72,0,1) 0.5s forwards;transition:transform 180ms cubic-bezier(0.32,0.72,0,1),border-color 180ms cubic-bezier(0.32,0.72,0,1),color 180ms cubic-bezier(0.32,0.72,0,1)}
+@media (hover:hover){.page-nav:hover{transform:translateY(-2px);border-color:#D97757;color:#D97757}}
+@keyframes elevaite-pn-in{to{opacity:1;transform:none}}
+[data-theme="dark"] .page-nav,html[data-theme="dark"] .page-nav,body[data-theme="dark"] .page-nav{background:rgba(35,34,32,0.92);color:#F5F4ED;border-color:rgba(245,244,237,0.14)}
+@media (prefers-reduced-motion:reduce){.page-nav{animation:none;opacity:1;transform:none;transition:none}}
+@media (max-width:520px){.page-nav span{display:none}.page-nav{padding:9px}}
+</style>
+
+</body>
+</html>

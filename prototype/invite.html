@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>You're invited — ElevAIte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="motion.css" />
+  <style>
+    body { font-family: 'Geist'; min-height: 100vh; }
+    .iv-page { min-height: 100vh; display: grid; place-items: center; padding: 40px 24px; position: relative; overflow: hidden; }
+    .iv-bloom { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 30%, rgba(217,119,87,0.15) 0%, transparent 60%); filter: blur(40px); animation: bloom 9s ease-in-out infinite alternate; }
+    .iv-wrap { position: relative; z-index: 1; width: 100%; max-width: 480px; animation: fade-up 700ms var(--ease) both; }
+
+    .iv-brand { display: flex; align-items: center; gap: 9px; margin-bottom: 22px; font-weight: 600; font-size: 14px; text-decoration: none; color: inherit; }
+    .iv-card { background: var(--bg); border: 1px solid var(--hairline-strong); border-radius: 16px; padding: 32px; box-shadow: var(--shadow); }
+
+    .iv-icon { width: 64px; height: 64px; border-radius: 16px; margin: 0 auto 18px; background: var(--coral-subtle); color: var(--coral); display: grid; place-items: center; animation: scale-in 600ms var(--ease) 0.15s both, ring-pulse 2.4s ease-in-out 1.5s infinite; }
+
+    .iv-h { font-size: clamp(22px, 3vw, 28px); font-weight: 600; letter-spacing: -0.018em; line-height: 1.15; margin: 0 0 8px; text-align: center; animation: fade-up 600ms var(--ease) 0.3s both; }
+    .iv-p { font-size: 14.5px; color: var(--text-2); margin: 0 0 28px; text-align: center; line-height: 1.55; animation: fade-up 600ms var(--ease) 0.4s both; }
+    .iv-p b { color: var(--text); font-weight: 500; }
+
+    .iv-workspace {
+      display: flex; align-items: center; gap: 14px;
+      padding: 16px 18px;
+      background: var(--surface);
+      border-radius: 12px;
+      margin-bottom: 22px;
+      animation: fade-up 600ms var(--ease) 0.5s both;
+    }
+    .iv-workspace__logo { width: 48px; height: 48px; border-radius: 11px; background: var(--coral); color: #fff; font-weight: 700; font-size: 22px; display: grid; place-items: center; flex-shrink: 0; }
+    .iv-workspace__name { font-size: 16px; font-weight: 600; letter-spacing: -0.005em; }
+    .iv-workspace__meta { font-size: 12px; color: var(--text-3); margin-top: 1px; }
+
+    .iv-invitee {
+      padding: 14px 16px;
+      background: var(--bg);
+      border: 1px solid var(--hairline-strong);
+      border-radius: 10px;
+      margin-bottom: 22px;
+      animation: fade-up 600ms var(--ease) 0.6s both;
+    }
+    .iv-invitee__lbl { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; color: var(--text-3); text-transform: uppercase; margin-bottom: 8px; }
+    .iv-invitee__row { display: flex; align-items: center; gap: 10px; padding: 4px 0; font-size: 13px; }
+    .iv-invitee__row svg { color: var(--text-3); flex-shrink: 0; }
+    .iv-invitee__row b { font-weight: 500; }
+    .iv-invitee__role { font-family: 'Geist Mono'; padding: 2px 7px; background: var(--coral-subtle); color: var(--coral-strong); border-radius: 4px; font-size: 11px; font-weight: 600; }
+
+    .iv-btns { display: flex; gap: 10px; animation: fade-up 600ms var(--ease) 0.7s both; }
+    .iv-btn-accept { flex: 2; padding: 12px; background: var(--coral); color: var(--text-on-coral); border-radius: 8px; border: 0; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; text-align: center; box-shadow: 0 1px 0 rgba(255,255,255,.18) inset, 0 1px 2px rgba(31,30,27,.12); transition: background 120ms var(--ease); }
+    .iv-btn-accept:hover { background: var(--coral-hover); }
+    .iv-btn-decline { flex: 1; padding: 12px; background: var(--bg); color: var(--text-2); border: 1px solid var(--border); border-radius: 8px; font-size: 13.5px; font-weight: 500; cursor: pointer; }
+    .iv-btn-decline:hover { color: var(--text); background: var(--surface); }
+
+    .iv-foot { margin-top: 22px; padding-top: 22px; border-top: 1px solid var(--hairline); font-size: 11.5px; color: var(--text-3); text-align: center; line-height: 1.55; }
+    .iv-foot a { color: var(--text-2); }
+  </style>
+</head>
+<body class="shell">
+
+<main class="iv-page">
+  <div class="iv-bloom"></div>
+  <div class="iv-wrap">
+    <a class="iv-brand" href="landing.html"><span class="topbar__brand-mark">E</span> ElevAIte</a>
+    <div class="iv-card">
+      <div class="iv-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M21 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+          <path d="M19 8v6M22 11h-6"/>
+        </svg>
+      </div>
+      <h1 class="iv-h">You're invited to join a team.</h1>
+      <p class="iv-p"><b>Prem Sai</b> invited you to <b>ElevAIte Inc.</b> on ElevAIte.</p>
+
+      <div class="iv-workspace">
+        <div class="iv-workspace__logo">E</div>
+        <div>
+          <div class="iv-workspace__name">ElevAIte Inc.</div>
+          <div class="iv-workspace__meta">5 members · prem@elevaite.so · Team plan</div>
+        </div>
+      </div>
+
+      <div class="iv-invitee">
+        <div class="iv-invitee__lbl">You will join as</div>
+        <div class="iv-invitee__row">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+          <b>alex@elevaite.so</b>
+        </div>
+        <div class="iv-invitee__row">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>
+          Role <span class="iv-invitee__role">MEMBER</span>
+        </div>
+      </div>
+
+      <div class="iv-btns">
+        <button class="iv-btn-decline">Decline</button>
+        <a class="iv-btn-accept" href="onboarding.html">Accept &amp; join team →</a>
+      </div>
+
+      <div class="iv-foot">
+        By joining, you agree to ElevAIte's <a href="terms.html">Terms</a> and the team's policies.<br/>
+        Invitation expires in 7 days.
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="reveal.js"></script>
+<!-- Page index navigator -->
+<a href="all-pages.html" class="page-nav" data-elevaite-page-nav aria-label="View all pages">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+  <span>All pages</span>
+</a>
+<style>
+.page-nav{position:fixed;bottom:20px;right:20px;z-index:9999;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;background:rgba(250,249,245,0.92);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(31,30,27,0.12);border-radius:999px;color:#1F1E1B;font-family:'Geist',ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:500;letter-spacing:-0.005em;text-decoration:none;box-shadow:0 4px 16px rgba(31,30,27,0.06),0 1px 2px rgba(31,30,27,0.04);opacity:0;transform:translateY(8px);animation:elevaite-pn-in 420ms cubic-bezier(0.32,0.72,0,1) 0.5s forwards;transition:transform 180ms cubic-bezier(0.32,0.72,0,1),border-color 180ms cubic-bezier(0.32,0.72,0,1),color 180ms cubic-bezier(0.32,0.72,0,1)}
+@media (hover:hover){.page-nav:hover{transform:translateY(-2px);border-color:#D97757;color:#D97757}}
+@keyframes elevaite-pn-in{to{opacity:1;transform:none}}
+[data-theme="dark"] .page-nav,html[data-theme="dark"] .page-nav,body[data-theme="dark"] .page-nav{background:rgba(35,34,32,0.92);color:#F5F4ED;border-color:rgba(245,244,237,0.14)}
+@media (prefers-reduced-motion:reduce){.page-nav{animation:none;opacity:1;transform:none;transition:none}}
+@media (max-width:520px){.page-nav span{display:none}.page-nav{padding:9px}}
+</style>
+
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Checkout — ElevAIte Team</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="motion.css" />
+  <style>
+    body { font-family: 'Geist'; min-height: 100vh; }
+    .co-shell { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; }
+    @media (max-width: 880px) { .co-shell { grid-template-columns: 1fr; } }
+
+    .co-left { padding: 36px 36px 60px; max-width: 540px; margin: 0 0 0 auto; animation: slide-right 700ms var(--ease) both; }
+    .co-back { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; font-size: 12.5px; color: var(--text-2); text-decoration: none; border-radius: 7px; margin-bottom: 22px; }
+    .co-back:hover { background: var(--surface); color: var(--text); }
+
+    .co-h { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; margin: 0 0 6px; }
+    .co-p { font-size: 13.5px; color: var(--text-2); margin: 0 0 28px; }
+
+    .co-section { margin-bottom: 22px; }
+    .co-section__h { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 10px; }
+
+    .co-pay-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .co-pay-option {
+      padding: 14px; background: var(--bg); border: 1.5px solid var(--border);
+      border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 10px;
+      transition: border-color 120ms var(--ease);
+    }
+    .co-pay-option.on { border-color: var(--coral); background: var(--coral-subtle); }
+    .co-pay-option__radio { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--border); flex-shrink: 0; position: relative; }
+    .co-pay-option.on .co-pay-option__radio { border-color: var(--coral); }
+    .co-pay-option.on .co-pay-option__radio::after { content: ''; position: absolute; inset: 3px; background: var(--coral); border-radius: 50%; }
+    .co-pay-option__name { font-size: 13px; font-weight: 500; flex: 1; }
+    .co-pay-option__icon { color: var(--text-2); }
+
+    .co-field { margin-bottom: 12px; }
+    .co-field__lbl { font-size: 11.5px; color: var(--text-2); font-weight: 500; margin-bottom: 5px; display: block; }
+    .co-input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .co-stripe-row { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--surface); border-radius: 8px; font-size: 11.5px; color: var(--text-3); margin-bottom: 18px; }
+    .co-stripe-row svg { color: #635BFF; }
+
+    .co-pay-btn { width: 100%; padding: 13px; background: var(--coral); color: var(--text-on-coral); border-radius: 9px; border: 0; font-size: 14.5px; font-weight: 600; cursor: pointer; box-shadow: 0 1px 0 rgba(255,255,255,.18) inset, 0 1px 2px rgba(31,30,27,.12); transition: background 120ms var(--ease); margin-top: 14px; }
+    .co-pay-btn:hover { background: var(--coral-hover); }
+
+    /* Right summary */
+    .co-right { padding: 36px 36px 60px; background: var(--surface); max-width: 540px; border-left: 1px solid var(--hairline); animation: slide-left 700ms var(--ease) 0.1s both; position: relative; overflow: hidden; }
+    .co-right::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 70% 20%, rgba(217,119,87,0.08), transparent 60%); pointer-events: none; }
+    .co-right > * { position: relative; z-index: 1; }
+
+    .co-summary { background: var(--bg); border: 1px solid var(--hairline-strong); border-radius: 14px; padding: 24px; box-shadow: var(--shadow); }
+    .co-plan-tag { display: inline-block; font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; padding: 3px 9px; border-radius: 4px; background: var(--coral); color: #fff; margin-bottom: 10px; }
+    .co-plan-name { font-size: 22px; font-weight: 600; letter-spacing: -0.018em; margin: 0 0 4px; }
+    .co-plan-p { font-size: 13px; color: var(--text-2); margin: 0 0 18px; }
+
+    .co-seats { padding: 14px 16px; background: var(--surface); border-radius: 10px; margin-bottom: 18px; }
+    .co-seats__row { display: flex; align-items: center; gap: 10px; }
+    .co-seats__lbl { font-size: 13px; font-weight: 500; flex: 1; }
+    .co-seats__ctrl { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 7px; background: var(--bg); overflow: hidden; }
+    .co-seats__ctrl button { width: 28px; height: 28px; border: 0; background: none; color: var(--text-2); cursor: pointer; font-size: 14px; }
+    .co-seats__ctrl button:hover { background: var(--surface); color: var(--text); }
+    .co-seats__ctrl input { width: 40px; text-align: center; border: 0; background: transparent; font-family: 'Geist Mono'; font-size: 13px; padding: 0; outline: none; }
+
+    .co-billing-period { display: flex; padding: 3px; background: var(--surface); border-radius: 8px; margin-bottom: 18px; position: relative; }
+    .co-billing-period button { flex: 1; padding: 8px; border-radius: 6px; border: 0; background: none; cursor: pointer; font-size: 12.5px; font-weight: 500; color: var(--text-2); position: relative; z-index: 1; transition: color 180ms var(--ease); }
+    .co-billing-period button.on { color: var(--text); }
+    .co-billing-period__pill { position: absolute; top: 3px; bottom: 3px; background: var(--bg); border-radius: 6px; box-shadow: 0 1px 2px rgba(31,30,27,0.06); transition: left 240ms var(--ease), width 240ms var(--ease); }
+    .co-billing-period__save { display: inline-block; margin-left: 4px; padding: 1px 5px; border-radius: 3px; background: var(--coral); color: #fff; font-size: 8.5px; font-weight: 700; letter-spacing: .04em; }
+
+    .co-line { display: flex; align-items: center; padding: 8px 0; font-size: 13px; border-top: 1px solid var(--hairline); }
+    .co-line:first-of-type { border-top: 0; }
+    .co-line__lbl { flex: 1; color: var(--text-2); }
+    .co-line__val { font-family: 'Geist Mono'; color: var(--text); font-weight: 500; }
+    .co-total { display: flex; align-items: baseline; padding: 14px 0 4px; border-top: 1.5px solid var(--text); margin-top: 8px; }
+    .co-total__lbl { flex: 1; font-size: 14px; font-weight: 600; }
+    .co-total__val { font-family: 'Geist Mono'; font-size: 22px; font-weight: 600; letter-spacing: -0.018em; }
+    .co-total__period { font-size: 11.5px; color: var(--text-3); margin-left: 6px; }
+
+    .co-coupon { margin-top: 14px; }
+    .co-coupon__toggle { font-size: 12px; color: var(--coral); text-decoration: none; cursor: pointer; }
+    .co-coupon__input { display: flex; gap: 6px; margin-top: 8px; }
+    .co-coupon__input input { flex: 1; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Geist Mono'; font-size: 12px; }
+    .co-coupon__input button { padding: 7px 12px; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; }
+
+    .co-guarantee { display: flex; align-items: center; gap: 8px; margin-top: 22px; padding: 12px 14px; background: var(--chip-sage-bg); border-radius: 8px; font-size: 12px; color: var(--chip-sage-text); }
+    .co-guarantee svg { flex-shrink: 0; }
+  </style>
+</head>
+<body class="shell">
+
+<div class="co-shell">
+  <section class="co-left">
+    <a class="co-back" href="pricing.html"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg> Back to pricing</a>
+    <h1 class="co-h">Almost there.</h1>
+    <p class="co-p">You're upgrading <b style="color:var(--text)">ElevAIte Inc.</b> to the Team plan.</p>
+
+    <div class="co-section">
+      <div class="co-section__h">Payment method</div>
+      <div class="co-pay-options">
+        <button class="co-pay-option on">
+          <div class="co-pay-option__radio"></div>
+          <span class="co-pay-option__name">Card</span>
+          <span class="co-pay-option__icon"><svg width="20" height="14" viewBox="0 0 24 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="22" height="14" rx="2"/><path d="M1 6h22"/></svg></span>
+        </button>
+        <button class="co-pay-option">
+          <div class="co-pay-option__radio"></div>
+          <span class="co-pay-option__name">Bank · ACH</span>
+          <span class="co-pay-option__icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 21h18M5 21V10M19 21V10M3 10l9-7 9 7"/></svg></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="co-section">
+      <div class="co-section__h">Card details</div>
+      <div class="co-field">
+        <label class="co-field__lbl">Card number</label>
+        <input class="field-input" placeholder="1234 1234 1234 1234" style="font-family: 'Geist Mono';" />
+      </div>
+      <div class="co-input-grid">
+        <div class="co-field">
+          <label class="co-field__lbl">Expiry</label>
+          <input class="field-input" placeholder="MM / YY" style="font-family: 'Geist Mono';" />
+        </div>
+        <div class="co-field">
+          <label class="co-field__lbl">CVC</label>
+          <input class="field-input" placeholder="123" style="font-family: 'Geist Mono';" />
+        </div>
+      </div>
+      <div class="co-field">
+        <label class="co-field__lbl">Cardholder name</label>
+        <input class="field-input" placeholder="Prem Sai" />
+      </div>
+    </div>
+
+    <div class="co-section">
+      <div class="co-section__h">Billing details</div>
+      <div class="co-field">
+        <label class="co-field__lbl">Billing email</label>
+        <input class="field-input" type="email" placeholder="billing@elevaite.so" />
+      </div>
+      <div class="co-field">
+        <label class="co-field__lbl">Country</label>
+        <select class="field-input"><option>United States</option><option>Canada</option><option>United Kingdom</option><option>Other</option></select>
+      </div>
+    </div>
+
+    <div class="co-stripe-row">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+      Payments secured by <span style="color: #635BFF; font-weight: 600;">Stripe</span> · we never see your card number
+    </div>
+
+    <button class="co-pay-btn">Pay $30.00 / month →</button>
+  </section>
+
+  <section class="co-right">
+    <div style="font-size: 11px; font-weight: 600; letter-spacing: .08em; color: var(--text-3); text-transform: uppercase; margin-bottom: 16px;">Order summary</div>
+
+    <div class="co-summary">
+      <span class="co-plan-tag">Team plan</span>
+      <h2 class="co-plan-name">ElevAIte Team</h2>
+      <p class="co-plan-p">For startups + small teams. Cancel anytime.</p>
+
+      <div class="co-billing-period">
+        <span class="co-billing-period__pill" id="bp-pill" style="left:3px; width:calc(50% - 3px);"></span>
+        <button class="on" id="bp-monthly">Monthly</button>
+        <button id="bp-annual">Annual <span class="co-billing-period__save">SAVE 20%</span></button>
+      </div>
+
+      <div class="co-seats">
+        <div class="co-seats__row">
+          <span class="co-seats__lbl">Seats</span>
+          <div class="co-seats__ctrl">
+            <button onclick="changeSeats(-1)">−</button>
+            <input type="number" id="seats" value="5" min="1" max="100" />
+            <button onclick="changeSeats(1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="co-line"><span class="co-line__lbl">Team plan · <span id="line-seats">5</span> seats × $<span id="line-rate">6</span></span><span class="co-line__val">$<span id="line-base">30.00</span></span></div>
+      <div class="co-line"><span class="co-line__lbl">Promo · <span style="color:var(--text-3); font-family:'Geist Mono';">none</span></span><span class="co-line__val">−$0.00</span></div>
+      <div class="co-line"><span class="co-line__lbl">Tax · CA (will apply)</span><span class="co-line__val">$0.00</span></div>
+      <div class="co-total">
+        <span class="co-total__lbl">Total today</span>
+        <span class="co-total__val">$<span id="total">30.00</span></span><span class="co-total__period">/ <span id="period">month</span></span>
+      </div>
+
+      <div class="co-coupon">
+        <a class="co-coupon__toggle" onclick="document.getElementById('coupon-input').style.display='flex';return false;">+ Add promo code</a>
+        <div class="co-coupon__input" id="coupon-input" style="display:none;">
+          <input placeholder="EARLY26" />
+          <button>Apply</button>
+        </div>
+      </div>
+
+      <div class="co-guarantee">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg>
+        <span><b>30-day money-back guarantee.</b> No questions asked.</span>
+      </div>
+    </div>
+
+    <div style="margin-top: 22px; padding-top: 22px; border-top: 1px solid var(--hairline); font-size: 12px; color: var(--text-3); line-height: 1.55;">
+      You'll be charged <b style="color: var(--text-2);">$<span id="recur">30.00</span></b> every <span id="period-2">month</span> starting today. You can change seats, downgrade, or cancel at any time from <a href="settings.html#billing" style="color: var(--coral);">Settings → Billing</a>.
+    </div>
+  </section>
+</div>
+
+<script src="reveal.js"></script>
+<script>
+  let annual = false;
+  let seats = 5;
+  const pill = document.getElementById('bp-pill');
+  function update() {
+    const rate = annual ? 4.80 : 6;
+    const base = seats * rate;
+    document.getElementById('seats').value = seats;
+    document.getElementById('line-seats').textContent = seats;
+    document.getElementById('line-rate').textContent = rate.toFixed(rate < 6 ? 2 : 0);
+    document.getElementById('line-base').textContent = base.toFixed(2);
+    document.getElementById('total').textContent = base.toFixed(2);
+    document.getElementById('recur').textContent = base.toFixed(2);
+    document.getElementById('period').textContent = annual ? 'year' : 'month';
+    document.getElementById('period-2').textContent = annual ? 'year' : 'month';
+    document.querySelector('.co-pay-btn').textContent = `Pay $${base.toFixed(2)} / ${annual ? 'year' : 'month'} →`;
+  }
+  function changeSeats(d) { seats = Math.max(1, Math.min(100, seats + d)); update(); }
+  document.getElementById('seats').addEventListener('input', e => { seats = parseInt(e.target.value)||1; update(); });
+  document.getElementById('bp-monthly').addEventListener('click', () => { annual = false; pill.style.left = '3px'; document.getElementById('bp-monthly').classList.add('on'); document.getElementById('bp-annual').classList.remove('on'); update(); });
+  document.getElementById('bp-annual').addEventListener('click', () => { annual = true; pill.style.left = '50%'; document.getElementById('bp-annual').classList.add('on'); document.getElementById('bp-monthly').classList.remove('on'); update(); });
+  document.querySelectorAll('.co-pay-option').forEach(o => o.addEventListener('click', () => {
+    document.querySelectorAll('.co-pay-option').forEach(x => x.classList.remove('on'));
+    o.classList.add('on');
+  }));
+</script>
+<!-- Page index navigator -->
+<a href="all-pages.html" class="page-nav" data-elevaite-page-nav aria-label="View all pages">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+  <span>All pages</span>
+</a>
+<style>
+.page-nav{position:fixed;bottom:20px;right:20px;z-index:9999;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;background:rgba(250,249,245,0.92);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(31,30,27,0.12);border-radius:999px;color:#1F1E1B;font-family:'Geist',ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:500;letter-spacing:-0.005em;text-decoration:none;box-shadow:0 4px 16px rgba(31,30,27,0.06),0 1px 2px rgba(31,30,27,0.04);opacity:0;transform:translateY(8px);animation:elevaite-pn-in 420ms cubic-bezier(0.32,0.72,0,1) 0.5s forwards;transition:transform 180ms cubic-bezier(0.32,0.72,0,1),border-color 180ms cubic-bezier(0.32,0.72,0,1),color 180ms cubic-bezier(0.32,0.72,0,1)}
+@media (hover:hover){.page-nav:hover{transform:translateY(-2px);border-color:#D97757;color:#D97757}}
+@keyframes elevaite-pn-in{to{opacity:1;transform:none}}
+[data-theme="dark"] .page-nav,html[data-theme="dark"] .page-nav,body[data-theme="dark"] .page-nav{background:rgba(35,34,32,0.92);color:#F5F4ED;border-color:rgba(245,244,237,0.14)}
+@media (prefers-reduced-motion:reduce){.page-nav{animation:none;opacity:1;transform:none;transition:none}}
+@media (max-width:520px){.page-nav span{display:none}.page-nav{padding:9px}}
+</style>
+
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Set up recurrence — ElevAIte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="motion.css" />
+  <style>
+    body { overflow: hidden; }
+    .mp-shell { min-height: 100vh; position: relative; display: grid; place-items: center; }
+    .mp-stage { position: absolute; inset: 0; background: var(--bg); overflow: hidden; }
+    .mp-stage__cal { position: absolute; inset: 0; opacity: 0.35; filter: blur(0.5px); }
+    .mp-stage__bg-grid {
+      position: absolute; left: 0; top: 0; right: 0; bottom: 0;
+      background-image:
+        linear-gradient(to right, var(--hairline) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--hairline) 1px, transparent 1px);
+      background-size: 14% 56px;
+    }
+    .mp-stage__chips { position: absolute; inset: 0; pointer-events: none; }
+    .mp-stage__chip { position: absolute; padding: 4px 8px; border-radius: 5px; font-size: 10.5px; font-weight: 500; opacity: 0.4; }
+    .mp-overlay {
+      position: absolute; inset: 0;
+      background: rgba(31, 30, 27, 0.36);
+      backdrop-filter: blur(6px) saturate(120%);
+      -webkit-backdrop-filter: blur(6px) saturate(120%);
+      animation: fade-in 300ms var(--ease) both;
+    }
+    .mp-modal {
+      position: relative; z-index: 1;
+      width: min(540px, calc(100vw - 32px));
+      background: var(--bg);
+      border: 1px solid var(--hairline-strong);
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      animation: scale-in 400ms var(--ease) both, fade-up 400ms var(--ease) both;
+      overflow: hidden;
+    }
+    .mp-modal__head {
+      display: flex; align-items: center; gap: 10px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--hairline);
+    }
+    .mp-modal__icon {
+      width: 28px; height: 28px; border-radius: 7px;
+      background: var(--coral-subtle); color: var(--coral);
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .mp-modal__title { font-size: 14.5px; font-weight: 600; letter-spacing: -0.005em; flex: 1; }
+    .mp-modal__close { width: 26px; height: 26px; border-radius: 6px; color: var(--text-3); background: none; border: 0; display: grid; place-items: center; cursor: pointer; }
+    .mp-modal__close:hover { background: var(--surface); color: var(--text); }
+
+    .mp-modal__body { padding: 20px; }
+    .mp-modal__foot { padding: 14px 20px; border-top: 1px solid var(--hairline); display: flex; gap: 8px; align-items: center; background: var(--surface-sunken); }
+
+    /* Preset chips */
+    .rr-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+    .rr-preset { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg); font-size: 12.5px; font-weight: 500; cursor: pointer; transition: all 120ms var(--ease); }
+    .rr-preset:hover { border-color: var(--border-strong); }
+    .rr-preset.on { background: var(--coral-subtle); border-color: var(--coral); color: var(--coral-strong); }
+
+    .rr-block { padding: 14px 16px; background: var(--surface); border: 1px solid var(--hairline-strong); border-radius: 10px; margin-bottom: 12px; }
+    .rr-block__h { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 8px; }
+
+    .rr-every { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    .rr-every input[type=number] { width: 56px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-family: 'Geist Mono'; font-size: 13px; text-align: center; }
+    .rr-every select { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); font-size: 13px; }
+    .rr-every input:focus, .rr-every select:focus { outline: none; border-color: var(--coral); }
+
+    .rr-dow { display: flex; gap: 4px; margin-top: 4px; }
+    .rr-dow button {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid var(--border); background: var(--bg);
+      font-size: 12px; font-weight: 500; cursor: pointer;
+      transition: all 120ms var(--ease);
+    }
+    .rr-dow button.on { background: var(--coral); color: var(--text-on-coral); border-color: var(--coral); }
+
+    .rr-end { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+    .rr-end label { display: flex; align-items: center; gap: 8px; padding: 6px 0; cursor: pointer; }
+    .rr-end input[type=radio] { accent-color: var(--coral); }
+    .rr-end input[type=number], .rr-end input[type=date] { padding: 5px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12.5px; margin-left: 6px; font-family: 'Geist Mono'; }
+
+    .rr-preview {
+      margin-top: 4px;
+      padding: 12px 14px;
+      background: var(--coral-subtle); border: 1px solid var(--coral);
+      border-radius: 8px;
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 12.5px; color: var(--coral-strong); line-height: 1.5;
+      animation: pop-in 400ms var(--ease) both;
+    }
+    .rr-preview svg { color: var(--coral); flex-shrink: 0; margin-top: 1px; }
+    .rr-preview b { font-weight: 600; }
+
+    .rr-rrule {
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: var(--surface-sunken);
+      border-radius: 6px;
+      font-family: 'Geist Mono'; font-size: 10.5px; color: var(--text-3);
+      letter-spacing: .01em;
+    }
+  </style>
+</head>
+<body class="shell">
+
+<div class="mp-shell">
+  <div class="mp-stage">
+    <div class="mp-stage__bg-grid"></div>
+    <div class="mp-stage__chips">
+      <span class="mp-stage__chip" style="top:18%; left:14%; background:var(--chip-coral-bg); color:var(--chip-coral-text); width:80px;">Standup</span>
+      <span class="mp-stage__chip" style="top:30%; left:28%; background:var(--chip-plum-bg); color:var(--chip-plum-text); width:120px;">CS 224N — NLP</span>
+      <span class="mp-stage__chip" style="top:46%; left:14%; background:var(--chip-sage-bg); color:var(--chip-sage-text); width:100px;">Coffee · Jamie</span>
+      <span class="mp-stage__chip" style="top:54%; left:42%; background:var(--chip-coral-bg); color:var(--chip-coral-text); width:130px;">Roadmap · Q3</span>
+      <span class="mp-stage__chip" style="top:64%; left:14%; background:var(--chip-sand-bg); color:var(--chip-sand-text); width:90px;">Focus block</span>
+    </div>
+  </div>
+  <div class="mp-overlay"></div>
+
+  <div class="mp-modal">
+    <header class="mp-modal__head">
+      <div class="mp-modal__icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg></div>
+      <div class="mp-modal__title">Set up recurrence</div>
+      <button class="mp-modal__close" onclick="history.back()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </header>
+
+    <div class="mp-modal__body">
+      <div style="font-size: 12px; color: var(--text-3); margin-bottom: 8px;">For event</div>
+      <div style="font-size: 14px; font-weight: 500; margin-bottom: 18px; display: flex; align-items:center; gap: 8px;">
+        <span style="width:9px; height:9px; border-radius: 3px; background: var(--chip-plum-bar);"></span>
+        CS 224N — NLP · Tue, May 19 · 1:30 PM
+      </div>
+
+      <div class="rr-presets">
+        <button class="rr-preset">Once</button>
+        <button class="rr-preset">Daily</button>
+        <button class="rr-preset on">Weekly</button>
+        <button class="rr-preset">Every weekday</button>
+        <button class="rr-preset">Bi-weekly</button>
+        <button class="rr-preset">Monthly</button>
+        <button class="rr-preset">Yearly</button>
+        <button class="rr-preset">Custom</button>
+      </div>
+
+      <div class="rr-block">
+        <div class="rr-block__h">Every</div>
+        <div class="rr-every">
+          <input type="number" min="1" value="1" />
+          <select><option>day</option><option selected>week</option><option>month</option><option>year</option></select>
+          on:
+        </div>
+        <div class="rr-dow">
+          <button>S</button><button class="on">M</button><button class="on">T</button><button class="on">W</button><button class="on">T</button><button class="on">F</button><button>S</button>
+        </div>
+      </div>
+
+      <div class="rr-block">
+        <div class="rr-block__h">Ends</div>
+        <div class="rr-end">
+          <label><input type="radio" name="end" /> Never</label>
+          <label><input type="radio" name="end" checked /> On <input type="date" value="2026-06-12" /></label>
+          <label><input type="radio" name="end" /> After <input type="number" min="1" value="14" /> occurrences</label>
+        </div>
+      </div>
+
+      <div class="rr-block">
+        <div class="rr-block__h">Skip</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+          <span class="acct__pill" style="background: var(--chip-rose-bg); color: var(--chip-rose-text); display:inline-flex; align-items:center; gap:6px; padding: 3px 9px;">Spring break (Apr 6–10) <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></span>
+          <span class="acct__pill" style="background: var(--chip-rose-bg); color: var(--chip-rose-text); display:inline-flex; align-items:center; gap:6px; padding: 3px 9px;">Memorial Day (May 25) <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></span>
+          <button class="acct__btn" style="padding:2px 8px; font-size:11px;">+ Add holiday/break</button>
+        </div>
+      </div>
+
+      <div class="rr-preview">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg>
+        <div>
+          <b>Weekly on Mon, Tue, Wed, Thu, Fri</b> · ending <b>Jun 12, 2026</b> · skipping <b>2 holidays</b>.<br/>
+          Will create <b>17 events</b> through Jun 12.
+        </div>
+      </div>
+      <div class="rr-rrule">RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR;UNTIL=20260612T235959Z;EXDATE=20260525T133000Z</div>
+    </div>
+
+    <div class="mp-modal__foot">
+      <button class="cta-ghost" style="padding:7px 12px; font-size:12.5px;" onclick="history.back()">Cancel</button>
+      <span style="flex:1"></span>
+      <button class="cta-primary" style="padding:7px 14px;">Save recurrence</button>
+    </div>
+  </div>
+</div>
+
+<script src="reveal.js"></script>
+<script>
+  document.querySelectorAll('.rr-preset').forEach(p => p.addEventListener('click', () => {
+    document.querySelectorAll('.rr-preset').forEach(x => x.classList.remove('on'));
+    p.classList.add('on');
+  }));
+  document.querySelectorAll('.rr-dow button').forEach(b => b.addEventListener('click', () => b.classList.toggle('on')));
+</script>
+<!-- Page index navigator -->
+<a href="all-pages.html" class="page-nav" data-elevaite-page-nav aria-label="View all pages">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+  <span>All pages</span>
+</a>
+<style>
+.page-nav{position:fixed;bottom:20px;right:20px;z-index:9999;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;background:rgba(250,249,245,0.92);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(31,30,27,0.12);border-radius:999px;color:#1F1E1B;font-family:'Geist',ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:500;letter-spacing:-0.005em;text-decoration:none;box-shadow:0 4px 16px rgba(31,30,27,0.06),0 1px 2px rgba(31,30,27,0.04);opacity:0;transform:translateY(8px);animation:elevaite-pn-in 420ms cubic-bezier(0.32,0.72,0,1) 0.5s forwards;transition:transform 180ms cubic-bezier(0.32,0.72,0,1),border-color 180ms cubic-bezier(0.32,0.72,0,1),color 180ms cubic-bezier(0.32,0.72,0,1)}
+@media (hover:hover){.page-nav:hover{transform:translateY(-2px);border-color:#D97757;color:#D97757}}
+@keyframes elevaite-pn-in{to{opacity:1;transform:none}}
+[data-theme="dark"] .page-nav,html[data-theme="dark"] .page-nav,body[data-theme="dark"] .page-nav{background:rgba(35,34,32,0.92);color:#F5F4ED;border-color:rgba(245,244,237,0.14)}
+@media (prefers-reduced-motion:reduce){.page-nav{animation:none;opacity:1;transform:none;transition:none}}
+@media (max-width:520px){.page-nav span{display:none}.page-nav{padding:9px}}
+</style>
+
+</body>
+</html>

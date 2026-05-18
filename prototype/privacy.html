@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Privacy Policy — ElevAIte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="motion.css" />
+  <style>
+    body { font-family: 'Geist'; }
+    .legal-page { padding: 56px 0 96px; }
+    .legal-head { text-align: center; margin-bottom: 56px; padding: 0 32px; }
+    .legal-head__eyebrow { font-size: 11.5px; font-weight: 600; letter-spacing: 0.08em; color: var(--coral); text-transform: uppercase; margin-bottom: 14px; animation: fade-in 600ms var(--ease) both; }
+    .legal-head h1 { font-size: clamp(38px, 5vw, 56px); font-weight: 600; letter-spacing: -0.025em; line-height: 1.05; margin: 0 0 14px; animation: fade-up 700ms var(--ease) 0.15s both; }
+    .legal-head__meta { font-size: 13px; color: var(--text-3); font-family: 'Geist Mono', monospace; animation: fade-up 600ms var(--ease) 0.3s both; }
+
+    .legal-shell {
+      display: grid; grid-template-columns: 240px 1fr; gap: 56px;
+      max-width: 1080px; margin: 0 auto; padding: 0 32px;
+    }
+    @media (max-width: 920px) { .legal-shell { grid-template-columns: 1fr; } .legal-toc { display: none; } }
+
+    .legal-toc {
+      position: sticky; top: 80px;
+      align-self: start;
+      max-height: calc(100vh - 120px); overflow-y: auto;
+    }
+    .legal-toc__lbl { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 12px; }
+    .legal-toc__link {
+      display: block; padding: 6px 10px;
+      font-size: 12.5px; color: var(--text-2);
+      text-decoration: none;
+      border-radius: 6px;
+      transition: background 120ms var(--ease), color 120ms var(--ease);
+      border-left: 2px solid transparent;
+    }
+    .legal-toc__link:hover, .legal-toc__link.active { color: var(--text); background: var(--surface); border-left-color: var(--coral); }
+
+    .legal-body { font-size: 15px; line-height: 1.7; color: var(--text-2); }
+    .legal-body h2 { font-size: 22px; font-weight: 600; letter-spacing: -0.012em; color: var(--text); margin: 44px 0 12px; }
+    .legal-body h2:first-child { margin-top: 0; }
+    .legal-body p { margin: 0 0 14px; }
+    .legal-body ul { padding-left: 22px; margin: 0 0 18px; }
+    .legal-body li { padding: 3px 0; }
+    .legal-body code { font-family: 'Geist Mono', monospace; font-size: 13px; background: var(--surface-sunken); padding: 1px 6px; border-radius: 3px; color: var(--text); }
+    .legal-body strong { color: var(--text); font-weight: 600; }
+    .legal-body a { color: var(--coral); text-decoration: none; }
+    .legal-body a:hover { text-decoration: underline; }
+
+    .callout {
+      padding: 16px 18px;
+      background: var(--coral-subtle);
+      border-left: 3px solid var(--coral);
+      border-radius: 8px;
+      margin: 20px 0;
+      color: var(--coral-strong);
+      font-size: 14px; line-height: 1.55;
+    }
+    .callout strong { color: var(--coral-strong); }
+
+    .tldr {
+      padding: 22px;
+      background: var(--surface);
+      border: 1px solid var(--hairline-strong);
+      border-radius: 12px;
+      margin-bottom: 36px;
+    }
+    .tldr h3 { font-size: 13px; font-weight: 600; color: var(--coral); margin: 0 0 8px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .tldr p { font-size: 14.5px; color: var(--text); margin: 0; line-height: 1.6; }
+  </style>
+</head>
+<body class="shell">
+
+<header class="mini-nav">
+  <div class="container mini-nav__inner">
+    <a href="landing.html" class="mini-nav__brand"><span class="topbar__brand-mark">E</span> ElevAIte</a>
+    <nav class="mini-nav__links"><a href="landing.html#features">Product</a><a href="pricing.html">Pricing</a><a href="help.html">Help</a></nav>
+    <span class="mini-nav__spacer"></span>
+    <a href="auth.html?mode=signin" style="font-size:13.5px;color:var(--text-2);text-decoration:none;">Sign in</a>
+    <a class="cta-primary" href="auth.html?mode=signup" style="padding:7px 14px;font-size:13px;">Get free</a>
+  </div>
+</header>
+
+<main class="legal-page">
+  <div class="legal-head">
+    <div class="legal-head__eyebrow">Privacy</div>
+    <h1>Privacy Policy</h1>
+    <div class="legal-head__meta">Effective May 17, 2026 · v2.1</div>
+  </div>
+
+  <div class="legal-shell">
+    <nav class="legal-toc" data-reveal>
+      <div class="legal-toc__lbl">On this page</div>
+      <a class="legal-toc__link active" href="#tldr">TL;DR</a>
+      <a class="legal-toc__link" href="#what">What we collect</a>
+      <a class="legal-toc__link" href="#why">How we use it</a>
+      <a class="legal-toc__link" href="#calendar">Calendar data</a>
+      <a class="legal-toc__link" href="#share">Who we share with</a>
+      <a class="legal-toc__link" href="#cookies">Cookies + tracking</a>
+      <a class="legal-toc__link" href="#rights">Your rights</a>
+      <a class="legal-toc__link" href="#storage">Storage + security</a>
+      <a class="legal-toc__link" href="#children">Children</a>
+      <a class="legal-toc__link" href="#contact">Contact</a>
+    </nav>
+
+    <article class="legal-body" data-reveal data-delay="1">
+      <div class="tldr">
+        <h3>TL;DR</h3>
+        <p>We don't store your calendar event data on our servers. We hold OAuth tokens and account preferences only. We never sell your data, never serve ads, and never train AI on your events. You can export everything or delete your account at any time.</p>
+      </div>
+
+      <h2 id="what">What we collect</h2>
+      <p>When you create an ElevAIte account, we collect:</p>
+      <ul>
+        <li>Your name, email, and (optionally) profile picture from your OAuth provider</li>
+        <li><strong>OAuth tokens</strong> for your connected calendar accounts (Google, Apple, Microsoft) — these grant us read/write access</li>
+        <li>Preferences you set (time zones, view defaults, keyboard shortcuts, theme)</li>
+        <li>Anonymous diagnostic data (crash reports, performance metrics) — opt-out available in Settings → Privacy</li>
+      </ul>
+
+      <h2 id="why">How we use what we collect</h2>
+      <p>We use the data we collect for three things only:</p>
+      <ul>
+        <li><strong>Operating the product:</strong> showing your calendar, syncing changes, sending reminders.</li>
+        <li><strong>Supporting you:</strong> if you email <a href="mailto:hello@elevaite.so">hello@elevaite.so</a>, we may look at your account to help.</li>
+        <li><strong>Improving the product:</strong> aggregated, anonymous usage metrics — never tied to your identity.</li>
+      </ul>
+
+      <h2 id="calendar">Calendar data — the important part</h2>
+      <div class="callout">
+        <strong>We do not store the contents of your calendar events on our servers.</strong> Event titles, attendees, descriptions, and locations live with your original provider (Google, Apple, Microsoft) and are fetched on demand each time you open the app.
+      </div>
+      <p>What this means in practice:</p>
+      <ul>
+        <li>We can't read your events when you're not signed in.</li>
+        <li>If you disconnect your calendar account, we immediately lose all access.</li>
+        <li>Your event data is never used to train AI or machine learning models.</li>
+        <li>Scheduling links (when invitees pick a time) cache only the slot you're booking — never your private events.</li>
+      </ul>
+
+      <h2 id="share">Who we share data with</h2>
+      <p>We share data with:</p>
+      <ul>
+        <li><strong>Your calendar providers</strong> (Google, Apple, Microsoft) — to read and write events on your behalf.</li>
+        <li><strong>Stripe</strong> — to process Team and Enterprise subscriptions. We never see your full card number.</li>
+        <li><strong>Linear, Slack, Notion</strong> — only if you explicitly connect those integrations.</li>
+      </ul>
+      <p>We do not sell your data. We do not share it with advertisers. We never have.</p>
+
+      <h2 id="cookies">Cookies + tracking</h2>
+      <p>We use minimal first-party cookies for signed-in sessions and to remember your preferences. We don't use third-party advertising cookies, fingerprinting, or session replay. Our analytics are server-side, aggregated, and don't identify you.</p>
+
+      <h2 id="rights">Your rights (GDPR, CCPA, FERPA)</h2>
+      <p>You can, at any time:</p>
+      <ul>
+        <li><strong>Export</strong> all your data (Settings → Account → Export full data)</li>
+        <li><strong>Delete</strong> your account permanently within 24 hours</li>
+        <li><strong>Disconnect</strong> any calendar account immediately — we lose access in real time</li>
+        <li><strong>Opt out</strong> of diagnostic data collection (Settings → Privacy)</li>
+        <li>For .edu users: we comply with FERPA. Class schedule data is treated as student educational record data.</li>
+      </ul>
+
+      <h2 id="storage">Storage + security</h2>
+      <p>Account preferences and OAuth tokens are stored in AWS <code>us-west-2</code> with encryption at rest (AES-256) and in transit (TLS 1.3+). Enterprise customers can request data residency in EU or APAC. We are SOC 2 Type II audited; the report is available under NDA.</p>
+
+      <h2 id="children">Children</h2>
+      <p>ElevAIte is not directed at children under 13. The .edu Student plan is intended for university students. If you become aware of a child under 13 using the service, please email us at <a href="mailto:privacy@elevaite.so">privacy@elevaite.so</a>.</p>
+
+      <h2 id="contact">Contact</h2>
+      <p>Email <a href="mailto:privacy@elevaite.so">privacy@elevaite.so</a> with questions, or write to ElevAIte, Inc., 555 Bryant St #200, Palo Alto, CA 94301.</p>
+    </article>
+  </div>
+</main>
+
+<footer class="container mini-foot">
+  <span>© 2026 ElevAIte, Inc.</span>
+  <span class="spacer"></span>
+  <a href="privacy.html" style="color:var(--text);">Privacy</a>
+  <a href="terms.html">Terms</a>
+  <a href="help.html">Help</a>
+</footer>
+
+<script src="reveal.js"></script>
+<script>
+  // Scroll-spy for TOC
+  const links = document.querySelectorAll('.legal-toc__link');
+  const sections = [...document.querySelectorAll('.legal-body [id]')];
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const id = e.target.id;
+        links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + id));
+      }
+    });
+  }, { rootMargin: '-30% 0px -55% 0px' });
+  // also observe TL;DR via top
+  const tldr = document.getElementById('tldr');
+  if (tldr) observer.observe(tldr);
+  sections.forEach(s => observer.observe(s));
+</script>
+
+<!-- Page index navigator -->
+<a href="all-pages.html" class="page-nav" data-elevaite-page-nav aria-label="View all pages">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+  <span>All pages</span>
+</a>
+<style>
+.page-nav{position:fixed;bottom:20px;right:20px;z-index:9999;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;background:rgba(250,249,245,0.92);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(31,30,27,0.12);border-radius:999px;color:#1F1E1B;font-family:'Geist',ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:500;letter-spacing:-0.005em;text-decoration:none;box-shadow:0 4px 16px rgba(31,30,27,0.06),0 1px 2px rgba(31,30,27,0.04);opacity:0;transform:translateY(8px);animation:elevaite-pn-in 420ms cubic-bezier(0.32,0.72,0,1) 0.5s forwards;transition:transform 180ms cubic-bezier(0.32,0.72,0,1),border-color 180ms cubic-bezier(0.32,0.72,0,1),color 180ms cubic-bezier(0.32,0.72,0,1)}
+@media (hover:hover){.page-nav:hover{transform:translateY(-2px);border-color:#D97757;color:#D97757}}
+@keyframes elevaite-pn-in{to{opacity:1;transform:none}}
+[data-theme="dark"] .page-nav,html[data-theme="dark"] .page-nav,body[data-theme="dark"] .page-nav{background:rgba(35,34,32,0.92);color:#F5F4ED;border-color:rgba(245,244,237,0.14)}
+@media (prefers-reduced-motion:reduce){.page-nav{animation:none;opacity:1;transform:none;transition:none}}
+@media (max-width:520px){.page-nav span{display:none}.page-nav{padding:9px}}
+</style>
+
+</body>
+</html>

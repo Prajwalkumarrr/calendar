@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Status — ElevAIte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="motion.css" />
+  <style>
+    body { font-family: 'Geist'; }
+    .st-shell { max-width: 1000px; margin: 0 auto; padding: 56px 32px 80px; }
+    .st-top {
+      background: var(--bg); border: 1px solid var(--hairline-strong);
+      border-radius: 16px; padding: 32px; text-align: center;
+      position: relative; overflow: hidden;
+      animation: fade-up 700ms var(--ease) both;
+    }
+    .st-top::before { content: ''; position: absolute; inset: -50%; background: radial-gradient(ellipse at center, rgba(126,156,122,0.10), transparent 60%); animation: bloom 9s ease-in-out infinite alternate; }
+    .st-top > * { position: relative; z-index: 1; }
+    .st-pulse {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: var(--chip-sage-bar); margin: 0 auto 18px;
+      display: grid; place-items: center; color: #fff;
+      animation: ring-pulse 2s ease-in-out infinite;
+      box-shadow: 0 0 0 0 rgba(126,156,122,0.4);
+    }
+    @keyframes ring-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(126,156,122,0.45); }
+      50%      { box-shadow: 0 0 0 18px rgba(126,156,122,0); }
+    }
+    .st-top h1 { font-size: clamp(28px, 4vw, 38px); font-weight: 600; letter-spacing: -0.022em; margin: 0 0 6px; }
+    .st-top p { font-size: 14px; color: var(--text-2); margin: 0; font-family: 'Geist Mono'; }
+    .st-top p b { color: var(--text); font-weight: 500; }
+
+    .st-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin: 28px 0 50px; }
+    @media (max-width: 760px) { .st-summary { grid-template-columns: 1fr 1fr; } }
+    .st-stat { padding: 18px; background: var(--bg); border: 1px solid var(--hairline-strong); border-radius: 12px; }
+    .st-stat__lbl { font-size: 11px; font-weight: 600; letter-spacing: .06em; color: var(--text-3); text-transform: uppercase; margin-bottom: 8px; }
+    .st-stat__val { font-size: 22px; font-weight: 600; letter-spacing: -0.018em; font-family: 'Geist Mono'; color: var(--text); }
+    .st-stat__val.good { color: var(--chip-sage-bar); }
+    .st-stat__delta { font-size: 11.5px; color: var(--text-3); margin-top: 4px; font-family: 'Geist Mono'; }
+
+    .st-section { background: var(--bg); border: 1px solid var(--hairline-strong); border-radius: 14px; margin-bottom: 22px; overflow: hidden; }
+    .st-section__h { padding: 14px 18px; border-bottom: 1px solid var(--hairline); font-size: 13px; font-weight: 600; letter-spacing: -0.005em; }
+    .st-svc { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; padding: 14px 18px; border-top: 1px solid var(--hairline); }
+    .st-svc:first-child { border-top: 0; }
+    .st-svc__name { font-size: 13.5px; font-weight: 500; }
+    .st-svc__bars { display: flex; gap: 2px; }
+    .st-svc__bar { width: 4px; height: 22px; background: var(--chip-sage-bar); border-radius: 1px; opacity: 0.85; }
+    .st-svc__bar.deg { background: var(--chip-ochre-bar); }
+    .st-svc__bar.down { background: var(--coral); }
+    .st-svc__status { font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 4px; text-transform: uppercase; letter-spacing: .04em; }
+    .ok { background: var(--chip-sage-bg); color: var(--chip-sage-text); }
+    .deg { background: var(--chip-ochre-bg); color: var(--chip-ochre-text); }
+
+    .st-incident { padding: 18px 20px; background: var(--bg); border: 1px solid var(--hairline-strong); border-radius: 12px; margin-bottom: 12px; }
+    .st-incident__head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .st-incident__tag { font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 3px; letter-spacing: .04em; text-transform: uppercase; }
+    .tag-resolved { background: var(--chip-sage-bg); color: var(--chip-sage-text); }
+    .tag-investigating { background: var(--chip-ochre-bg); color: var(--chip-ochre-text); }
+    .st-incident__date { font-size: 11.5px; color: var(--text-3); font-family: 'Geist Mono'; margin-left: auto; }
+    .st-incident__h { font-size: 14.5px; font-weight: 600; letter-spacing: -0.005em; margin: 0 0 6px; }
+    .st-incident__p { font-size: 13px; color: var(--text-2); line-height: 1.5; margin: 0; }
+    .st-incident__timeline { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--hairline); font-size: 12px; color: var(--text-3); font-family: 'Geist Mono'; line-height: 1.6; }
+
+    .st-sub { text-align: center; margin-top: 36px; }
+    .st-sub__lbl { font-size: 11px; color: var(--text-3); font-weight: 500; margin-bottom: 8px; letter-spacing: .04em; }
+    .st-sub a { font-size: 13px; color: var(--coral); text-decoration: none; font-weight: 500; }
+  </style>
+</head>
+<body class="shell">
+
+<header class="mini-nav">
+  <div class="container mini-nav__inner">
+    <a href="landing.html" class="mini-nav__brand"><span class="topbar__brand-mark">E</span> ElevAIte</a>
+    <nav class="mini-nav__links"><a href="landing.html#features">Product</a><a href="help.html">Help</a><a href="status.html" style="color:var(--text);">Status</a></nav>
+    <span class="mini-nav__spacer"></span>
+    <a class="cta-primary" href="auth.html?mode=signup" style="padding:7px 14px;font-size:13px;">Get free</a>
+  </div>
+</header>
+
+<main class="st-shell">
+  <div class="st-top">
+    <div class="st-pulse"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></div>
+    <h1>All systems operational</h1>
+    <p>Last updated <b>2 min ago</b> · status.elevaite.so</p>
+  </div>
+
+  <div class="st-summary">
+    <div class="st-stat" data-reveal>
+      <div class="st-stat__lbl">Uptime · 30 days</div>
+      <div class="st-stat__val good">99.99%</div>
+      <div class="st-stat__delta">Target: 99.9%</div>
+    </div>
+    <div class="st-stat" data-reveal data-delay="1">
+      <div class="st-stat__lbl">Avg API latency</div>
+      <div class="st-stat__val">128 ms</div>
+      <div class="st-stat__delta">−12 ms vs last week</div>
+    </div>
+    <div class="st-stat" data-reveal data-delay="2">
+      <div class="st-stat__lbl">Active users</div>
+      <div class="st-stat__val">14,231</div>
+      <div class="st-stat__delta">+ 432 today</div>
+    </div>
+    <div class="st-stat" data-reveal data-delay="3">
+      <div class="st-stat__lbl">Open incidents</div>
+      <div class="st-stat__val">0</div>
+      <div class="st-stat__delta">Last incident 18 days ago</div>
+    </div>
+  </div>
+
+  <div class="st-section" data-reveal>
+    <div class="st-section__h">Service health · last 90 days</div>
+    <div class="st-svc">
+      <div class="st-svc__name">Web app · app.elevaite.so</div>
+      <div class="st-svc__bars" id="bars1"></div>
+      <span class="st-svc__status ok">Operational</span>
+    </div>
+    <div class="st-svc">
+      <div class="st-svc__name">API · api.elevaite.so</div>
+      <div class="st-svc__bars" id="bars2"></div>
+      <span class="st-svc__status ok">Operational</span>
+    </div>
+    <div class="st-svc">
+      <div class="st-svc__name">Calendar sync · Google</div>
+      <div class="st-svc__bars" id="bars3"></div>
+      <span class="st-svc__status ok">Operational</span>
+    </div>
+    <div class="st-svc">
+      <div class="st-svc__name">Calendar sync · Apple</div>
+      <div class="st-svc__bars" id="bars4"></div>
+      <span class="st-svc__status ok">Operational</span>
+    </div>
+    <div class="st-svc">
+      <div class="st-svc__name">Calendar sync · Outlook</div>
+      <div class="st-svc__bars" id="bars5"></div>
+      <span class="st-svc__status ok">Operational</span>
+    </div>
+    <div class="st-svc">
+      <div class="st-svc__name">Email delivery · transactional</div>
+      <div class="st-svc__bars" id="bars6"></div>
+      <span class="st-svc__status ok">Operational</span>
+    </div>
+    <div class="st-svc">
+      <div class="st-svc__name">Scheduling links</div>
+      <div class="st-svc__bars" id="bars7"></div>
+      <span class="st-svc__status ok">Operational</span>
+    </div>
+  </div>
+
+  <h2 style="font-size: 18px; font-weight: 600; letter-spacing: -0.01em; margin: 32px 0 16px;">Past incidents</h2>
+
+  <div class="st-incident" data-reveal>
+    <div class="st-incident__head">
+      <span class="st-incident__tag tag-resolved">Resolved</span>
+      <span class="st-incident__date">Apr 29, 2026 · 14:08 PT</span>
+    </div>
+    <h3 class="st-incident__h">Outlook calendar sync delays (15 min)</h3>
+    <p class="st-incident__p">Microsoft's Graph API was returning intermittent 5xx errors. Sync resumed automatically once their service stabilized.</p>
+    <div class="st-incident__timeline">
+      14:08 — Identified · 14:12 — Workaround deployed · 14:23 — Fully resolved
+    </div>
+  </div>
+
+  <div class="st-incident" data-reveal data-delay="1">
+    <div class="st-incident__head">
+      <span class="st-incident__tag tag-resolved">Resolved</span>
+      <span class="st-incident__date">Mar 11, 2026 · 09:42 PT</span>
+    </div>
+    <h3 class="st-incident__h">Public booking pages slow load (8 min)</h3>
+    <p class="st-incident__p">A faulty deploy increased booking page TTFB by ~2s. Rolled back; deployed fix the following morning.</p>
+    <div class="st-incident__timeline">
+      09:42 — Detected · 09:47 — Rolled back · 09:50 — Resolved
+    </div>
+  </div>
+
+  <div class="st-incident" data-reveal data-delay="2">
+    <div class="st-incident__head">
+      <span class="st-incident__tag tag-resolved">Resolved</span>
+      <span class="st-incident__date">Feb 22, 2026 · 22:14 PT</span>
+    </div>
+    <h3 class="st-incident__h">Brief authentication issue (4 min)</h3>
+    <p class="st-incident__p">Identity provider returned 504s. Affected new sign-ins; existing sessions were unaffected.</p>
+    <div class="st-incident__timeline">
+      22:14 — Detected · 22:17 — Mitigation · 22:18 — Resolved
+    </div>
+  </div>
+
+  <div class="st-sub">
+    <div class="st-sub__lbl">Get notified of incidents</div>
+    <a href="#">Subscribe to email updates →</a>
+    &nbsp;·&nbsp;
+    <a href="#">RSS feed</a>
+  </div>
+</main>
+
+<footer class="container mini-foot">
+  <span>© 2026 ElevAIte, Inc.</span>
+  <span class="spacer"></span>
+  <a href="security.html">Security</a>
+  <a href="privacy.html">Privacy</a>
+  <a href="help.html">Help</a>
+</footer>
+
+<script src="reveal.js"></script>
+<script>
+  // Generate 90 status bars per service. Almost all green, occasional ochre/coral.
+  function genBars(target, pattern) {
+    const t = document.getElementById(target); if (!t) return;
+    for (let i = 0; i < 90; i++) {
+      const b = document.createElement('span');
+      b.className = 'st-svc__bar';
+      if (pattern && pattern[i]) b.classList.add(pattern[i]);
+      t.appendChild(b);
+    }
+  }
+  genBars('bars1');
+  genBars('bars2');
+  const p3 = {}; p3[60] = 'deg';
+  genBars('bars3', p3);
+  genBars('bars4');
+  genBars('bars5');
+  const p6 = {}; p6[78] = 'deg'; p6[79] = 'deg';
+  genBars('bars6', p6);
+  genBars('bars7');
+</script>
+<!-- Page index navigator -->
+<a href="all-pages.html" class="page-nav" data-elevaite-page-nav aria-label="View all pages">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+  <span>All pages</span>
+</a>
+<style>
+.page-nav{position:fixed;bottom:20px;right:20px;z-index:9999;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;background:rgba(250,249,245,0.92);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(31,30,27,0.12);border-radius:999px;color:#1F1E1B;font-family:'Geist',ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:500;letter-spacing:-0.005em;text-decoration:none;box-shadow:0 4px 16px rgba(31,30,27,0.06),0 1px 2px rgba(31,30,27,0.04);opacity:0;transform:translateY(8px);animation:elevaite-pn-in 420ms cubic-bezier(0.32,0.72,0,1) 0.5s forwards;transition:transform 180ms cubic-bezier(0.32,0.72,0,1),border-color 180ms cubic-bezier(0.32,0.72,0,1),color 180ms cubic-bezier(0.32,0.72,0,1)}
+@media (hover:hover){.page-nav:hover{transform:translateY(-2px);border-color:#D97757;color:#D97757}}
+@keyframes elevaite-pn-in{to{opacity:1;transform:none}}
+[data-theme="dark"] .page-nav,html[data-theme="dark"] .page-nav,body[data-theme="dark"] .page-nav{background:rgba(35,34,32,0.92);color:#F5F4ED;border-color:rgba(245,244,237,0.14)}
+@media (prefers-reduced-motion:reduce){.page-nav{animation:none;opacity:1;transform:none;transition:none}}
+@media (max-width:520px){.page-nav span{display:none}.page-nav{padding:9px}}
+</style>
+
+</body>
+</html>

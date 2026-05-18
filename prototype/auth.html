@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ElevAIte — Sign in</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="app.css" />
+
+  <style>
+    html, body { overflow: auto; }
+    body { font-family: 'Geist', ui-sans-serif, system-ui, sans-serif; min-height: 100vh; }
+
+    @keyframes auth-form-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+    @keyframes auth-side-in { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: none; } }
+    @keyframes pop-in     { 0% { opacity: 0; transform: translateY(-10px) scale(0.86); } 60% { transform: translateY(0) scale(1.04); } 100% { opacity: 1; transform: none; } }
+    @keyframes word-up    { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+    @keyframes cal-row    { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+    @keyframes scale-in   { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: none; } }
+    @keyframes bloom-cor  { from { box-shadow: 0 0 0 0 rgba(217,119,87,.0); } 100% { box-shadow: 0 0 0 16px rgba(217,119,87,0); } }
+    @keyframes ring-pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(217,119,87,.25); } 50% { box-shadow: 0 0 0 8px rgba(217,119,87,0); } }
+
+    .auth-shell {
+      display: grid;
+      grid-template-columns: 1fr 1.05fr;
+      min-height: 100vh;
+    }
+    .auth-shell > .auth-form-wrap { animation: auth-form-in 700ms var(--ease) both; }
+    .auth-shell > .auth-side      { animation: auth-side-in 800ms var(--ease) 100ms both; }
+
+    /* Right side — split panel with quote / context */
+    .auth-side {
+      background: var(--surface);
+      padding: 56px 48px;
+      display: flex; flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      border-left: 1px solid var(--hairline);
+    }
+    .auth-side::before {
+      content: ''; position: absolute;
+      inset: -20% -20% 40% -20%;
+      background: radial-gradient(ellipse at 60% 50%, rgba(217,119,87,0.14) 0%, transparent 60%);
+      filter: blur(40px);
+      pointer-events: none;
+      animation: bloom-side 8s ease-in-out infinite alternate;
+    }
+    @keyframes bloom-side {
+      from { opacity: 0.4; transform: translate(-2%, 2%); }
+      to   { opacity: 1;   transform: translate(2%, -2%); }
+    }
+    .auth-side__crumb {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; color: var(--text-3); font-weight: 500;
+      margin-bottom: 38px;
+    }
+    .auth-side__head {
+      font-size: 11.5px; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--coral);
+      margin-bottom: 14px;
+    }
+    .auth-side__h {
+      font-size: 34px; font-weight: 600; letter-spacing: -0.022em;
+      line-height: 1.1; margin: 0 0 14px;
+      max-width: 380px;
+    }
+    .auth-side__h .word {
+      display: inline-block; margin-right: .18em;
+      opacity: 0; transform: translateY(20px);
+      animation: word-up 700ms var(--ease) both;
+    }
+    .auth-side__h .word:nth-child(1) { animation-delay: .35s }
+    .auth-side__h .word:nth-child(2) { animation-delay: .42s }
+    .auth-side__h .word:nth-child(3) { animation-delay: .49s }
+    .auth-side__h .word:nth-child(4) { animation-delay: .56s }
+    .auth-side__h .word:nth-child(5) { animation-delay: .63s }
+    .auth-side__h .word:nth-child(6) { animation-delay: .70s }
+    .auth-side__h .word:nth-child(7) { animation-delay: .77s }
+    .auth-side__h .word:nth-child(8) { animation-delay: .84s }
+    .auth-side__h .word:nth-child(9) { animation-delay: .91s }
+    .auth-side__h .word em { font-style: normal; color: var(--coral); }
+    .auth-side__lede {
+      font-size: 14.5px; color: var(--text-2); line-height: 1.55;
+      max-width: 380px; margin: 0 0 32px;
+    }
+    .auth-side__quote {
+      margin-top: auto;
+      padding: 22px;
+      background: var(--bg);
+      border: 1px solid var(--hairline);
+      border-radius: 12px;
+      max-width: 420px;
+      animation: scale-in 800ms var(--ease) 1.4s both;
+      position: relative; z-index: 1;
+    }
+    .auth-side__quote-txt {
+      font-size: 14px; line-height: 1.55; color: var(--text);
+      margin: 0 0 14px; letter-spacing: -0.005em;
+    }
+    .auth-side__quote-attr {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 12px;
+    }
+    .auth-side__avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: linear-gradient(135deg, #9A7B98, #D97757);
+      display: grid; place-items: center; color: #fff; font-weight: 600; font-size: 12px;
+    }
+    .auth-side__name { font-weight: 600; }
+    .auth-side__role { color: var(--text-3); font-size: 11.5px; }
+
+    .auth-side__cal-preview {
+      margin-top: 36px;
+      background: var(--bg);
+      border: 1px solid var(--hairline);
+      border-radius: 12px;
+      padding: 12px 14px;
+      animation: scale-in 700ms var(--ease) .9s both;
+      position: relative; z-index: 1;
+    }
+    .auth-side__cal-h {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+    .auth-side__cal-h span { white-space: nowrap; }
+    .auth-side__cal-h span:first-child { font-size: 12.5px; font-weight: 600; letter-spacing: -0.005em; }
+    .auth-side__cal-h span:last-child { font-size: 10.5px; color: var(--text-3); font-family: 'Geist Mono', monospace; }
+    .auth-side__cal-rows { display: flex; flex-direction: column; gap: 5px; }
+    .auth-side__cal-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 8px 5px 10px;
+      border-radius: 5px;
+      font-size: 11.5px;
+      animation: cal-row 600ms var(--ease) both;
+    }
+    .auth-side__cal-row:nth-child(1) { animation-delay: 1.1s; }
+    .auth-side__cal-row:nth-child(2) { animation-delay: 1.18s; }
+    .auth-side__cal-row:nth-child(3) { animation-delay: 1.26s; }
+    .auth-side__cal-row:nth-child(4) { animation-delay: 1.34s; }
+    .auth-side__cal-row:nth-child(5) { animation-delay: 1.42s; animation-name: cal-row, ring-pulse; animation-duration: 600ms, 2s; animation-iteration-count: 1, infinite; animation-delay: 1.42s, 1.8s; }
+
+    /* Left side — form */
+    .auth-form-wrap {
+      display: flex; flex-direction: column;
+      padding: 36px 48px;
+      min-height: 100vh;
+    }
+    .auth-top {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 48px;
+    }
+    .auth-top__brand {
+      display: flex; align-items: center; gap: 9px;
+      font-weight: 600; font-size: 15px; letter-spacing: -0.01em;
+      text-decoration: none; color: inherit;
+    }
+    .auth-top__back {
+      font-size: 12.5px; color: var(--text-2); font-weight: 500;
+      text-decoration: none;
+      display: inline-flex; align-items: center; gap: 4px;
+      white-space: nowrap;
+      transition: color 120ms var(--ease);
+    }
+    .auth-top__back:hover { color: var(--text); }
+
+    .auth-form {
+      width: 100%; max-width: 380px;
+      margin: auto 0;
+    }
+
+    .auth-h {
+      font-size: 28px; font-weight: 600; letter-spacing: -0.02em;
+      line-height: 1.1; margin: 0 0 8px;
+      animation: word-up 700ms var(--ease) 0.2s both;
+    }
+    .auth-sub { font-size: 14px; color: var(--text-2); margin: 0 0 30px; animation: word-up 700ms var(--ease) 0.32s both; }
+
+    /* Tabs */
+    .auth-tabs {
+      display: inline-flex; padding: 3px;
+      background: var(--surface);
+      border: 1px solid var(--hairline-strong);
+      border-radius: 9px;
+      margin-bottom: 28px;
+      position: relative;
+    }
+    .auth-tabs button {
+      padding: 6px 16px; border-radius: 7px;
+      font-size: 13px; color: var(--text-2); font-weight: 500;
+      white-space: nowrap;
+      position: relative; z-index: 1;
+      transition: color 180ms var(--ease);
+    }
+    .auth-tabs button[aria-pressed="true"] {
+      color: var(--text);
+    }
+    .auth-tabs__pill {
+      position: absolute; top: 3px; bottom: 3px;
+      background: var(--bg);
+      border-radius: 7px;
+      box-shadow: 0 1px 2px rgba(31,30,27,0.06);
+      transition: left 280ms var(--ease), width 280ms var(--ease);
+    }
+
+    /* Form fields */
+    .field { display: block; margin-bottom: 14px; opacity: 0; animation: word-up 600ms var(--ease) both; }
+    .field:nth-of-type(1) { animation-delay: 0.6s; }
+    .field:nth-of-type(2) { animation-delay: 0.68s; }
+    .field__lbl { font-size: 12px; color: var(--text-2); font-weight: 500; margin-bottom: 6px; display: block; }
+    .field__input {
+      width: 100%; padding: 10px 13px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      font-size: 14px;
+      color: var(--text);
+      transition: border-color 120ms var(--ease), box-shadow 120ms var(--ease);
+    }
+    .field__input:hover { border-color: var(--border-strong); }
+    .field__input:focus {
+      border-color: var(--coral);
+      box-shadow: 0 0 0 3px rgba(217,119,87,0.18);
+    }
+    .field__input::placeholder { color: var(--text-3); }
+
+    .field__hint { font-size: 11px; color: var(--text-3); margin-top: 6px; }
+
+    /* .edu callout */
+    .edu-callout {
+      margin-top: -4px; margin-bottom: 14px;
+      padding: 10px 12px 10px 14px;
+      background: var(--coral-subtle);
+      border: 1px solid var(--coral);
+      border-radius: 8px;
+      font-size: 12.5px; color: var(--coral-strong); font-weight: 500;
+      display: flex; align-items: center; gap: 8px;
+      animation: pop-in 500ms var(--ease) both, bloom-cor 1.6s var(--ease) both;
+    }
+    .edu-callout svg { color: var(--coral); flex-shrink: 0; }
+    .edu-callout small { color: var(--coral-strong); opacity: .8; display: block; margin-top: 1px; }
+
+    /* Buttons */
+    .btn-primary {
+      width: 100%;
+      padding: 11px;
+      background: var(--coral); color: var(--text-on-coral);
+      border-radius: 8px;
+      font-size: 14px; font-weight: 600;
+      white-space: nowrap;
+      box-shadow: 0 1px 0 rgba(255,255,255,.18) inset, 0 1px 2px rgba(31,30,27,.12);
+      transition: background 120ms var(--ease), transform 60ms var(--ease), box-shadow 120ms var(--ease);
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      animation: word-up 600ms var(--ease) 0.8s both;
+    }
+    .btn-primary:hover:not([disabled]) { background: var(--coral-hover); box-shadow: 0 1px 0 rgba(255,255,255,.18) inset, 0 4px 12px rgba(217,119,87,0.25); }
+    .btn-primary:active { transform: translateY(1px); }
+    .btn-primary[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-oauth {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg); color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13.5px; font-weight: 500;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      white-space: nowrap;
+      margin-bottom: 8px;
+      transition: background 120ms var(--ease), border-color 120ms var(--ease), transform 120ms var(--ease);
+      animation: word-up 600ms var(--ease) both;
+    }
+    .btn-oauth:nth-of-type(1) { animation-delay: 0.4s; }
+    .btn-oauth:nth-of-type(2) { animation-delay: 0.48s; }
+    .btn-oauth:hover { background: var(--surface); border-color: var(--border-strong); transform: translateY(-1px); }
+
+    /* Divider */
+    .or {
+      display: flex; align-items: center; gap: 12px;
+      margin: 20px 0;
+      font-size: 11px; color: var(--text-3); font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .or::before, .or::after {
+      content: ''; flex: 1; height: 1px; background: var(--hairline-strong);
+    }
+
+    /* Footer */
+    .auth-foot {
+      margin-top: 36px;
+      font-size: 12px; color: var(--text-3); line-height: 1.55;
+      text-align: center;
+    }
+    .auth-foot a { color: var(--text-2); }
+
+    .legal {
+      margin-top: 22px;
+      padding-top: 22px;
+      border-top: 1px solid var(--hairline);
+      font-size: 11px; color: var(--text-3); line-height: 1.55;
+    }
+    .legal a { color: var(--text-2); text-decoration: underline; }
+
+    /* Magic link confirmation */
+    .magic-state {
+      text-align: center;
+      padding: 24px 18px;
+      background: var(--surface);
+      border: 1px solid var(--hairline-strong);
+      border-radius: 12px;
+      animation: pop-in 450ms var(--ease);
+    }
+    .magic-state__icon {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: var(--coral-subtle); color: var(--coral);
+      display: grid; place-items: center;
+      margin: 0 auto 14px;
+      animation: ring-pulse 2s ease-in-out infinite;
+    }
+    .magic-state__h { font-size: 18px; font-weight: 600; letter-spacing: -0.015em; margin: 0 0 6px; }
+    .magic-state__p { font-size: 13px; color: var(--text-2); line-height: 1.5; margin: 0 0 18px; }
+    .magic-state__email { color: var(--text); font-weight: 500; }
+
+    @media (max-width: 880px) {
+      .auth-shell { grid-template-columns: 1fr; }
+      .auth-side { order: -1; padding: 32px 28px 36px; border-left: 0; border-bottom: 1px solid var(--hairline); min-height: auto; }
+      .auth-side__quote, .auth-side__cal-preview { display: none; }
+      .auth-side__h { font-size: 26px; }
+      .auth-form-wrap { padding: 28px 28px 40px; }
+    }
+  </style>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+  const params = new URLSearchParams(location.search);
+  const initialMode = params.get('mode') === 'signin' ? 'signin' : 'signup';
+
+  const GoogleG = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24">
+      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.76h3.56c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.56-2.76c-.99.66-2.25 1.05-3.72 1.05-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0012 23z"/>
+      <path fill="#FBBC05" d="M5.84 14.1A6.6 6.6 0 015.5 12c0-.73.13-1.44.34-2.1V7.06H2.18A11 11 0 001 12c0 1.77.42 3.45 1.18 4.94l3.66-2.84z"/>
+      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/>
+    </svg>
+  );
+  const AppleA = () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17.05 12.04c0-2.94 2.42-4.36 2.53-4.42-1.38-2.02-3.53-2.3-4.3-2.33-1.83-.19-3.57 1.08-4.5 1.08-.92 0-2.35-1.05-3.86-1.02-1.99.03-3.82 1.15-4.84 2.93-2.07 3.58-.53 8.87 1.49 11.78 1 1.43 2.18 3.02 3.72 2.97 1.5-.06 2.06-.96 3.86-.96s2.31.96 3.88.93c1.6-.03 2.61-1.44 3.6-2.88 1.13-1.66 1.6-3.27 1.63-3.36-.04-.01-3.13-1.2-3.16-4.76zM14.83 4.42c.83-1 1.39-2.4 1.24-3.79-1.2.05-2.65.8-3.5 1.8-.77.88-1.44 2.31-1.26 3.67 1.33.1 2.69-.68 3.52-1.68z"/>
+    </svg>
+  );
+  const Sparkle = () => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>
+    </svg>
+  );
+  const MailIcon = () => (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="5" width="18" height="14" rx="2"/>
+      <path d="M3 7l9 6 9-6"/>
+    </svg>
+  );
+
+  function App() {
+    const [mode, setMode] = React.useState(initialMode);
+    const [name, setName] = React.useState('');
+    const [email, setEmail] = React.useState('');
+    const [sent, setSent] = React.useState(false);
+
+    const isEdu = /@[\w.-]+\.edu(\.[a-z]{2})?$/i.test(email);
+    const valid = email.includes('@') && (mode === 'signin' || name.trim().length > 1);
+
+    const onSubmit = (e) => {
+      e.preventDefault();
+      if (!valid) return;
+      setSent(true);
+    };
+
+    if (sent) {
+      return (
+        <AuthShell mode={mode}>
+          <div className="magic-state">
+            <div className="magic-state__icon"><MailIcon /></div>
+            <h2 className="magic-state__h">Check your inbox</h2>
+            <p className="magic-state__p">
+              We sent a magic link to <span className="magic-state__email">{email}</span>.<br/>
+              Click it to {mode === 'signup' ? 'create your account' : 'sign in'}. The link expires in 15 minutes.
+            </p>
+            <button className="btn-oauth" onClick={() => setSent(false)}>← Use a different email</button>
+          </div>
+          {isEdu && mode === 'signup' && (
+            <div className="edu-callout" style={{marginTop: 16}}>
+              <Sparkle />
+              <div>
+                <b>Free forever activated</b>
+                <small>Your .edu address qualifies for the Student plan.</small>
+              </div>
+            </div>
+          )}
+        </AuthShell>
+      );
+    }
+
+    return (
+      <AuthShell mode={mode}>
+        <div className="auth-tabs" role="tablist">
+          <span className="auth-tabs__pill" style={{
+            left: mode === 'signup' ? 3 : 'calc(50% - 0px)',
+            width: 'calc(50% - 3px)',
+          }} />
+          <button role="tab" aria-pressed={mode==='signup'} onClick={() => setMode('signup')}>Sign up</button>
+          <button role="tab" aria-pressed={mode==='signin'} onClick={() => setMode('signin')}>Sign in</button>
+        </div>
+
+        <h1 className="auth-h">{mode === 'signup' ? 'Create your account' : 'Welcome back'}</h1>
+        <p className="auth-sub">
+          {mode === 'signup'
+            ? 'Free forever for personal use — and 100% free with a .edu.'
+            : 'Sign in to pick up where you left off.'}
+        </p>
+
+        <button className="btn-oauth"><GoogleG /> Continue with Google</button>
+        <button className="btn-oauth"><AppleA /> Continue with Apple</button>
+
+        <div className="or">or with email</div>
+
+        <form onSubmit={onSubmit}>
+          {mode === 'signup' && (
+            <label className="field">
+              <span className="field__lbl">Your name</span>
+              <input className="field__input" type="text" placeholder="Prem Sai" value={name} onChange={e => setName(e.target.value)} autoComplete="name" />
+            </label>
+          )}
+          <label className="field">
+            <span className="field__lbl">Email address</span>
+            <input className="field__input" type="email" placeholder={mode === 'signup' ? 'you@school.edu — free!' : 'you@elevaite.so'} value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" />
+            {mode === 'signup' && !isEdu && (
+              <div className="field__hint">Use your .edu address and we’ll auto-apply the Student free plan.</div>
+            )}
+          </label>
+
+          {mode === 'signup' && isEdu && (
+            <div className="edu-callout">
+              <Sparkle />
+              <div>
+                <b>🎓 You qualify for ElevAIte Student — free forever.</b>
+                <small>We’ll verify your .edu address after you confirm your email.</small>
+              </div>
+            </div>
+          )}
+
+          <button type="submit" className="btn-primary" disabled={!valid}>
+            {mode === 'signup' ? 'Create my account →' : 'Send me a sign-in link →'}
+          </button>
+        </form>
+
+        <div className="auth-foot">
+          {mode === 'signup' ? (
+            <>Already have an account? <a href="#" onClick={(e) => {e.preventDefault(); setMode('signin');}}>Sign in</a></>
+          ) : (
+            <>New here? <a href="#" onClick={(e) => {e.preventDefault(); setMode('signup');}}>Create an account</a></>
+          )}
+        </div>
+
+        <div className="legal">
+          By {mode === 'signup' ? 'creating an account' : 'signing in'}, you agree to ElevAIte’s <a>Terms of Service</a> and <a>Privacy Policy</a>. Free for personal use · students always free with .edu.
+        </div>
+      </AuthShell>
+    );
+  }
+
+  function AuthShell({ mode, children }) {
+    return (
+      <div className="auth-shell">
+        <div className="auth-form-wrap">
+          <div className="auth-top">
+            <a className="auth-top__brand" href="landing.html">
+              <span className="topbar__brand-mark">E</span> ElevAIte
+            </a>
+            <a className="auth-top__back" href="landing.html">← Back to site</a>
+          </div>
+          <div className="auth-form">
+            {children}
+          </div>
+        </div>
+
+        <aside className="auth-side">
+          <div className="auth-side__crumb">
+            <span className="topbar__brand-mark" style={{width: 18, height: 18, fontSize: 9.5, borderRadius: 5}}>E</span>
+            <span>ElevAIte · {mode === 'signup' ? 'why join?' : 'what’s waiting?'}</span>
+          </div>
+
+          <div className="auth-side__head">{mode === 'signup' ? '🎓 Built for you' : '👋 Glad you’re back'}</div>
+          <h2 className="auth-side__h">
+            {(mode === 'signup'
+              ? ['A', 'warm,', <span key="f"><em>fast</em></span>, 'calendar', '—', 'free', 'if', 'you’re', 'a', 'student.']
+              : ['Your', 'week,', 'exactly', 'where', 'you', 'left', 'it.']
+            ).map((w, i) => <span className="word" key={i}>{w}</span>)}
+          </h2>
+          <p className="auth-side__lede">
+            {mode === 'signup'
+              ? 'Free forever for personal use. Free with a .edu. No credit card, no upsells, no dark patterns.'
+              : 'Pick up where you stopped. Your shortcuts, calendars, and scheduling links are all synced.'}
+          </p>
+
+          <div className="auth-side__cal-preview">
+            <div className="auth-side__cal-h">
+              <span>Wednesday, May 20</span>
+              <span>5 events · 2 focus blocks</span>
+            </div>
+            <div className="auth-side__cal-rows">
+              {[
+                {t:'9:00',  d:'Daily standup',           c:'coral'},
+                {t:'10:00', d:'Coffee w/ Jamie',         c:'sage'},
+                {t:'11:30', d:'Roadmap review · Q3',     c:'coral'},
+                {t:'2:00',  d:'Focus · calendar grid',   c:'sand'},
+                {t:'4:30',  d:'1:1 with Sam',            c:'coral', now: true},
+              ].map((e, i) => (
+                <div key={i} className="auth-side__cal-row" style={{
+                  background: `var(--chip-${e.c}-bg)`,
+                  borderLeft: `3px solid var(--chip-${e.c}-bar)`,
+                  color: `var(--chip-${e.c}-text)`,
+                  outline: e.now ? '1.5px solid var(--coral)' : 'none',
+                  outlineOffset: 1,
+                }}>
+                  <span className="mono" style={{width: 38, fontSize: 10.5, opacity: 0.75}}>{e.t}</span>
+                  <span style={{flex: 1}}>{e.d}</span>
+                  {e.now && <span style={{fontSize: 9, fontWeight: 700, color: 'var(--coral)', letterSpacing: '.06em'}}>NOW</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="auth-side__quote">
+            <p className="auth-side__quote-txt">“I went from Cron to Notion Calendar to ElevAIte in 6 months. This is the first one that doesn’t feel like an app — it feels like a tool I actually trust.”</p>
+            <div className="auth-side__quote-attr">
+              <div className="auth-side__avatar">L</div>
+              <div>
+                <div className="auth-side__name">Linnea Park</div>
+                <div className="auth-side__role">CS '27, Stanford · YC W26</div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+<!-- Page index navigator -->
+<a href="all-pages.html" class="page-nav" data-elevaite-page-nav aria-label="View all pages">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+  <span>All pages</span>
+</a>
+<style>
+.page-nav{position:fixed;bottom:20px;right:20px;z-index:9999;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;background:rgba(250,249,245,0.92);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(31,30,27,0.12);border-radius:999px;color:#1F1E1B;font-family:'Geist',ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:500;letter-spacing:-0.005em;text-decoration:none;box-shadow:0 4px 16px rgba(31,30,27,0.06),0 1px 2px rgba(31,30,27,0.04);opacity:0;transform:translateY(8px);animation:elevaite-pn-in 420ms cubic-bezier(0.32,0.72,0,1) 0.5s forwards;transition:transform 180ms cubic-bezier(0.32,0.72,0,1),border-color 180ms cubic-bezier(0.32,0.72,0,1),color 180ms cubic-bezier(0.32,0.72,0,1)}
+@media (hover:hover){.page-nav:hover{transform:translateY(-2px);border-color:#D97757;color:#D97757}}
+@keyframes elevaite-pn-in{to{opacity:1;transform:none}}
+[data-theme="dark"] .page-nav,html[data-theme="dark"] .page-nav,body[data-theme="dark"] .page-nav{background:rgba(35,34,32,0.92);color:#F5F4ED;border-color:rgba(245,244,237,0.14)}
+@media (prefers-reduced-motion:reduce){.page-nav{animation:none;opacity:1;transform:none;transition:none}}
+@media (max-width:520px){.page-nav span{display:none}.page-nav{padding:9px}}
+</style>
+
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Verify your email — ElevAIte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="motion.css" />
+  <style>
+    body { font-family: 'Geist'; min-height: 100vh; }
+    .vp { min-height: 100vh; display: grid; place-items: center; padding: 40px 24px; position: relative; overflow: hidden; }
+    .vp__bloom { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 30%, rgba(217,119,87,0.15) 0%, transparent 60%); filter: blur(40px); animation: bloom 9s ease-in-out infinite alternate; pointer-events: none; }
+    .vp-wrap { width: 100%; max-width: 460px; position: relative; z-index: 1; animation: fade-up 700ms var(--ease) both; }
+    .vp-brand { display: flex; align-items: center; gap: 9px; margin-bottom: 22px; font-weight: 600; font-size: 14px; text-decoration: none; color: inherit; }
+    .vp-card { background: var(--bg); border: 1px solid var(--hairline-strong); border-radius: 16px; padding: 36px; box-shadow: var(--shadow); text-align: center; }
+
+    .vp-icon-wrap { position: relative; margin: 0 auto 20px; width: 80px; height: 80px; }
+    .vp-icon {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: var(--coral-subtle); color: var(--coral);
+      display: grid; place-items: center;
+      animation: scale-in 600ms var(--ease) 0.15s both;
+    }
+    .vp-icon.spin svg { animation: spin 1.5s linear infinite; }
+    .vp-icon.ring { animation: scale-in 600ms var(--ease) 0.15s both, ring-pulse 2.4s ease-in-out 1.5s infinite; }
+    .vp-icon svg path.draw { stroke-dasharray: 24; stroke-dashoffset: 24; animation: check-pop 600ms var(--ease) 0.6s forwards; }
+
+    .vp-h { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 8px; line-height: 1.1; }
+    .vp-p { font-size: 14.5px; color: var(--text-2); margin: 0 0 24px; line-height: 1.55; }
+    .vp-p b { color: var(--text); font-weight: 500; }
+
+    .vp-edu {
+      display: flex; align-items: flex-start; gap: 10px;
+      margin: 0 0 22px; padding: 12px 14px;
+      background: var(--coral-subtle); border: 1px solid var(--coral);
+      border-radius: 10px; text-align: left;
+      color: var(--coral-strong);
+      animation: pop-in 500ms var(--ease) 0.8s both;
+    }
+    .vp-edu svg { color: var(--coral); flex-shrink: 0; margin-top: 1px; }
+    .vp-edu b { display: block; font-size: 13px; font-weight: 600; }
+    .vp-edu small { font-size: 11.5px; opacity: 0.8; display: block; margin-top: 2px; }
+
+    .vp-resend { font-size: 12.5px; color: var(--text-3); }
+    .vp-resend a { color: var(--coral); text-decoration: none; font-weight: 500; }
+    .vp-resend a:hover { text-decoration: underline; }
+
+    .vp-mail-anim {
+      width: 70px; height: 50px;
+      position: relative; margin: 0 auto;
+    }
+    .vp-mail-anim svg { position: absolute; inset: 0; }
+    .vp-mail-anim::after {
+      content: ''; position: absolute; inset: -8px; border-radius: 14px;
+      border: 2px solid var(--coral); opacity: 0;
+      animation: pulse-out 2s ease-out infinite;
+    }
+    @keyframes pulse-out {
+      0% { opacity: 0; transform: scale(0.8); }
+      50% { opacity: 0.6; }
+      100% { opacity: 0; transform: scale(1.3); }
+    }
+  </style>
+</head>
+<body class="shell">
+
+<main class="vp">
+  <div class="vp__bloom"></div>
+  <div class="vp-wrap">
+    <a class="vp-brand" href="landing.html"><span class="topbar__brand-mark">E</span> ElevAIte</a>
+
+    <!-- STATE: pending (default - waiting on user) -->
+    <div class="vp-card" id="state-pending">
+      <div class="vp-icon-wrap">
+        <div class="vp-icon ring">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+        </div>
+      </div>
+      <h1 class="vp-h">Check your inbox</h1>
+      <p class="vp-p">We sent a verification link to<br/><b>linnea@stanford.edu</b>. Tap it to finish creating your account.</p>
+
+      <div class="vp-edu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>
+        <div><b>🎓 .edu detected — Student plan ready</b>
+          <small>You'll be on the Student tier (free forever) the moment your email's verified.</small>
+        </div>
+      </div>
+
+      <div class="vp-resend">
+        Didn't get the email? Check spam, or <a href="#" onclick="event.preventDefault(); go('resent');">resend</a>.
+      </div>
+    </div>
+
+    <!-- STATE: resent -->
+    <div class="vp-card" id="state-resent" style="display:none;">
+      <div class="vp-icon-wrap">
+        <div class="vp-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+        </div>
+      </div>
+      <h1 class="vp-h">Resent — check your inbox</h1>
+      <p class="vp-p">New link is on its way to <b>linnea@stanford.edu</b>.</p>
+      <div class="vp-resend">Still nothing? <a href="help.html">Contact support</a> or <a href="#" onclick="event.preventDefault();go('change');">use a different email</a>.</div>
+    </div>
+
+    <!-- STATE: verifying (when user clicks link in email — shown momentarily) -->
+    <div class="vp-card" id="state-verifying" style="display:none;">
+      <div class="vp-icon-wrap">
+        <div class="vp-icon spin">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <h1 class="vp-h">Verifying your email…</h1>
+      <p class="vp-p">One second. Don't close this tab.</p>
+    </div>
+
+    <!-- STATE: success -->
+    <div class="vp-card" id="state-success" style="display:none;">
+      <div class="vp-icon-wrap">
+        <div class="vp-icon ring" style="background: var(--coral); color: #fff;">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path class="draw" d="M20 6L9 17l-5-5"/></svg>
+        </div>
+      </div>
+      <h1 class="vp-h">You're verified.</h1>
+      <p class="vp-p">Welcome to ElevAIte. Let's set up your calendar.</p>
+      <div class="vp-edu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+        <div><b>🎓 Student plan active</b><small>Free forever while your .edu stays active.</small></div>
+      </div>
+      <a class="cta-primary" href="oauth-callback.html" style="display:flex; justify-content:center;">Connect your calendar →</a>
+    </div>
+
+  </div>
+</main>
+
+<script src="reveal.js"></script>
+<script>
+  const states = ['pending', 'resent', 'verifying', 'success'];
+  function go(s) {
+    states.forEach(x => {
+      const el = document.getElementById('state-' + x);
+      if (el) el.style.display = x === s ? '' : 'none';
+    });
+  }
+  // ?token=foo → verifying then success
+  const params = new URLSearchParams(location.search);
+  if (params.get('token')) {
+    go('verifying');
+    setTimeout(() => go('success'), 1400);
+  }
+</script>
+<!-- Page index navigator -->
+<a href="all-pages.html" class="page-nav" data-elevaite-page-nav aria-label="View all pages">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+  <span>All pages</span>
+</a>
+<style>
+.page-nav{position:fixed;bottom:20px;right:20px;z-index:9999;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;background:rgba(250,249,245,0.92);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(31,30,27,0.12);border-radius:999px;color:#1F1E1B;font-family:'Geist',ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:500;letter-spacing:-0.005em;text-decoration:none;box-shadow:0 4px 16px rgba(31,30,27,0.06),0 1px 2px rgba(31,30,27,0.04);opacity:0;transform:translateY(8px);animation:elevaite-pn-in 420ms cubic-bezier(0.32,0.72,0,1) 0.5s forwards;transition:transform 180ms cubic-bezier(0.32,0.72,0,1),border-color 180ms cubic-bezier(0.32,0.72,0,1),color 180ms cubic-bezier(0.32,0.72,0,1)}
+@media (hover:hover){.page-nav:hover{transform:translateY(-2px);border-color:#D97757;color:#D97757}}
+@keyframes elevaite-pn-in{to{opacity:1;transform:none}}
+[data-theme="dark"] .page-nav,html[data-theme="dark"] .page-nav,body[data-theme="dark"] .page-nav{background:rgba(35,34,32,0.92);color:#F5F4ED;border-color:rgba(245,244,237,0.14)}
+@media (prefers-reduced-motion:reduce){.page-nav{animation:none;opacity:1;transform:none;transition:none}}
+@media (max-width:520px){.page-nav span{display:none}.page-nav{padding:9px}}
+</style>
+
+</body>
+</html>

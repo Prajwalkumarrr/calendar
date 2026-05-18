@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ElevAIte Calendar — Design canvas</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="app.css" />
+
+  <style>
+    body { overflow: hidden; background: #f0eee9; }
+  </style>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="react" src="design-canvas.jsx"></script>
+  <script type="text/babel" data-presets="react" src="icons.jsx"></script>
+  <script type="text/babel" data-presets="react" src="data.jsx"></script>
+  <script type="text/babel" data-presets="react" src="screens-landing.jsx"></script>
+  <script type="text/babel" data-presets="react" src="screens-onboarding.jsx"></script>
+  <script type="text/babel" data-presets="react" src="screens-scheduling.jsx"></script>
+
+  <script type="text/babel" data-presets="react">
+    function CanvasApp() {
+      return (
+        <DesignCanvas>
+          <DCSection id="entry" title="Entry points" subtitle="Marketing → sign-in → onboarding">
+            <DCArtboard id="landing" label="Landing page" width={1200} height={920}>
+              <Landing />
+            </DCArtboard>
+            <DCArtboard id="auth" label="Sign in" width={440} height={620}>
+              <AuthScreen />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="onboarding" title="Onboarding" subtitle="3-step setup — branches by audience (student / startup / just me)">
+            <DCArtboard id="ob1" label="01 · Who is it for" width={540} height={620}>
+              <OnboardA />
+            </DCArtboard>
+            <DCArtboard id="ob2" label="02 · Connect calendars" width={540} height={620}>
+              <OnboardB />
+            </DCArtboard>
+            <DCArtboard id="ob3" label="03 · Quick tour" width={620} height={620}>
+              <OnboardC />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="booking" title="Scheduling" subtitle="Manager → public booking link — the billboard">
+            <DCArtboard id="manager" label="Links manager" width={920} height={620}>
+              <SchedulingManager />
+            </DCArtboard>
+            <DCArtboard id="public" label="Public booking page" width={1040} height={680}>
+              <PublicBooking />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="settings-and-states" title="Settings & states">
+            <DCArtboard id="settings" label="Settings · Appearance" width={1000} height={640}>
+              <Settings />
+            </DCArtboard>
+            <DCArtboard id="empty" label="Empty state" width={780} height={520}>
+              <EmptyState />
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="surfaces" title="Other surfaces" subtitle="Menu bar (macOS) + mobile">
+            <DCArtboard id="menubar" label="Menu bar popover" width={360} height={520}>
+              <MenuBar />
+            </DCArtboard>
+            <DCArtboard id="mobile" label="Mobile · Day view" width={390} height={760}>
+              <MobileDay />
+            </DCArtboard>
+          </DCSection>
+        </DesignCanvas>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<CanvasApp />);
+  </script>
+<!-- Page index navigator -->
+<a href="all-pages.html" class="page-nav" data-elevaite-page-nav aria-label="View all pages">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+  <span>All pages</span>
+</a>
+<style>
+.page-nav{position:fixed;bottom:20px;right:20px;z-index:9999;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;background:rgba(250,249,245,0.92);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(31,30,27,0.12);border-radius:999px;color:#1F1E1B;font-family:'Geist',ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:500;letter-spacing:-0.005em;text-decoration:none;box-shadow:0 4px 16px rgba(31,30,27,0.06),0 1px 2px rgba(31,30,27,0.04);opacity:0;transform:translateY(8px);animation:elevaite-pn-in 420ms cubic-bezier(0.32,0.72,0,1) 0.5s forwards;transition:transform 180ms cubic-bezier(0.32,0.72,0,1),border-color 180ms cubic-bezier(0.32,0.72,0,1),color 180ms cubic-bezier(0.32,0.72,0,1)}
+@media (hover:hover){.page-nav:hover{transform:translateY(-2px);border-color:#D97757;color:#D97757}}
+@keyframes elevaite-pn-in{to{opacity:1;transform:none}}
+[data-theme="dark"] .page-nav,html[data-theme="dark"] .page-nav,body[data-theme="dark"] .page-nav{background:rgba(35,34,32,0.92);color:#F5F4ED;border-color:rgba(245,244,237,0.14)}
+@media (prefers-reduced-motion:reduce){.page-nav{animation:none;opacity:1;transform:none;transition:none}}
+@media (max-width:520px){.page-nav span{display:none}.page-nav{padding:9px}}
+</style>
+
+</body>
+</html>

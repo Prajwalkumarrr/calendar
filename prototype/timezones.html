@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Time zones — ElevAIte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="motion.css" />
+  <style>
+    body { overflow: hidden; }
+    .tz-shell { min-height: 100vh; position: relative; display: grid; place-items: center; }
+    .tz-bg { position: absolute; inset: 0; background: var(--bg); opacity: 0.4; }
+    .tz-bg__grid { position: absolute; inset: 0; background-image: linear-gradient(to right, var(--hairline) 1px, transparent 1px), linear-gradient(to bottom, var(--hairline) 1px, transparent 1px); background-size: 14% 56px; }
+    .tz-overlay { position: absolute; inset: 0; background: rgba(31, 30, 27, 0.36); backdrop-filter: blur(6px) saturate(120%); animation: fade-in 300ms var(--ease) both; }
+
+    .tz-modal {
+      position: relative; z-index: 1;
+      width: min(560px, calc(100vw - 32px));
+      background: var(--bg);
+      border: 1px solid var(--hairline-strong);
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      animation: scale-in 400ms var(--ease) both, fade-up 400ms var(--ease) both;
+      overflow: hidden;
+    }
+    .tz-head { display: flex; align-items: center; gap: 10px; padding: 16px 20px; border-bottom: 1px solid var(--hairline); }
+    .tz-head__icon { width: 28px; height: 28px; border-radius: 7px; background: var(--coral-subtle); color: var(--coral); display: grid; place-items: center; }
+    .tz-head__title { font-size: 14.5px; font-weight: 600; flex: 1; }
+    .tz-head__close { width: 26px; height: 26px; border-radius: 6px; color: var(--text-3); border: 0; background: none; cursor: pointer; }
+    .tz-head__close:hover { background: var(--surface); color: var(--text); }
+
+    .tz-body { padding: 18px 20px 22px; }
+    .tz-sub { font-size: 12.5px; color: var(--text-2); margin: 0 0 18px; line-height: 1.5; }
+
+    .tz-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .tz-row {
+      display: grid; grid-template-columns: 28px 30px 1fr auto auto auto;
+      align-items: center; gap: 12px;
+      padding: 10px 14px;
+      background: var(--bg); border: 1px solid var(--hairline-strong);
+      border-radius: 10px;
+    }
+    .tz-grip { color: var(--text-3); cursor: grab; }
+    .tz-grip:active { cursor: grabbing; }
+    .tz-row__primary { font-size: 9.5px; font-weight: 600; padding: 2px 5px; border-radius: 3px; background: var(--coral-subtle); color: var(--coral-strong); text-transform: uppercase; letter-spacing: .04em; visibility: hidden; }
+    .tz-row.primary .tz-row__primary { visibility: visible; }
+    .tz-row__abbr { font-family: 'Geist Mono'; font-size: 11px; color: var(--text-3); background: var(--surface-sunken); padding: 2px 6px; border-radius: 4px; text-align: center; }
+    .tz-row__name { font-size: 13.5px; font-weight: 500; }
+    .tz-row__city { font-size: 11.5px; color: var(--text-3); }
+    .tz-row__time { font-family: 'Geist Mono'; font-size: 13px; color: var(--text); }
+    .tz-row__diff { font-family: 'Geist Mono'; font-size: 10.5px; color: var(--text-3); }
+    .tz-row__del { width: 22px; height: 22px; color: var(--text-3); border: 0; background: none; border-radius: 4px; cursor: pointer; }
+    .tz-row__del:hover { color: var(--coral-strong); background: var(--coral-subtle); }
+
+    .tz-add { display: flex; gap: 8px; }
+    .tz-add-input-wrap { position: relative; flex: 1; }
+    .tz-add-input-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-3); }
+    .tz-add-input { width: 100%; padding: 9px 12px 9px 36px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; }
+    .tz-add-input:focus { outline: none; border-color: var(--coral); box-shadow: 0 0 0 3px rgba(217,119,87,0.15); }
+
+    .tz-suggestions {
+      margin-top: 8px;
+      background: var(--bg); border: 1px solid var(--hairline-strong);
+      border-radius: 10px; box-shadow: var(--shadow);
+      max-height: 220px; overflow-y: auto;
+    }
+    .tz-suggest {
+      padding: 9px 14px; cursor: pointer;
+      display: flex; align-items: center; gap: 10px;
+      transition: background 120ms var(--ease);
+    }
+    .tz-suggest:hover { background: var(--coral-subtle); }
+    .tz-suggest__abbr { font-family: 'Geist Mono'; font-size: 10.5px; color: var(--text-3); width: 36px; background: var(--surface-sunken); padding: 2px 6px; border-radius: 4px; text-align: center; }
+    .tz-suggest__name { flex: 1; font-size: 13px; }
+    .tz-suggest__diff { font-family: 'Geist Mono'; font-size: 10.5px; color: var(--text-3); }
+
+    .tz-options { padding: 14px 20px; border-top: 1px solid var(--hairline); background: var(--surface-sunken); }
+    .tz-opt-row { display: flex; align-items: center; gap: 12px; padding: 7px 0; font-size: 12.5px; }
+    .tz-opt-row span { flex: 1; }
+
+    .tz-foot { padding: 14px 20px; border-top: 1px solid var(--hairline); display: flex; gap: 8px; background: var(--surface-sunken); }
+  </style>
+</head>
+<body class="shell">
+
+<div class="tz-shell">
+  <div class="tz-bg"><div class="tz-bg__grid"></div></div>
+  <div class="tz-overlay"></div>
+
+  <div class="tz-modal">
+    <header class="tz-head">
+      <div class="tz-head__icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+      <div class="tz-head__title">Time zones in your sidebar</div>
+      <button class="tz-head__close" onclick="history.back()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+    </header>
+
+    <div class="tz-body">
+      <p class="tz-sub">Drag to reorder. The top one is your "primary" — it sets what your calendar renders in. Up to 6 visible at once.</p>
+
+      <div class="tz-list" id="tz-list">
+        <div class="tz-row primary">
+          <span class="tz-grip"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.4"/><circle cx="15" cy="6" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="18" r="1.4"/><circle cx="15" cy="18" r="1.4"/></svg></span>
+          <span class="tz-row__abbr">PT</span>
+          <div>
+            <div class="tz-row__name">America/Los_Angeles<span class="tz-row__primary" style="margin-left:6px;">Primary</span></div>
+            <div class="tz-row__city">Palo Alto, San Francisco, Seattle</div>
+          </div>
+          <div>
+            <div class="tz-row__time">2:48 PM</div>
+            <div class="tz-row__diff">UTC −7</div>
+          </div>
+          <button class="tz-row__del" disabled style="opacity:0.3; cursor:not-allowed;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14H6L5 6"/></svg></button>
+        </div>
+
+        <div class="tz-row">
+          <span class="tz-grip"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.4"/><circle cx="15" cy="6" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="18" r="1.4"/><circle cx="15" cy="18" r="1.4"/></svg></span>
+          <span class="tz-row__abbr">ET</span>
+          <div>
+            <div class="tz-row__name">America/New_York</div>
+            <div class="tz-row__city">NYC, Boston, Toronto</div>
+          </div>
+          <div>
+            <div class="tz-row__time">5:48 PM</div>
+            <div class="tz-row__diff">+3 hrs</div>
+          </div>
+          <button class="tz-row__del"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14H6L5 6"/></svg></button>
+        </div>
+
+        <div class="tz-row">
+          <span class="tz-grip"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.4"/><circle cx="15" cy="6" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="18" r="1.4"/><circle cx="15" cy="18" r="1.4"/></svg></span>
+          <span class="tz-row__abbr">BST</span>
+          <div>
+            <div class="tz-row__name">Europe/London</div>
+            <div class="tz-row__city">London, Edinburgh</div>
+          </div>
+          <div>
+            <div class="tz-row__time">10:48 PM</div>
+            <div class="tz-row__diff">+8 hrs</div>
+          </div>
+          <button class="tz-row__del"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14H6L5 6"/></svg></button>
+        </div>
+
+        <div class="tz-row">
+          <span class="tz-grip"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.4"/><circle cx="15" cy="6" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="18" r="1.4"/><circle cx="15" cy="18" r="1.4"/></svg></span>
+          <span class="tz-row__abbr">SGT</span>
+          <div>
+            <div class="tz-row__name">Asia/Singapore</div>
+            <div class="tz-row__city">Singapore, Manila</div>
+          </div>
+          <div>
+            <div class="tz-row__time">5:48 AM</div>
+            <div class="tz-row__diff">+15 hrs (tmrw)</div>
+          </div>
+          <button class="tz-row__del"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6l-1 14H6L5 6"/></svg></button>
+        </div>
+      </div>
+
+      <div class="tz-add">
+        <div class="tz-add-input-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input class="tz-add-input" id="tz-q" placeholder="Add a city or time zone…" />
+        </div>
+        <button class="cta-ghost" style="padding:7px 12px; font-size:12.5px;">+ Add</button>
+      </div>
+
+      <div class="tz-suggestions" id="tz-suggest" style="display:none;">
+        <div class="tz-suggest"><span class="tz-suggest__abbr">JST</span><span class="tz-suggest__name">Asia/Tokyo · Tokyo, Osaka</span><span class="tz-suggest__diff">+16 hrs</span></div>
+        <div class="tz-suggest"><span class="tz-suggest__abbr">IST</span><span class="tz-suggest__name">Asia/Kolkata · Mumbai, Bangalore</span><span class="tz-suggest__diff">+12.5 hrs</span></div>
+        <div class="tz-suggest"><span class="tz-suggest__abbr">AEDT</span><span class="tz-suggest__name">Australia/Sydney · Melbourne, Sydney</span><span class="tz-suggest__diff">+17 hrs</span></div>
+        <div class="tz-suggest"><span class="tz-suggest__abbr">CET</span><span class="tz-suggest__name">Europe/Berlin · Berlin, Paris, Amsterdam</span><span class="tz-suggest__diff">+9 hrs</span></div>
+      </div>
+    </div>
+
+    <div class="tz-options">
+      <div class="tz-opt-row">
+        <span>Show time zone strip in sidebar</span>
+        <label class="switch"><input type="checkbox" checked /><span class="switch__track"></span><span class="switch__thumb"></span></label>
+      </div>
+      <div class="tz-opt-row">
+        <span>Highlight working hours per zone</span>
+        <label class="switch"><input type="checkbox" checked /><span class="switch__track"></span><span class="switch__thumb"></span></label>
+      </div>
+      <div class="tz-opt-row">
+        <span>Show DST transitions</span>
+        <label class="switch"><input type="checkbox" /><span class="switch__track"></span><span class="switch__thumb"></span></label>
+      </div>
+    </div>
+
+    <div class="tz-foot">
+      <button class="cta-ghost" style="padding:7px 12px; font-size:12.5px;" onclick="history.back()">Cancel</button>
+      <span style="flex:1"></span>
+      <button class="cta-primary" style="padding:7px 14px;">Save</button>
+    </div>
+  </div>
+</div>
+
+<script src="reveal.js"></script>
+<script>
+  const q = document.getElementById('tz-q');
+  const sug = document.getElementById('tz-suggest');
+  q.addEventListener('focus', () => sug.style.display = '');
+  q.addEventListener('blur', () => setTimeout(() => sug.style.display = 'none', 150));
+
+  // Add styles for the switch (referenced from settings)
+  const css = document.createElement('style');
+  css.textContent = `
+    .switch { position: relative; width: 32px; height: 18px; flex-shrink: 0; cursor: pointer; display: inline-block; }
+    .switch input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .switch__track { position: absolute; inset: 0; background: var(--border); border-radius: 999px; transition: background 200ms var(--ease); }
+    .switch__thumb { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; background: var(--bg); border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,.18); transition: transform 200ms var(--ease); }
+    .switch input:checked ~ .switch__track { background: var(--coral); }
+    .switch input:checked ~ .switch__thumb { transform: translateX(14px); }
+  `;
+  document.head.appendChild(css);
+</script>
+<!-- Page index navigator -->
+<a href="all-pages.html" class="page-nav" data-elevaite-page-nav aria-label="View all pages">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+  <span>All pages</span>
+</a>
+<style>
+.page-nav{position:fixed;bottom:20px;right:20px;z-index:9999;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;background:rgba(250,249,245,0.92);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(31,30,27,0.12);border-radius:999px;color:#1F1E1B;font-family:'Geist',ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:500;letter-spacing:-0.005em;text-decoration:none;box-shadow:0 4px 16px rgba(31,30,27,0.06),0 1px 2px rgba(31,30,27,0.04);opacity:0;transform:translateY(8px);animation:elevaite-pn-in 420ms cubic-bezier(0.32,0.72,0,1) 0.5s forwards;transition:transform 180ms cubic-bezier(0.32,0.72,0,1),border-color 180ms cubic-bezier(0.32,0.72,0,1),color 180ms cubic-bezier(0.32,0.72,0,1)}
+@media (hover:hover){.page-nav:hover{transform:translateY(-2px);border-color:#D97757;color:#D97757}}
+@keyframes elevaite-pn-in{to{opacity:1;transform:none}}
+[data-theme="dark"] .page-nav,html[data-theme="dark"] .page-nav,body[data-theme="dark"] .page-nav{background:rgba(35,34,32,0.92);color:#F5F4ED;border-color:rgba(245,244,237,0.14)}
+@media (prefers-reduced-motion:reduce){.page-nav{animation:none;opacity:1;transform:none;transition:none}}
+@media (max-width:520px){.page-nav span{display:none}.page-nav{padding:9px}}
+</style>
+
+</body>
+</html>

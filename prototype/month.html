@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Month view — ElevAIte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="motion.css" />
+  <style>
+    body { overflow: hidden; }
+    .m-shell { display: flex; flex-direction: column; height: 100vh; }
+    .m-main { flex: 1; display: flex; min-height: 0; }
+
+    .m-side {
+      width: 248px; border-right: 1px solid var(--hairline-strong);
+      padding: 16px 14px; overflow-y: auto; flex-shrink: 0;
+      animation: slide-right 600ms var(--ease) both;
+    }
+    .m-side__h { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); padding: 6px 4px 8px; }
+    .m-cal-item { display: flex; align-items: center; gap: 9px; padding: 6px 6px; font-size: 12.5px; border-radius: 6px; }
+    .m-cal-item:hover { background: var(--surface); }
+    .m-cal-item__sw { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+    .m-stats {
+      margin-top: 14px; padding: 14px; background: var(--surface); border-radius: 10px;
+      font-size: 12px;
+    }
+    .m-stats__lbl { color: var(--text-3); margin-bottom: 8px; font-weight: 500; font-size: 11.5px; }
+    .m-stats__row { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-family: 'Geist Mono'; font-size: 11.5px; }
+    .m-stats__bar { flex: 1; height: 6px; background: var(--surface-sunken); border-radius: 3px; overflow: hidden; }
+    .m-stats__bar > span { display: block; height: 100%; background: var(--coral); }
+    .m-stats__val { color: var(--text-2); font-weight: 500; }
+
+    .m-content { flex: 1; display: flex; flex-direction: column; min-width: 0; padding: 12px; animation: fade-up 600ms var(--ease) 0.1s both; }
+
+    .m-day-heads {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      border-bottom: 1px solid var(--hairline-strong);
+      padding: 0;
+    }
+    .m-day-head { text-align: center; padding: 10px 0; font-size: 11px; font-weight: 500; letter-spacing: .04em; color: var(--text-3); }
+
+    .m-grid {
+      flex: 1; display: grid;
+      grid-template-rows: repeat(5, 1fr);
+      gap: 0;
+    }
+    .m-week { display: grid; grid-template-columns: repeat(7, 1fr); border-top: 1px solid var(--hairline); position: relative; }
+    .m-week:first-child { border-top: 0; }
+
+    .m-day {
+      border-left: 1px solid var(--hairline);
+      padding: 6px 6px 4px;
+      overflow: hidden;
+      display: flex; flex-direction: column; gap: 2px;
+      transition: background 120ms var(--ease);
+    }
+    .m-day:first-child { border-left: 0; }
+    .m-day:hover { background: var(--surface-sunken); }
+    .m-day.faded .m-day__num { color: var(--text-3); }
+    .m-day.weekend { background: rgba(31,30,27,0.012); }
+    .m-day.today { background: rgba(217,119,87,0.04); }
+
+    .m-day__num {
+      font-family: 'Geist Mono'; font-size: 11.5px;
+      color: var(--text); margin-bottom: 3px;
+      width: 22px; height: 22px; display: inline-grid; place-items: center;
+      border-radius: 50%;
+    }
+    .m-day.today .m-day__num { background: var(--coral); color: #fff; font-weight: 600; }
+    .m-day__more {
+      font-size: 10.5px; color: var(--text-3); font-weight: 500;
+      padding: 1px 5px; border-radius: 3px;
+      align-self: flex-start;
+      transition: background 120ms var(--ease);
+      cursor: pointer;
+    }
+    .m-day__more:hover { background: var(--surface); color: var(--text); }
+
+    .m-evt {
+      padding: 2px 6px;
+      font-size: 10.5px; font-weight: 500;
+      border-radius: 3px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      line-height: 1.3;
+      cursor: pointer;
+      transition: filter 120ms var(--ease);
+    }
+    .m-evt:hover { filter: brightness(0.96); }
+    .m-evt.tinted { padding-left: 4px; border-left: 2px solid var(--chip-bar); background: var(--chip-bg); color: var(--chip-text); }
+    .m-evt.fill { background: var(--chip-bar); color: #fff; }
+    .m-evt.allday { background: var(--chip-bar); color: #fff; }
+    .m-evt.allday.span2 { grid-column: span 2; }
+    .m-evt.allday.span3 { grid-column: span 3; }
+
+    .m-evt__dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--chip-bar); margin-right: 5px; vertical-align: middle; }
+
+    .m-now-pulse {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--coral); display: inline-block;
+      margin-left: 5px; vertical-align: middle;
+      animation: dot-pulse 2s infinite;
+    }
+  </style>
+</head>
+<body class="shell">
+
+<div class="m-shell">
+  <header class="topbar">
+    <button class="icon-btn" title="Sidebar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg></button>
+    <div class="topbar__brand"><div class="topbar__brand-mark">E</div> ElevAIte</div>
+    <div style="display:flex; align-items:center; gap:6px;">
+      <button class="icon-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <button class="icon-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M9 18l6-6-6-6"/></svg></button>
+      <button class="today-btn">Today</button>
+    </div>
+    <div class="topbar__date" style="margin-left:2px;">May 2026 <small>· 47 events</small></div>
+    <div style="flex:1"></div>
+    <a class="new-event-btn" href="#" style="text-decoration:none;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg> New event <span class="kbd-on-coral">C</span>
+    </a>
+    <a class="search-trigger" href="search.html" style="text-decoration:none;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <span class="search-trigger__placeholder">Search or command…</span>
+      <span class="kbd">⌘K</span>
+    </a>
+    <div class="view-picker">
+      <a href="day.html" style="text-decoration:none;"><button aria-pressed="false">D</button></a>
+      <a href="index.html" style="text-decoration:none;"><button aria-pressed="false">W</button></a>
+      <a href="month.html" style="text-decoration:none;"><button aria-pressed="true">M</button></a>
+    </div>
+    <button class="icon-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></button>
+    <div class="avatar">P</div>
+  </header>
+
+  <main class="m-main">
+    <aside class="m-side">
+      <div class="m-side__h">Quick stats</div>
+      <div class="m-stats">
+        <div class="m-stats__lbl">Time this month</div>
+        <div class="m-stats__row">Meetings <div class="m-stats__bar"><span style="width:62%;"></span></div><span class="m-stats__val">38h</span></div>
+        <div class="m-stats__row">Focus    <div class="m-stats__bar"><span style="width:42%;background:var(--chip-sand-bar);"></span></div><span class="m-stats__val">24h</span></div>
+        <div class="m-stats__row">Classes  <div class="m-stats__bar"><span style="width:34%;background:var(--chip-plum-bar);"></span></div><span class="m-stats__val">19h</span></div>
+        <div class="m-stats__row">Personal <div class="m-stats__bar"><span style="width:18%;background:var(--chip-sage-bar);"></span></div><span class="m-stats__val">10h</span></div>
+      </div>
+
+      <div class="m-side__h" style="margin-top: 14px;">My calendars</div>
+      <div class="m-cal-item"><span class="m-cal-item__sw" style="background:#D97757"></span> ElevAIte (Work)</div>
+      <div class="m-cal-item"><span class="m-cal-item__sw" style="background:#7E9C7A"></span> Personal</div>
+      <div class="m-cal-item"><span class="m-cal-item__sw" style="background:#748AA6"></span> Stanford CS</div>
+      <div class="m-cal-item"><span class="m-cal-item__sw" style="background:#997594"></span> Lectures</div>
+      <div class="m-cal-item"><span class="m-cal-item__sw" style="background:#C0808C"></span> Family</div>
+      <div class="m-cal-item"><span class="m-cal-item__sw" style="background:#8C857A"></span> US Holidays</div>
+    </aside>
+
+    <section class="m-content">
+      <div class="m-day-heads">
+        <div class="m-day-head">MON</div><div class="m-day-head">TUE</div><div class="m-day-head">WED</div>
+        <div class="m-day-head">THU</div><div class="m-day-head">FRI</div><div class="m-day-head">SAT</div><div class="m-day-head">SUN</div>
+      </div>
+
+      <div class="m-grid">
+        <!-- Week 1 (Apr 27 - May 3) -->
+        <div class="m-week">
+          <div class="m-day faded"><span class="m-day__num">27</span></div>
+          <div class="m-day faded"><span class="m-day__num">28</span></div>
+          <div class="m-day faded"><span class="m-day__num">29</span></div>
+          <div class="m-day faded"><span class="m-day__num">30</span></div>
+          <div class="m-day"><span class="m-day__num">1</span><div class="m-evt fill" style="--chip-bar:#8C857A;">May Day · Holiday</div></div>
+          <div class="m-day weekend"><span class="m-day__num">2</span><div class="m-evt tinted" style="--chip-bg:#E3ECE0;--chip-bar:#7E9C7A;--chip-text:#3E5639;">Brunch w/ Alex</div></div>
+          <div class="m-day weekend"><span class="m-day__num">3</span></div>
+        </div>
+
+        <!-- Week 2 (May 4 - 10) -->
+        <div class="m-week">
+          <div class="m-day"><span class="m-day__num">4</span>
+            <div class="m-evt tinted" style="--chip-bg:#F4E5DC;--chip-bar:#D97757;--chip-text:#7A3E26;">9:00 Standup</div>
+            <div class="m-evt tinted" style="--chip-bg:#EFE7D5;--chip-bar:#B89460;--chip-text:#5F4A20;">2:00 Focus</div>
+          </div>
+          <div class="m-day"><span class="m-day__num">5</span>
+            <div class="m-evt tinted" style="--chip-bg:#F4E5DC;--chip-bar:#D97757;--chip-text:#7A3E26;">9:00 Standup</div>
+            <div class="m-evt tinted" style="--chip-bg:#EBE0E8;--chip-bar:#997594;--chip-text:#4D384A;">1:30 CS 224N</div>
+          </div>
+          <div class="m-day"><span class="m-day__num">6</span>
+            <div class="m-evt tinted" style="--chip-bg:#F4E5DC;--chip-bar:#D97757;--chip-text:#7A3E26;">9:00 Standup</div>
+            <div class="m-evt tinted" style="--chip-bg:#F4E5DC;--chip-bar:#D97757;--chip-text:#7A3E26;">11:30 Roadmap</div>
+          </div>
+          <div class="m-day"><span class="m-day__num">7</span>
+            <div class="m-evt tinted" style="--chip-bg:#EBE0E8;--chip-bar:#997594;--chip-text:#4D384A;">1:30 CS 224N</div>
+            <div class="m-evt tinted" style="--chip-bg:#F1E6CC;--chip-bar:#C49746;--chip-text:#6E521F;">4:00 Yoga</div>
+          </div>
+          <div class="m-day"><span class="m-day__num">8</span>
+            <div class="m-evt fill" style="--chip-bar:#D97757;">10:30 All-hands</div>
+            <div class="m-evt tinted" style="--chip-bg:#F1E0E2;--chip-bar:#C0808C;--chip-text:#5D343C;">5:30 Happy hour</div>
+          </div>
+          <div class="m-day weekend"><span class="m-day__num">9</span>
+            <div class="m-evt tinted" style="--chip-bg:#F1E0E2;--chip-bar:#C0808C;--chip-text:#5D343C;">Mother's Day</div>
+          </div>
+          <div class="m-day weekend"><span class="m-day__num">10</span></div>
+        </div>
+
+        <!-- Week 3 (May 11 - 17) — Q3 planning all-day spans -->
+        <div class="m-week">
+          <div class="m-day"><span class="m-day__num">11</span>
+            <div class="m-evt allday span3" style="--chip-bar:#997594;">Q3 planning week · Mon – Thu</div>
+            <div class="m-evt tinted" style="--chip-bg:#F4E5DC;--chip-bar:#D97757;--chip-text:#7A3E26;">9:00 Standup</div>
+          </div>
+          <div class="m-day"><span class="m-day__num">12</span>
+            <div class="m-evt tinted" style="--chip-bg:#F4E5DC;--chip-bar:#D97757;--chip-text:#7A3E26;">9:00 Standup</div>
+            <div class="m-evt tinted" style="--chip-bg:#F4E5DC;--chip-bar:#D97757;--chip-text:#7A3E26;">11:00 Eng weekly</div>
+          </div>
+          <div class="m-day"><span class="m-day__num">13</span>
+            <div class="m-evt tinted" style="--chip-bg:#F4E5DC;--chip-bar:#D97757;--chip-text:#7A3E26;">10:00 Coffee · Jamie</div>
+            <div class="m-evt tinted" style="--chip-bg:#EFE7D5;--chip-bar:#B89460;--chip-text:#5F4A20;">2:00 Focus</div>
+          </div>
+          <div class="m-day"><span class="m-day__num">14</span>
+            <div class="m-evt tinted" style="--chip-bg:#EBE0E8;--chip-bar:#997594;--chip-text:#4D384A;">2:00 Office hours</div>
+          </div>
+          <div class="m-day"><span class="m-day__num">15</span>
+            <div class="m-evt fill" style="--chip-bar:#D97757;">10:30 All-hands</div>
+            <div class="m-evt tinted" style="--chip-bg:#EFE7D5;--chip-bar:#B89460;--chip-text:#5F4A20;">2:30 Focus · deck</div>
+          </div>
+          <div class="m-day weekend"><span class="m-day__num">16</span></div>
+          <div class="m-day weekend"><span class="m-day__num">17</span></div>
+        </div>
+
+        <!-- Week 4 (May 18 - 24) — current -->
+        <div class="m-week">
+          <div class="m-day"><span class="m-day__num">18</span>
+            <div class="m-evt allday span3" style="--chip-bar:#997594;">Q3 planning week (cont.)</div>
+            <div class="m-evt tinted" style="--chip-bg:#F4E5DC;--chip-bar:#D97757;--chip-text:#7A3E26;">10:30 1:1 Maya</div>
+            <div class="m-evt tinted" style="--chip-bg:#F4E5DC;--chip-bar:#D97757;--chip-text:#7A3E26;">5:00 Investor sync</div>
+          </div>
+          <div class="m-day"><span class="m-day__num">19</span>
+            <div class="m-evt tinted" style="--chip-bg:#F4E5DC;--chip-bar:#D97757;--chip-text:#7A3E26;">11:00 Eng weekly</div>
+            <div class="m-evt tinted" style="--chip-bg:#EBE0E8;--chip-bar:#997594;--chip-text:#4D384A;">1:30 CS 224N</div>
+            <div class="m-day__more">+ 3 more</div>
+          </div>
+          <div class="m-day today"><span class="m-day__num">20</span>
+            <div class="m-evt tinted" style="--chip-bg:#F4E5DC;--chip-bar:#D97757;--chip-text:#7A3E26;">11:30 Roadmap · Q3<span class="m-now-pulse"></span></div>
+            <div class="m-evt tinted" style="--chip-bg:#EFE7D5;--chip-bar:#B89460;--chip-text:#5F4A20;">2:00 Focus</div>
+            <div class="m-evt tinted" style="--chip-bg:#EBE0E8;--chip-bar:#997594;--chip-text:#4D384A;">6:30 Founders · YC</div>
+            <div class="m-day__more">+ 4 more</div>
+          </div>
+          <div class="m-day"><span class="m-day__num">21</span>
+            <div class="m-evt fill" style="--chip-bar:#C0808C;">Anna's birthday 🎂</div>
+            <div class="m-evt tinted" style="--chip-bg:#F1E6CC;--chip-bar:#C49746;--chip-text:#6E521F;">8:00 Yoga</div>
+            <div class="m-evt tinted" style="--chip-bg:#EBE0E8;--chip-bar:#997594;--chip-text:#4D384A;">2:00 Office hours</div>
+            <div class="m-day__more">+ 3 more</div>
+          </div>
+          <div class="m-day"><span class="m-day__num">22</span>
+            <div class="m-evt fill" style="--chip-bar:#D97757;">10:30 All-hands</div>
+            <div class="m-evt tinted" style="--chip-bg:#EFE7D5;--chip-bar:#B89460;--chip-text:#5F4A20;">2:30 Focus · deck</div>
+            <div class="m-evt tinted" style="--chip-bg:#F1E0E2;--chip-bar:#C0808C;--chip-text:#5D343C;">5:30 Happy hour</div>
+          </div>
+          <div class="m-day weekend"><span class="m-day__num">23</span>
+            <div class="m-evt tinted" style="--chip-bg:#E3ECE0;--chip-bar:#7E9C7A;--chip-text:#3E5639;">10:00 Brunch · Alex</div>
+            <div class="m-evt tinted" style="--chip-bg:#F1E0E2;--chip-bar:#C0808C;--chip-text:#5D343C;">7:00 Dinner · Linnea</div>
+          </div>
+          <div class="m-day weekend"><span class="m-day__num">24</span>
+            <div class="m-evt tinted" style="--chip-bg:#E0E6ED;--chip-bar:#748AA6;--chip-text:#364759;">11:00 Weekly planning</div>
+          </div>
+        </div>
+
+        <!-- Week 5 (May 25 - 31) -->
+        <div class="m-week">
+          <div class="m-day"><span class="m-day__num">25</span><div class="m-evt fill" style="--chip-bar:#8C857A;">Memorial Day</div></div>
+          <div class="m-day"><span class="m-day__num">26</span>
+            <div class="m-evt tinted" style="--chip-bg:#F4E5DC;--chip-bar:#D97757;--chip-text:#7A3E26;">9:00 Standup</div>
+          </div>
+          <div class="m-day"><span class="m-day__num">27</span>
+            <div class="m-evt tinted" style="--chip-bg:#F4E5DC;--chip-bar:#D97757;--chip-text:#7A3E26;">9:00 Standup</div>
+            <div class="m-evt tinted" style="--chip-bg:#F1E6CC;--chip-bar:#C49746;--chip-text:#6E521F;">11:00 User research</div>
+          </div>
+          <div class="m-day"><span class="m-day__num">28</span>
+            <div class="m-evt tinted" style="--chip-bg:#EBE0E8;--chip-bar:#997594;--chip-text:#4D384A;">2:00 Office hours</div>
+          </div>
+          <div class="m-day"><span class="m-day__num">29</span>
+            <div class="m-evt fill" style="--chip-bar:#D97757;">10:30 All-hands</div>
+          </div>
+          <div class="m-day weekend faded"><span class="m-day__num">30</span></div>
+          <div class="m-day weekend faded"><span class="m-day__num">31</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="reveal.js"></script>
+<!-- Page index navigator -->
+<a href="all-pages.html" class="page-nav" data-elevaite-page-nav aria-label="View all pages">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+  <span>All pages</span>
+</a>
+<style>
+.page-nav{position:fixed;bottom:20px;right:20px;z-index:9999;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;background:rgba(250,249,245,0.92);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(31,30,27,0.12);border-radius:999px;color:#1F1E1B;font-family:'Geist',ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:500;letter-spacing:-0.005em;text-decoration:none;box-shadow:0 4px 16px rgba(31,30,27,0.06),0 1px 2px rgba(31,30,27,0.04);opacity:0;transform:translateY(8px);animation:elevaite-pn-in 420ms cubic-bezier(0.32,0.72,0,1) 0.5s forwards;transition:transform 180ms cubic-bezier(0.32,0.72,0,1),border-color 180ms cubic-bezier(0.32,0.72,0,1),color 180ms cubic-bezier(0.32,0.72,0,1)}
+@media (hover:hover){.page-nav:hover{transform:translateY(-2px);border-color:#D97757;color:#D97757}}
+@keyframes elevaite-pn-in{to{opacity:1;transform:none}}
+[data-theme="dark"] .page-nav,html[data-theme="dark"] .page-nav,body[data-theme="dark"] .page-nav{background:rgba(35,34,32,0.92);color:#F5F4ED;border-color:rgba(245,244,237,0.14)}
+@media (prefers-reduced-motion:reduce){.page-nav{animation:none;opacity:1;transform:none;transition:none}}
+@media (max-width:520px){.page-nav span{display:none}.page-nav{padding:9px}}
+</style>
+
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Choose calendars — ElevAIte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="motion.css" />
+  <style>
+    body { font-family: 'Geist'; min-height: 100vh; }
+    .oa { min-height: 100vh; display: grid; place-items: center; padding: 40px 24px; position: relative; overflow: hidden; }
+    .oa__bloom { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 30%, rgba(217,119,87,0.13) 0%, transparent 60%); filter: blur(40px); animation: bloom 9s ease-in-out infinite alternate; pointer-events: none; }
+    .oa-wrap { width: 100%; max-width: 540px; position: relative; z-index: 1; animation: fade-up 700ms var(--ease) both; }
+    .oa-brand { display: flex; align-items: center; gap: 9px; margin-bottom: 22px; font-weight: 600; font-size: 14px; text-decoration: none; color: inherit; }
+    .oa-progress { display: flex; align-items: center; gap: 8px; margin-bottom: 30px; font-size: 11px; color: var(--text-3); font-weight: 500; letter-spacing: .04em; text-transform: uppercase; }
+    .oa-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--coral); }
+    .oa-dot.empty { background: var(--surface-sunken); border: 1px solid var(--border); }
+    .oa-progress hr { flex: 1; border: 0; height: 1px; background: var(--hairline); margin: 0 4px; }
+
+    .oa-card { background: var(--bg); border: 1px solid var(--hairline-strong); border-radius: 16px; padding: 32px; box-shadow: var(--shadow); }
+    .oa-account {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px;
+      background: var(--surface);
+      border-radius: 10px;
+      margin-bottom: 20px;
+      animation: scale-in 600ms var(--ease) 0.2s both;
+    }
+    .oa-account__provider { width: 34px; height: 34px; border-radius: 8px; background: #fff; display: grid; place-items: center; border: 1px solid var(--hairline-strong); flex-shrink: 0; }
+    .oa-account__email { font-size: 13.5px; font-weight: 500; }
+    .oa-account__type { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+    .oa-account__check {
+      margin-left: auto;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--coral); color: #fff;
+      display: grid; place-items: center;
+      flex-shrink: 0;
+    }
+
+    .oa-h { font-size: 24px; font-weight: 600; letter-spacing: -0.018em; margin: 0 0 6px; animation: fade-up 600ms var(--ease) 0.3s both; }
+    .oa-p { font-size: 14px; color: var(--text-2); margin: 0 0 22px; line-height: 1.55; animation: fade-up 600ms var(--ease) 0.4s both; }
+
+    .cal-list { display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow-y: auto; padding-right: 4px; margin-bottom: 22px; }
+    .cal-group { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); padding: 12px 6px 4px; }
+    .cal-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; cursor: pointer;
+      transition: background 120ms var(--ease), border-color 120ms var(--ease);
+      animation: fade-up 500ms var(--ease) both;
+    }
+    .cal-item:nth-child(2) { animation-delay: 0.5s; }
+    .cal-item:nth-child(3) { animation-delay: 0.55s; }
+    .cal-item:nth-child(4) { animation-delay: 0.6s; }
+    .cal-item:nth-child(5) { animation-delay: 0.65s; }
+    .cal-item:nth-child(7) { animation-delay: 0.75s; }
+    .cal-item:nth-child(8) { animation-delay: 0.8s; }
+    .cal-item:nth-child(9) { animation-delay: 0.85s; }
+    .cal-item.on { background: var(--coral-subtle); border-color: var(--coral); }
+    .cal-item:hover { border-color: var(--border-strong); }
+    .cal-swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; box-shadow: inset 0 0 0 1px rgba(31,30,27,.1); }
+    .cal-name { flex: 1; font-size: 13px; }
+    .cal-event-count { font-size: 11px; color: var(--text-3); font-family: 'Geist Mono', monospace; margin-right: 8px; }
+    .cal-check {
+      width: 18px; height: 18px; border-radius: 5px;
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      transition: background 120ms var(--ease), border-color 120ms var(--ease);
+      display: grid; place-items: center; flex-shrink: 0;
+    }
+    .cal-item.on .cal-check { background: var(--coral); border-color: var(--coral); color: #fff; }
+    .cal-item .cal-check svg { opacity: 0; transition: opacity 120ms; }
+    .cal-item.on .cal-check svg { opacity: 1; }
+
+    .oa-btns { display: flex; align-items: center; gap: 10px; }
+    .oa-btns .summary { flex: 1; font-size: 12px; color: var(--text-3); }
+    .oa-btn { padding: 10px 18px; background: var(--coral); color: var(--text-on-coral); border-radius: 8px; font-size: 14px; font-weight: 600; border: 0; cursor: pointer; transition: background 120ms var(--ease); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+    .oa-btn:hover { background: var(--coral-hover); }
+  </style>
+</head>
+<body class="shell">
+
+<main class="oa">
+  <div class="oa__bloom"></div>
+  <div class="oa-wrap">
+    <a class="oa-brand" href="landing.html"><span class="topbar__brand-mark">E</span> ElevAIte</a>
+
+    <!-- Progress -->
+    <div class="oa-progress">
+      <span class="oa-dot"></span> Account
+      <hr/>
+      <span class="oa-dot"></span> Verify
+      <hr/>
+      <span class="oa-dot" style="background: var(--coral); box-shadow: 0 0 0 3px var(--coral-subtle);"></span> Calendars
+      <hr/>
+      <span class="oa-dot empty"></span> All set
+    </div>
+
+    <div class="oa-card">
+      <!-- Connected account banner -->
+      <div class="oa-account">
+        <div class="oa-account__provider">
+          <svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.76h3.56c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.56-2.76c-.99.66-2.25 1.05-3.72 1.05-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0012 23z"/><path fill="#FBBC05" d="M5.84 14.1A6.6 6.6 0 015.5 12c0-.73.13-1.44.34-2.1V7.06H2.18A11 11 0 001 12c0 1.77.42 3.45 1.18 4.94l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>
+        </div>
+        <div>
+          <div class="oa-account__email">prem@stanford.edu</div>
+          <div class="oa-account__type">Google Calendar · connected</div>
+        </div>
+        <div class="oa-account__check">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        </div>
+      </div>
+
+      <h1 class="oa-h">Which calendars do you want to see?</h1>
+      <p class="oa-p">Toggle any calendar on or off. You can always change this later in Settings.</p>
+
+      <div class="cal-list" id="cal-list">
+        <div class="cal-group">prem@stanford.edu — Google</div>
+        <button class="cal-item on" data-id="c1">
+          <span class="cal-swatch" style="background: #D97757"></span>
+          <span class="cal-name">prem@stanford.edu <small style="color:var(--text-3); font-size:11px;">(Primary)</small></span>
+          <span class="cal-event-count">128 events</span>
+          <span class="cal-check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+        </button>
+        <button class="cal-item on" data-id="c2">
+          <span class="cal-swatch" style="background: #997594"></span>
+          <span class="cal-name">CS 224N — NLP</span>
+          <span class="cal-event-count">42 events</span>
+          <span class="cal-check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+        </button>
+        <button class="cal-item on" data-id="c3">
+          <span class="cal-swatch" style="background: #C49746"></span>
+          <span class="cal-name">Office Hours · Subscribed</span>
+          <span class="cal-event-count">24 events</span>
+          <span class="cal-check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+        </button>
+        <button class="cal-item" data-id="c4">
+          <span class="cal-swatch" style="background: #8C857A"></span>
+          <span class="cal-name">US Holidays</span>
+          <span class="cal-event-count">12 events</span>
+          <span class="cal-check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+        </button>
+        <button class="cal-item" data-id="c5">
+          <span class="cal-swatch" style="background: #7E9C7A"></span>
+          <span class="cal-name">CS GSAs (read-only)</span>
+          <span class="cal-event-count">9 events</span>
+          <span class="cal-check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+        </button>
+
+        <div class="cal-group">Recommended</div>
+        <button class="cal-item on" data-id="c6">
+          <span class="cal-swatch" style="background: #748AA6"></span>
+          <span class="cal-name">Tasks · ElevAIte (write-back)</span>
+          <span class="cal-event-count">3 events</span>
+          <span class="cal-check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+        </button>
+      </div>
+
+      <div class="oa-btns">
+        <div class="summary" id="summary">4 of 6 calendars selected</div>
+        <button class="cta-ghost" type="button">Add another account</button>
+        <a class="oa-btn" href="index.html">Continue →</a>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-top: 18px; font-size: 12px; color: var(--text-3);">
+      We never store your event data on our servers. <a href="privacy.html" style="color:var(--text-2);">Read the privacy policy</a>.
+    </div>
+  </div>
+</main>
+
+<script src="reveal.js"></script>
+<script>
+  const items = document.querySelectorAll('.cal-item');
+  const summary = document.getElementById('summary');
+  function tally() {
+    const n = document.querySelectorAll('.cal-item.on').length;
+    summary.textContent = `${n} of ${items.length} calendars selected`;
+  }
+  items.forEach(it => it.addEventListener('click', () => { it.classList.toggle('on'); tally(); }));
+</script>
+
+<!-- Page index navigator -->
+<a href="all-pages.html" class="page-nav" data-elevaite-page-nav aria-label="View all pages">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+  <span>All pages</span>
+</a>
+<style>
+.page-nav{position:fixed;bottom:20px;right:20px;z-index:9999;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;background:rgba(250,249,245,0.92);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(31,30,27,0.12);border-radius:999px;color:#1F1E1B;font-family:'Geist',ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:500;letter-spacing:-0.005em;text-decoration:none;box-shadow:0 4px 16px rgba(31,30,27,0.06),0 1px 2px rgba(31,30,27,0.04);opacity:0;transform:translateY(8px);animation:elevaite-pn-in 420ms cubic-bezier(0.32,0.72,0,1) 0.5s forwards;transition:transform 180ms cubic-bezier(0.32,0.72,0,1),border-color 180ms cubic-bezier(0.32,0.72,0,1),color 180ms cubic-bezier(0.32,0.72,0,1)}
+@media (hover:hover){.page-nav:hover{transform:translateY(-2px);border-color:#D97757;color:#D97757}}
+@keyframes elevaite-pn-in{to{opacity:1;transform:none}}
+[data-theme="dark"] .page-nav,html[data-theme="dark"] .page-nav,body[data-theme="dark"] .page-nav{background:rgba(35,34,32,0.92);color:#F5F4ED;border-color:rgba(245,244,237,0.14)}
+@media (prefers-reduced-motion:reduce){.page-nav{animation:none;opacity:1;transform:none;transition:none}}
+@media (max-width:520px){.page-nav span{display:none}.page-nav{padding:9px}}
+</style>
+
+</body>
+</html>

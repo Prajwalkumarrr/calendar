@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mobile screens — ElevAIte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="tokens.css" />
+  <link rel="stylesheet" href="app.css" />
+  <link rel="stylesheet" href="motion.css" />
+  <style>
+    body { font-family: 'Geist'; min-height: 100vh; padding: 40px 24px 60px; background: #f0eee9; }
+    .mob-wrap { max-width: 1200px; margin: 0 auto; }
+    .mob-head { text-align: center; margin-bottom: 28px; }
+    .mob-head h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 6px; }
+    .mob-head p { font-size: 14px; color: var(--text-2); margin: 0; }
+    .mob-tabs {
+      display: inline-flex; padding: 3px; margin: 18px auto 28px;
+      background: var(--bg); border: 1px solid var(--hairline-strong);
+      border-radius: 9px; position: relative;
+    }
+    .mob-tabs button { padding: 6px 14px; border-radius: 7px; border: 0; background: none; cursor: pointer; font-size: 12.5px; font-weight: 500; color: var(--text-2); position: relative; z-index: 1; transition: color 180ms var(--ease); }
+    .mob-tabs button.on { color: var(--text); }
+    .mob-tabs__pill { position: absolute; top: 3px; bottom: 3px; background: var(--surface); border-radius: 7px; box-shadow: 0 1px 2px rgba(31,30,27,0.06); transition: left 280ms var(--ease), width 280ms var(--ease); }
+
+    .mob-stage { display: grid; place-items: start center; gap: 36px; padding-top: 8px; }
+
+    /* iPhone frame */
+    .phone {
+      width: 390px; height: 760px;
+      background: #1a1916;
+      border-radius: 50px; padding: 14px;
+      position: relative;
+      box-shadow: 0 24px 60px rgba(31,30,27,0.18), 0 6px 12px rgba(31,30,27,0.06);
+      animation: scale-in 500ms var(--ease) both;
+      display: none;
+    }
+    .phone.on { display: block; }
+    .phone__screen {
+      width: 100%; height: 100%; background: var(--bg);
+      border-radius: 38px; overflow: hidden;
+      position: relative;
+    }
+    .phone__notch {
+      position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+      width: 120px; height: 28px; background: #1a1916; border-radius: 18px;
+      z-index: 10;
+    }
+    .phone__status {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 26px 0;
+      font-family: 'Geist Mono'; font-size: 13px; font-weight: 600;
+    }
+
+    .ph-pg { padding: 10px 18px 0; height: calc(100% - 30px); display: flex; flex-direction: column; }
+    .ph-header { display: flex; align-items: center; gap: 10px; padding: 12px 0 14px; }
+    .ph-back { width: 32px; height: 32px; border-radius: 8px; background: var(--surface); color: var(--text); border: 0; display: grid; place-items: center; }
+    .ph-title { flex: 1; font-size: 16px; font-weight: 600; letter-spacing: -0.005em; }
+
+    .ph-content { flex: 1; overflow-y: auto; padding-bottom: 16px; }
+
+    /* === Settings screen === */
+    .ph-set-section { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); padding: 14px 4px 6px; }
+    .ph-set-group { background: var(--bg); border: 1px solid var(--hairline-strong); border-radius: 12px; overflow: hidden; margin-bottom: 4px; }
+    .ph-set-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-top: 1px solid var(--hairline); }
+    .ph-set-row:first-child { border-top: 0; }
+    .ph-set-row__icon { width: 30px; height: 30px; border-radius: 7px; background: var(--surface-sunken); color: var(--text-2); display: grid; place-items: center; flex-shrink: 0; }
+    .ph-set-row__icon--coral { background: var(--coral-subtle); color: var(--coral); }
+    .ph-set-row__icon--blue { background: var(--chip-slate-bg); color: var(--chip-slate-bar); }
+    .ph-set-row__icon--purple { background: var(--chip-plum-bg); color: var(--chip-plum-bar); }
+    .ph-set-row__icon--green { background: var(--chip-sage-bg); color: var(--chip-sage-bar); }
+    .ph-set-row__icon--ochre { background: var(--chip-ochre-bg); color: var(--chip-ochre-bar); }
+    .ph-set-row__icon--rose { background: var(--chip-rose-bg); color: var(--chip-rose-bar); }
+    .ph-set-row__label { font-size: 14px; flex: 1; }
+    .ph-set-row__value { font-size: 12.5px; color: var(--text-3); font-family: 'Geist Mono'; }
+    .ph-set-row svg.chev { color: var(--text-3); flex-shrink: 0; }
+    .switch { position: relative; width: 36px; height: 22px; flex-shrink: 0; cursor: pointer; display: inline-block; }
+    .switch input { position: absolute; inset: 0; opacity: 0; }
+    .switch__track { position: absolute; inset: 0; background: var(--border); border-radius: 999px; transition: background 200ms var(--ease); }
+    .switch__thumb { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; background: var(--bg); border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,.18); transition: transform 200ms var(--ease); }
+    .switch input:checked ~ .switch__track { background: var(--coral); }
+    .switch input:checked ~ .switch__thumb { transform: translateX(14px); }
+
+    .ph-profile { display: flex; align-items: center; gap: 14px; padding: 18px 14px; background: var(--coral-subtle); border-radius: 14px; margin-bottom: 4px; }
+    .ph-profile__avatar { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg,#9A7B98,#D97757); color: #fff; font-weight: 600; font-size: 22px; display: grid; place-items: center; }
+    .ph-profile__name { font-size: 16px; font-weight: 600; letter-spacing: -0.005em; }
+    .ph-profile__email { font-size: 11.5px; color: var(--coral-strong); font-family: 'Geist Mono'; }
+
+    /* === Event detail (full-screen sheet) === */
+    .ph-evt-hd { padding: 14px 0 16px; display: flex; align-items: center; gap: 10px; }
+    .ph-evt-tag { font-size: 11.5px; color: var(--text-2); display: inline-flex; align-items: center; gap: 6px; flex: 1; }
+    .ph-evt-tag .dot { width: 9px; height: 9px; border-radius: 3px; background: var(--coral); }
+    .ph-evt-title { font-size: 26px; font-weight: 600; letter-spacing: -0.018em; line-height: 1.15; margin: 0 0 12px; }
+
+    .ph-evt-meta { display: flex; flex-direction: column; gap: 12px; padding: 14px; background: var(--surface-sunken); border-radius: 12px; margin-bottom: 16px; }
+    .ph-evt-meta__row { display: flex; align-items: center; gap: 12px; font-size: 13px; }
+    .ph-evt-meta__row svg { color: var(--text-3); flex-shrink: 0; }
+    .ph-evt-meta__row b { font-weight: 500; color: var(--text); }
+
+    .ph-evt-section { padding: 14px 14px 14px; background: var(--bg); border: 1px solid var(--hairline-strong); border-radius: 12px; margin-bottom: 12px; }
+    .ph-evt-section__h { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 10px; }
+    .ph-evt-person { display: flex; align-items: center; gap: 10px; padding: 6px 0; font-size: 13.5px; }
+    .ph-evt-person__avatar { width: 28px; height: 28px; border-radius: 50%; color: #fff; font-weight: 600; font-size: 11px; display: grid; place-items: center; }
+    .ph-evt-person__rsvp { margin-left: auto; font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; letter-spacing: .03em; }
+
+    .ph-evt-actions { display: flex; gap: 8px; position: sticky; bottom: 0; background: linear-gradient(to top, var(--bg) 70%, transparent); padding: 10px 0 14px; }
+    .ph-evt-actions button { flex: 1; padding: 12px; border-radius: 10px; font-size: 13.5px; font-weight: 600; cursor: pointer; border: 0; }
+    .ph-evt-actions .delete { background: var(--bg); color: var(--text-3); border: 1px solid var(--border); }
+    .ph-evt-actions .save { background: var(--coral); color: var(--text-on-coral); }
+
+    /* === Command palette (full-screen search) === */
+    .ph-cmd-input { padding: 14px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--hairline); }
+    .ph-cmd-input svg { color: var(--text-3); }
+    .ph-cmd-input input { flex: 1; border: 0; outline: none; background: transparent; font-size: 17px; color: var(--text); }
+    .ph-cmd-input input::placeholder { color: var(--text-3); }
+    .ph-cmd-cancel { font-size: 14px; color: var(--coral); font-weight: 500; background: none; border: 0; }
+
+    .ph-cmd-results { padding: 6px; }
+    .ph-cmd-sect { font-size: 10px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); padding: 12px 12px 4px; }
+    .ph-cmd-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 8px; }
+    .ph-cmd-item.sel { background: var(--coral-subtle); }
+    .ph-cmd-item__icon { width: 32px; height: 32px; border-radius: 8px; background: var(--surface-sunken); color: var(--text-2); display: grid; place-items: center; flex-shrink: 0; }
+    .ph-cmd-item.sel .ph-cmd-item__icon { background: var(--coral); color: #fff; }
+    .ph-cmd-item__body { flex: 1; }
+    .ph-cmd-item__title { font-size: 14px; font-weight: 500; line-height: 1.2; }
+    .ph-cmd-item__meta { font-size: 11.5px; color: var(--text-3); font-family: 'Geist Mono'; margin-top: 1px; }
+    .ph-cmd-item__kbd { font-family: 'Geist Mono'; font-size: 11px; padding: 2px 7px; border-radius: 4px; border: 1px solid var(--border); color: var(--text-2); background: var(--bg); }
+
+    .ph-cmd-recent {
+      display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 12px 16px;
+    }
+    .ph-cmd-recent-pill { padding: 5px 10px; background: var(--surface); border: 1px solid var(--hairline-strong); border-radius: 999px; font-size: 11.5px; font-family: 'Geist Mono'; color: var(--text-2); }
+  </style>
+</head>
+<body>
+
+<div class="mob-wrap">
+  <div class="mob-head">
+    <h1>Mobile screens</h1>
+    <p>Settings · Event detail · Command palette — all native-app-sized.</p>
+    <div class="mob-tabs">
+      <span class="mob-tabs__pill" id="m-pill" style="left:3px;width:auto"></span>
+      <button class="on" data-v="settings" id="bt-settings">Settings</button>
+      <button data-v="event" id="bt-event">Event detail</button>
+      <button data-v="cmdk" id="bt-cmdk">⌘K search</button>
+    </div>
+  </div>
+
+  <div class="mob-stage">
+
+    <!-- === SETTINGS === -->
+    <div class="phone on" data-screen="settings">
+      <div class="phone__notch"></div>
+      <div class="phone__screen">
+        <div class="phone__status"><span>9:41</span><span>5G ●</span></div>
+        <div class="ph-pg">
+          <div class="ph-header">
+            <button class="ph-back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <span class="ph-title">Settings</span>
+          </div>
+          <div class="ph-content">
+            <div class="ph-profile">
+              <div class="ph-profile__avatar">P</div>
+              <div>
+                <div class="ph-profile__name">Prem Sai</div>
+                <div class="ph-profile__email">prem@stanford.edu · 🎓 Student</div>
+              </div>
+            </div>
+
+            <div class="ph-set-section">Account</div>
+            <div class="ph-set-group">
+              <div class="ph-set-row"><span class="ph-set-row__icon ph-set-row--coral"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg></span><span class="ph-set-row__label">Profile</span><svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>
+              <div class="ph-set-row"><span class="ph-set-row__icon ph-set-row--blue"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></span><span class="ph-set-row__label">Calendars</span><span class="ph-set-row__value">3</span><svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>
+              <div class="ph-set-row"><span class="ph-set-row__icon ph-set-row--ochre"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 004 0"/></svg></span><span class="ph-set-row__label">Notifications</span><span class="ph-set-row__value">2 new</span><svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>
+            </div>
+
+            <div class="ph-set-section">Customize</div>
+            <div class="ph-set-group">
+              <div class="ph-set-row"><span class="ph-set-row__icon ph-set-row--purple"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span class="ph-set-row__label">Time zones</span><span class="ph-set-row__value">4</span><svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>
+              <div class="ph-set-row"><span class="ph-set-row__icon ph-set-row--green"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg></span><span class="ph-set-row__label">Dark mode</span><label class="switch"><input type="checkbox" /><span class="switch__track"></span><span class="switch__thumb"></span></label></div>
+              <div class="ph-set-row"><span class="ph-set-row__icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="13.5" cy="6.5" r="1"/><circle cx="17.5" cy="10.5" r="1"/><path d="M12 2a10 10 0 1 0 0 20"/></svg></span><span class="ph-set-row__label">Accent color</span><span class="ph-set-row__value" style="color: var(--coral);">● Coral</span><svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>
+              <div class="ph-set-row"><span class="ph-set-row__icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="2"/></svg></span><span class="ph-set-row__label">Density</span><span class="ph-set-row__value">Regular</span><svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>
+            </div>
+
+            <div class="ph-set-section">App</div>
+            <div class="ph-set-group">
+              <div class="ph-set-row"><span class="ph-set-row__icon ph-set-row--rose"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></span><span class="ph-set-row__label">Plan &amp; billing</span><span class="ph-set-row__value">Student · free</span><svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>
+              <div class="ph-set-row"><span class="ph-set-row__icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></span><span class="ph-set-row__label">Help &amp; support</span><svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>
+              <div class="ph-set-row"><span class="ph-set-row__icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 17a5 5 0 0 1 0-10v0a5 5 0 0 1 0 10z"/></svg></span><span class="ph-set-row__label">About</span><span class="ph-set-row__value">v2.4.0</span><svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></div>
+            </div>
+
+            <button style="margin-top: 16px; width: 100%; padding: 13px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--coral-strong); font-size: 14px; font-weight: 600;">Sign out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- === EVENT DETAIL === -->
+    <div class="phone" data-screen="event">
+      <div class="phone__notch"></div>
+      <div class="phone__screen">
+        <div class="phone__status"><span>9:41</span><span>5G ●</span></div>
+        <div class="ph-pg">
+          <div class="ph-header">
+            <button class="ph-back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+            <span class="ph-title" style="flex:1; font-size: 12px; color: var(--text-3); font-weight: 500; letter-spacing: .04em; text-transform: uppercase;">Event details</span>
+            <button class="ph-back" style="background:none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+          </div>
+          <div class="ph-content">
+            <div class="ph-evt-hd">
+              <div class="ph-evt-tag"><span class="dot"></span> ElevAIte (Work)</div>
+            </div>
+            <h1 class="ph-evt-title">Roadmap review · Q3</h1>
+
+            <div class="ph-evt-meta">
+              <div class="ph-evt-meta__row">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                <div>
+                  <div><b>Wed, May 20, 2026</b></div>
+                  <div style="font-family: 'Geist Mono'; font-size: 11.5px; color: var(--text-3); margin-top: 2px;">11:30 AM – 12:30 PM PT · 60 min</div>
+                </div>
+              </div>
+              <div class="ph-evt-meta__row">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>
+                <div>
+                  <div><b>Google Meet</b></div>
+                  <div style="font-family: 'Geist Mono'; font-size: 11.5px; color: var(--coral); margin-top: 2px;">meet.google.com/dxv-ksrr-yrt</div>
+                </div>
+              </div>
+              <div class="ph-evt-meta__row">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0116 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <div><b>Office</b><div style="font-family: 'Geist Mono'; font-size: 11.5px; color: var(--text-3); margin-top: 2px;">555 Bryant St, Palo Alto</div></div>
+              </div>
+            </div>
+
+            <div class="ph-evt-section">
+              <div class="ph-evt-section__h">Participants · 5</div>
+              <div class="ph-evt-person">
+                <div class="ph-evt-person__avatar" style="background: linear-gradient(135deg,#9A7B98,#D97757);">P</div>
+                <div><div style="font-weight: 500;">Prem Sai</div><div style="font-size: 11.5px; color: var(--text-3);">Organizer</div></div>
+                <span class="ph-evt-person__rsvp" style="background: var(--chip-sage-bg); color: var(--chip-sage-text);">YES</span>
+              </div>
+              <div class="ph-evt-person">
+                <div class="ph-evt-person__avatar" style="background: linear-gradient(135deg,#88A188,#B89968);">M</div>
+                <div><div style="font-weight: 500;">Maya Liu</div></div>
+                <span class="ph-evt-person__rsvp" style="background: var(--chip-sage-bg); color: var(--chip-sage-text);">YES</span>
+              </div>
+              <div class="ph-evt-person">
+                <div class="ph-evt-person__avatar" style="background: linear-gradient(135deg,#7A8DA8,#9A7B98);">S</div>
+                <div><div style="font-weight: 500;">Sam Chen</div></div>
+                <span class="ph-evt-person__rsvp" style="background: var(--chip-ochre-bg); color: var(--chip-ochre-text);">MAYBE</span>
+              </div>
+              <div class="ph-evt-person">
+                <div class="ph-evt-person__avatar" style="background: linear-gradient(135deg,#C8A057,#D97757);">J</div>
+                <div><div style="font-weight: 500;">Jordan Park</div></div>
+                <span class="ph-evt-person__rsvp" style="background: var(--surface-sunken); color: var(--text-3);">PENDING</span>
+              </div>
+            </div>
+
+            <div class="ph-evt-section">
+              <div class="ph-evt-section__h">Notes</div>
+              <div style="font-size: 13.5px; line-height: 1.55; color: var(--text);">Walk through Q3 priorities. Doc: <span style="color: var(--coral);">linear.app/elevaite/roadmap-q3</span></div>
+            </div>
+
+            <div class="ph-evt-actions">
+              <button class="delete">Delete</button>
+              <button class="save">Save changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- === COMMAND PALETTE === -->
+    <div class="phone" data-screen="cmdk">
+      <div class="phone__notch"></div>
+      <div class="phone__screen">
+        <div class="phone__status"><span>9:41</span><span>5G ●</span></div>
+        <div class="ph-pg" style="padding: 10px 0 0;">
+          <div class="ph-cmd-input">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input value="" placeholder="Type a command or search…" />
+            <button class="ph-cmd-cancel">Cancel</button>
+          </div>
+
+          <div class="ph-cmd-results" style="flex:1; overflow-y: auto;">
+            <div class="ph-cmd-sect">Recent searches</div>
+            <div class="ph-cmd-recent">
+              <span class="ph-cmd-recent-pill">roadmap</span>
+              <span class="ph-cmd-recent-pill">1:1 maya</span>
+              <span class="ph-cmd-recent-pill">CS 224N</span>
+              <span class="ph-cmd-recent-pill">demo prep</span>
+            </div>
+
+            <div class="ph-cmd-sect">Quick actions</div>
+            <div class="ph-cmd-item sel">
+              <div class="ph-cmd-item__icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></div>
+              <div class="ph-cmd-item__body">
+                <div class="ph-cmd-item__title">Create event</div>
+                <div class="ph-cmd-item__meta">starts now · 1h</div>
+              </div>
+              <span class="ph-cmd-item__kbd">C</span>
+            </div>
+            <div class="ph-cmd-item">
+              <div class="ph-cmd-item__icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
+              <div class="ph-cmd-item__body">
+                <div class="ph-cmd-item__title">Jump to today</div>
+                <div class="ph-cmd-item__meta">Wed, May 20</div>
+              </div>
+              <span class="ph-cmd-item__kbd">T</span>
+            </div>
+            <div class="ph-cmd-item">
+              <div class="ph-cmd-item__icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg></div>
+              <div class="ph-cmd-item__body">
+                <div class="ph-cmd-item__title">Share my availability</div>
+                <div class="ph-cmd-item__meta">next 5 days</div>
+              </div>
+              <span class="ph-cmd-item__kbd">⇧A</span>
+            </div>
+
+            <div class="ph-cmd-sect">Today's events</div>
+            <div class="ph-cmd-item">
+              <div class="ph-cmd-item__icon" style="background:#F4E5DC; color: #D97757;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg></div>
+              <div class="ph-cmd-item__body">
+                <div class="ph-cmd-item__title">Roadmap review · Q3</div>
+                <div class="ph-cmd-item__meta">in 18 min · 11:30 AM</div>
+              </div>
+            </div>
+            <div class="ph-cmd-item">
+              <div class="ph-cmd-item__icon" style="background:#F4E5DC; color: #D97757;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg></div>
+              <div class="ph-cmd-item__body">
+                <div class="ph-cmd-item__title">1:1 with Sam</div>
+                <div class="ph-cmd-item__meta">4:30 PM · Office</div>
+              </div>
+            </div>
+            <div class="ph-cmd-item">
+              <div class="ph-cmd-item__icon" style="background:#EBE0E8; color: #997594;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg></div>
+              <div class="ph-cmd-item__body">
+                <div class="ph-cmd-item__title">Founders drinks · YC</div>
+                <div class="ph-cmd-item__meta">6:30 PM · Mission SF</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.mob-tabs button');
+  const pill = document.getElementById('m-pill');
+  const phones = document.querySelectorAll('.phone');
+  function setActive(v) {
+    tabs.forEach(b => {
+      const on = b.dataset.v === v;
+      b.classList.toggle('on', on);
+      if (on) {
+        pill.style.left = b.offsetLeft + 'px';
+        pill.style.width = b.offsetWidth + 'px';
+      }
+    });
+    phones.forEach(p => p.classList.toggle('on', p.dataset.screen === v));
+  }
+  tabs.forEach(b => b.addEventListener('click', () => setActive(b.dataset.v)));
+  // init
+  setTimeout(() => setActive('settings'), 30);
+</script>
+<!-- Page index navigator -->
+<a href="all-pages.html" class="page-nav" data-elevaite-page-nav aria-label="View all pages">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <rect x="3" y="3" width="7" height="7" rx="1"/>
+    <rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/>
+    <rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+  <span>All pages</span>
+</a>
+<style>
+.page-nav{position:fixed;bottom:20px;right:20px;z-index:9999;display:inline-flex;align-items:center;gap:7px;padding:8px 13px;background:rgba(250,249,245,0.92);backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%);border:1px solid rgba(31,30,27,0.12);border-radius:999px;color:#1F1E1B;font-family:'Geist',ui-sans-serif,system-ui,sans-serif;font-size:12px;font-weight:500;letter-spacing:-0.005em;text-decoration:none;box-shadow:0 4px 16px rgba(31,30,27,0.06),0 1px 2px rgba(31,30,27,0.04);opacity:0;transform:translateY(8px);animation:elevaite-pn-in 420ms cubic-bezier(0.32,0.72,0,1) 0.5s forwards;transition:transform 180ms cubic-bezier(0.32,0.72,0,1),border-color 180ms cubic-bezier(0.32,0.72,0,1),color 180ms cubic-bezier(0.32,0.72,0,1)}
+@media (hover:hover){.page-nav:hover{transform:translateY(-2px);border-color:#D97757;color:#D97757}}
+@keyframes elevaite-pn-in{to{opacity:1;transform:none}}
+[data-theme="dark"] .page-nav,html[data-theme="dark"] .page-nav,body[data-theme="dark"] .page-nav{background:rgba(35,34,32,0.92);color:#F5F4ED;border-color:rgba(245,244,237,0.14)}
+@media (prefers-reduced-motion:reduce){.page-nav{animation:none;opacity:1;transform:none;transition:none}}
+@media (max-width:520px){.page-nav span{display:none}.page-nav{padding:9px}}
+</style>
+
+</body>
+</html>
