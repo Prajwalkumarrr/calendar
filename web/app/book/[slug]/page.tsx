@@ -1,6 +1,6 @@
 import { headers } from 'next/headers';
 import { BookingFlow } from './BookingFlow';
-import styles from './book.module.css';
+import './book.css';
 
 export const metadata = { title: 'Book a time · ElevAIte' };
 
@@ -20,7 +20,7 @@ export default async function BookPage({ params }: { params: Promise<{ slug: str
 
   if (!link) {
     return (
-      <main className={styles.notFound}>
+      <main className="pb-notfound">
         <h1>Link not found</h1>
         <p>This scheduling link doesn&apos;t exist or has been removed.</p>
       </main>
