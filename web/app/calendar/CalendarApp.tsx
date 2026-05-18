@@ -556,7 +556,9 @@ export function CalendarApp() {
               <div className="cal-gutter">
                 {Array.from({ length: HOUR_END - HOUR_START + 1 }, (_, k) => HOUR_START + k).map((h) => (
                   <div className="cal-gutter__hour" key={h}>
-                    <span>{h === 12 ? '12 PM' : h > 12 ? `${h - 12} PM` : `${h} AM`}</span>
+                    <span>{appearance.timeFormat === '24'
+                        ? String(h).padStart(2, '0') + ':00'
+                        : (h === 12 ? '12 PM' : h > 12 ? (h - 12) + ' PM' : h + ' AM')}</span>
                   </div>
                 ))}
               </div>
