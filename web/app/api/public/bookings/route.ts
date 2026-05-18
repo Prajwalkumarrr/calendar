@@ -3,6 +3,7 @@ import { createBooking, generateSlots, getLinkBySlug } from '@/lib/scheduling';
 import { listEventsInRange } from '@/lib/events';
 import { getUserById } from '@/lib/users';
 import { sendBookingEmails } from '@/lib/email';
+import { createNotification } from '@/lib/notifications';
 
 // Public — invitee creates a booking.
 // POST /api/public/bookings { slug, startISO, name, email, note? }
@@ -43,9 +44,18 @@ export async function POST(req: NextRequest) {
       note: typeof note === 'string' ? note : undefined,
     });
 
-    // Fire-and-forget email send. We don't block the response on email delivery
-    // — the booking is already saved and the invitee will see the confirmation page.
+    // Fire-and-forget side effects: notification to host's inbox + (when wired) email
     const host = await getUserById(link.ownerId);
+    void createNotification({
+      ownerId: link.ownerId,
+      kind: 'booking.created',
+      title: `${name} booked ${link.title}`,
+      body: `${start.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })} (${link.durationMin} min)${typeof note === 'string' && note ? ` — "${note.slice(0, 120)}"` : ''}`,
+      href: `/booked/${booking.id}`,
+      actorName: name,
+      actorEmail: email,
+      refId: booking.id,
+    });
     if (host?.email) {
       void sendBookingEmails({
         inviteeName: name,
