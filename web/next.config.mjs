@@ -36,7 +36,7 @@ const nextConfig = {
         { source: '/verify-email', destination: '/verify-email.html' },
         { source: '/forgot-password', destination: '/forgot-password.html' },
         { source: '/oauth-callback', destination: '/oauth-callback.html' },
-        { source: '/invite', destination: '/invite.html' },
+        // /invite/[token] now has a real React page — static prototype stays at /invite.html for reference.
         { source: '/checkout', destination: '/checkout.html' },
       ],
       // `fallback` runs AFTER dynamic routes, so /api/auth/[...nextauth] and other
