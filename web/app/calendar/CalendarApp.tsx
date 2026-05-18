@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { signOut } from 'next-auth/react';
+import Link from 'next/link';
 import styles from './calendar.module.css';
 import {
   addDays,
@@ -143,6 +144,19 @@ export function CalendarApp() {
         <button className={styles.navBtn} onClick={() => setAnchor((a) => addDays(a, 7))} aria-label="Next week">›</button>
         <div className={styles.label}>{label}</div>
         <div className={styles.spacer} />
+        <Link
+          href="/scheduling"
+          style={{
+            height: 32, padding: '0 12px',
+            borderRadius: 8, border: '1px solid var(--hairline-strong)',
+            background: 'var(--surface)', color: 'var(--text)',
+            fontSize: 12.5, fontWeight: 500,
+            display: 'inline-flex', alignItems: 'center',
+            textDecoration: 'none',
+          }}
+        >
+          Scheduling
+        </Link>
         <button
           className={styles.newBtn}
           onClick={() => {

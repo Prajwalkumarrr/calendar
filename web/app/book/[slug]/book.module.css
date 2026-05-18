@@ -1,0 +1,99 @@
+.page {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  display: grid;
+  grid-template-columns: 360px 1fr;
+}
+@media (max-width: 760px) {
+  .page { grid-template-columns: 1fr; }
+}
+
+/* Left column — host info */
+.left {
+  padding: 40px 36px;
+  border-right: 1px solid var(--hairline-strong);
+  background: var(--surface);
+}
+.brand { display: inline-flex; align-items: center; gap: 9px; font-weight: 600; font-size: 14.5px; margin-bottom: 32px; }
+.brandDot { width: 22px; height: 22px; border-radius: 6px; background: var(--coral); display: grid; place-items: center; color: #fff; font-size: 11px; font-weight: 700; font-family: var(--font-mono); }
+.h { font-size: 26px; font-weight: 600; letter-spacing: -0.018em; margin: 0 0 8px; line-height: 1.2; }
+.meta { display: flex; gap: 18px; color: var(--text-2); font-size: 13.5px; margin-bottom: 18px; }
+.metaItem { display: inline-flex; align-items: center; gap: 6px; }
+.desc { color: var(--text-2); font-size: 14px; line-height: 1.55; }
+
+/* Right column — date+slot picker / form */
+.right {
+  padding: 40px 48px;
+  overflow: auto;
+}
+
+.section { margin-bottom: 28px; }
+.label {
+  font-size: 11px; font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3);
+  margin-bottom: 10px; display: block;
+}
+
+.dateRow { display: flex; gap: 6px; flex-wrap: wrap; }
+.dateBtn {
+  min-width: 78px; padding: 9px 10px;
+  border: 1px solid var(--hairline-strong); background: var(--surface-elevated);
+  border-radius: 10px; cursor: pointer; font-family: inherit;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  transition: border-color 180ms var(--ease), background 180ms var(--ease);
+}
+.dateBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.dateBtnActive { border-color: var(--coral); background: var(--coral-subtle); color: var(--coral-strong, var(--coral)); }
+.dayName { font-size: 10.5px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); }
+.dayNum { font-size: 17px; font-weight: 600; font-feature-settings: 'tnum'; }
+.dateBtnActive .dayName { color: inherit; }
+
+.slots {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 6px;
+  max-width: 540px;
+}
+.slot {
+  height: 38px; border-radius: 8px;
+  border: 1px solid var(--hairline-strong); background: var(--surface-elevated);
+  font-family: var(--font-mono); font-size: 12.5px; font-weight: 500;
+  color: var(--text); cursor: pointer; font-feature-settings: 'tnum';
+}
+@media (hover: hover) { .slot:hover { border-color: var(--coral); color: var(--coral-strong, var(--coral)); } }
+.slotActive { background: var(--coral); color: #fff; border-color: var(--coral); }
+
+.noSlots { color: var(--text-3); font-size: 13.5px; padding: 14px 0; }
+
+/* Form */
+.form { max-width: 460px; }
+.field { display: block; margin-bottom: 14px; }
+.input, .textarea {
+  width: 100%; padding: 10px 12px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 8px; font-size: 14px; color: var(--text);
+  font-family: inherit;
+}
+.input:focus, .textarea:focus { outline: 2px solid var(--ring); outline-offset: 1px; }
+.actions { display: flex; gap: 10px; margin-top: 16px; align-items: center; }
+.btn {
+  height: 40px; padding: 0 16px;
+  border-radius: 9px;
+  font-size: 13.5px; font-weight: 500; font-family: inherit;
+  cursor: pointer;
+  border: 1px solid var(--hairline-strong);
+  background: var(--surface-elevated); color: var(--text);
+}
+.btnPrimary { background: var(--text); color: var(--bg); border-color: var(--text); }
+.btnPrimary:disabled { opacity: 0.6; cursor: progress; }
+.summary {
+  padding: 12px 14px;
+  background: var(--coral-subtle); color: var(--coral-strong, var(--coral));
+  border-radius: 8px; font-size: 13.5px;
+  margin-bottom: 18px; font-weight: 500;
+}
+.err { color: var(--coral-strong, #B85A3C); font-size: 13px; margin-top: 6px; }
+.notFound { padding: 80px 24px; text-align: center; }
+.notFound h1 { font-size: 22px; font-weight: 600; margin: 0 0 8px; }
+.notFound p { color: var(--text-2); margin: 0; }
