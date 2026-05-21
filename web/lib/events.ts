@@ -42,6 +42,10 @@ export type EventDTO = Omit<EventDoc, '_id' | 'start' | 'end' | 'createdAt' | 'u
   // Set on expanded instances of a recurring series
   seriesId?: string;       // base event id (same as `id` for the base)
   instanceIndex?: number;  // 0 = base, 1 = first repeat, ...
+  // Provenance — local Mongo (default) or pulled from an external calendar.
+  source?: 'google';
+  readOnly?: boolean;
+  externalLink?: string;   // e.g. htmlLink to open in source calendar
 };
 
 function recurrenceToDTO(r?: Recurrence): RecurrenceDTO | undefined {
@@ -152,7 +156,9 @@ export async function listEventsInRange(
   ownerId: string,
   from: Date,
   to: Date,
+  opts: { includeExternal?: boolean } = {},
 ): Promise<EventDTO[]> {
+  const includeExternal = opts.includeExternal !== false;
   const c = await col();
   // Pull events whose base start is before `to` AND (it's recurring OR end > from).
   const docs = await c
@@ -168,6 +174,33 @@ export async function listEventsInRange(
     .toArray();
   const out: EventDTO[] = [];
   for (const doc of docs) out.push(...expandToRange(doc as EventDoc, from, to));
+
+  if (includeExternal) {
+    const { getGoogleCalendarEvents } = await import('./integrations/google-calendar');
+    try {
+      const googleEvents = await getGoogleCalendarEvents(ownerId, from, to);
+      for (const ev of googleEvents) {
+        out.push({
+          id: `google:${ev.id}`,
+          ownerId,
+          title: ev.title,
+          start: ev.start.toISOString(),
+          end: ev.end.toISOString(),
+          allDay: ev.allDay,
+          color: 'slate',
+          location: ev.location,
+          description: ev.description,
+          conferencing: ev.meetingUrl ? { provider: 'meet', url: ev.meetingUrl } : undefined,
+          source: 'google',
+          readOnly: true,
+          externalLink: ev.htmlLink,
+        });
+      }
+    } catch (err) {
+      console.error('[events] google merge failed:', err);
+    }
+  }
+
   return out.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
 }
 
@@ -180,6 +213,7 @@ export type CreateEventInput = {
   color?: ChipColor;
   location?: string;
   description?: string;
+  conferencing?: EventDoc['conferencing'];
   recurrence?: Recurrence;
 };
 
@@ -194,6 +228,7 @@ export async function createEvent(input: CreateEventInput): Promise<EventDTO> {
     color: input.color ?? 'coral',
     location: input.location,
     description: input.description,
+    conferencing: input.conferencing,
     recurrence: input.recurrence,
     createdAt: now,
     updatedAt: now,

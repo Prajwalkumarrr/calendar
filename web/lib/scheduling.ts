@@ -1,8 +1,15 @@
 import { ObjectId } from 'mongodb';
 import clientPromise from './mongodb';
 import { createEvent } from './events';
+import { createZoomMeeting } from './integrations/zoom';
 
 const DB_NAME = 'elevaite';
+
+export type ConferencingConfig =
+  | { provider: 'none' }
+  | { provider: 'zoom' }
+  | { provider: 'meet' }
+  | { provider: 'custom'; url: string };
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -19,6 +26,7 @@ export type SchedulingLinkDoc = {
   workingHours: Record<string, WorkingHourRange[]>;
   bufferMin: number;
   active: boolean;
+  conferencing?: ConferencingConfig;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -38,6 +46,8 @@ export type BookingDoc = {
   start: Date;
   end: Date;
   note?: string;
+  meetingUrl?: string;
+  meetingProvider?: 'zoom' | 'meet' | 'custom';
   status: 'confirmed' | 'cancelled';
   createdAt: Date;
 };
@@ -51,6 +61,8 @@ export type BookingDTO = {
   start: string;
   end: string;
   note?: string;
+  meetingUrl?: string;
+  meetingProvider?: 'zoom' | 'meet' | 'custom';
   status: 'confirmed' | 'cancelled';
   link?: { title: string; slug: string; durationMin: number };
 };
@@ -82,6 +94,8 @@ function bookingToDTO(doc: BookingDoc, link?: SchedulingLinkDoc): BookingDTO {
     start: doc.start.toISOString(),
     end: doc.end.toISOString(),
     note: doc.note,
+    meetingUrl: doc.meetingUrl,
+    meetingProvider: doc.meetingProvider,
     status: doc.status,
     link: link
       ? { title: link.title, slug: link.slug, durationMin: link.durationMin }
@@ -133,6 +147,7 @@ export type CreateLinkInput = {
   description?: string;
   workingHours?: SchedulingLinkDoc['workingHours'];
   bufferMin?: number;
+  conferencing?: ConferencingConfig;
 };
 
 export async function createLink(input: CreateLinkInput): Promise<SchedulingLinkDTO | { error: string }> {
@@ -155,6 +170,7 @@ export async function createLink(input: CreateLinkInput): Promise<SchedulingLink
     workingHours: input.workingHours ?? DEFAULT_WORKING_HOURS,
     bufferMin: input.bufferMin ?? 0,
     active: true,
+    conferencing: input.conferencing,
     createdAt: now,
     updatedAt: now,
   };
@@ -172,7 +188,7 @@ export async function deleteLink(ownerId: string, id: string): Promise<boolean> 
 export async function updateLink(
   ownerId: string,
   id: string,
-  patch: Partial<Pick<SchedulingLinkDoc, 'title' | 'description' | 'durationMin' | 'workingHours' | 'bufferMin' | 'active'>>,
+  patch: Partial<Pick<SchedulingLinkDoc, 'title' | 'description' | 'durationMin' | 'workingHours' | 'bufferMin' | 'active' | 'conferencing'>>,
 ): Promise<SchedulingLinkDTO | null> {
   if (!ObjectId.isValid(id)) return null;
   const c = await linksCol();
@@ -245,6 +261,30 @@ export type CreateBookingInput = {
 
 export async function createBooking(input: CreateBookingInput): Promise<BookingDTO> {
   const now = new Date();
+  const conf = input.link.conferencing;
+
+  let meetingUrl: string | undefined;
+  let meetingProvider: BookingDoc['meetingProvider'];
+  let eventConferencing: Parameters<typeof createEvent>[0]['conferencing'];
+
+  if (conf?.provider === 'zoom') {
+    const meeting = await createZoomMeeting(input.link.ownerId, {
+      topic: `${input.link.title} · ${input.inviteeName}`,
+      start: input.start,
+      durationMin: input.link.durationMin,
+      agenda: input.note,
+    });
+    if (meeting) {
+      meetingUrl = meeting.joinUrl;
+      meetingProvider = 'zoom';
+      eventConferencing = { provider: 'zoom', url: meeting.joinUrl };
+    }
+  } else if (conf?.provider === 'custom' && conf.url) {
+    meetingUrl = conf.url;
+    meetingProvider = 'custom';
+    eventConferencing = { provider: 'custom', url: conf.url };
+  }
+
   const event = await createEvent({
     ownerId: input.link.ownerId,
     title: `${input.link.title} · ${input.inviteeName}`,
@@ -252,6 +292,7 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingD
     end: input.end,
     color: 'coral',
     description: input.note,
+    conferencing: eventConferencing,
   });
   const c = await bookingsCol();
   const doc: BookingDoc = {
@@ -263,6 +304,8 @@ export async function createBooking(input: CreateBookingInput): Promise<BookingD
     start: input.start,
     end: input.end,
     note: input.note,
+    meetingUrl,
+    meetingProvider,
     status: 'confirmed',
     createdAt: now,
   };

@@ -71,6 +71,8 @@ export async function POST(req: NextRequest) {
         durationMin: link.durationMin,
         bookingId: booking.id,
         note: typeof note === 'string' ? note : undefined,
+        meetingUrl: booking.meetingUrl,
+        meetingProvider: booking.meetingProvider,
       });
     }
 

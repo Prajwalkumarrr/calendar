@@ -31,7 +31,7 @@ const nextConfig = {
         // /search now has a real React page; the static prototype html stays at /search.html for reference.
         { source: '/recurring', destination: '/recurring.html' },
         // /timezones now has a real React management page; the static prototype html stays at /timezones.html for reference.
-        { source: '/integrations', destination: '/integrations.html' },
+        // /integrations now has a real React page; the static prototype html stays at /integrations.html for reference.
         { source: '/empty', destination: '/empty.html' },
         { source: '/verify-email', destination: '/verify-email.html' },
         { source: '/forgot-password', destination: '/forgot-password.html' },

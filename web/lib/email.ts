@@ -124,6 +124,8 @@ export type BookingEmailArgs = {
   durationMin: number;
   bookingId: string;
   note?: string;
+  meetingUrl?: string;
+  meetingProvider?: 'zoom' | 'meet' | 'custom';
 };
 
 export async function sendBookingEmails(args: BookingEmailArgs): Promise<void> {
@@ -139,6 +141,13 @@ export async function sendBookingEmails(args: BookingEmailArgs): Promise<void> {
 
   const time = `${fmt(args.start)} — ${args.durationMin} min`;
   const confirmUrl = `${APP_URL}/booked/${args.bookingId}`;
+  const providerLabel = args.meetingProvider === 'zoom' ? 'Zoom' : args.meetingProvider === 'meet' ? 'Google Meet' : 'Video';
+  const meetingBlock = args.meetingUrl
+    ? `<p style="margin:0 0 12px;padding:10px 12px;background:${palette.surface};border-radius:8px;">
+         <strong>${providerLabel}:</strong>
+         <a href="${args.meetingUrl}" style="color:${palette.coral};text-decoration:none;">${args.meetingUrl}</a>
+       </p>`
+    : '';
 
   const inviteeHtml = shellHtml({
     eyebrow: "You're scheduled",
@@ -146,6 +155,7 @@ export async function sendBookingEmails(args: BookingEmailArgs): Promise<void> {
     body: `
       <p style="margin:0 0 12px;"><strong>${args.linkTitle}</strong></p>
       <p style="margin:0 0 12px;">${time}</p>
+      ${meetingBlock}
       ${args.note ? `<p style="margin:0 0 12px;padding:10px 12px;background:${palette.surface};border-radius:8px;font-style:italic;">"${args.note.replace(/</g, '&lt;')}"</p>` : ''}
       <p style="margin:14px 0 0;">A calendar event has been added to ${args.hostName}'s calendar. You'll receive a reminder before it starts.</p>
     `,
@@ -159,6 +169,7 @@ export async function sendBookingEmails(args: BookingEmailArgs): Promise<void> {
       <p style="margin:0 0 12px;"><strong>${args.linkTitle}</strong></p>
       <p style="margin:0 0 12px;">${time}</p>
       <p style="margin:0 0 12px;color:${palette.text2};">From: <strong>${args.inviteeName}</strong> (${args.inviteeEmail})</p>
+      ${meetingBlock}
       ${args.note ? `<p style="margin:0 0 12px;padding:10px 12px;background:${palette.surface};border-radius:8px;font-style:italic;">"${args.note.replace(/</g, '&lt;')}"</p>` : ''}
       <p style="margin:14px 0 0;">This event has been added to your ElevAIte calendar.</p>
     `,

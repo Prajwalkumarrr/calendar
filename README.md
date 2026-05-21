@@ -150,6 +150,58 @@ NextAuth needs a Google OAuth client. **One-time setup, ~3 minutes.**
 
 Restart `npm run dev` after editing env vars. Visit [http://localhost:3000/sign-in](http://localhost:3000/sign-in), click "Continue with Google" → you land on `/dashboard` signed in. Your user is now in the `users` collection in Atlas.
 
+## Set up integrations (Zoom, Slack, Notion)
+
+The `/integrations` page lists every supported provider. Each provider you want to enable needs its own OAuth app + a pair of env vars in `web/.env.local`. Until those are set the card on `/integrations` shows **Needs setup** instead of a Connect button.
+
+### Zoom (fully wired — creates a real Zoom meeting on every booking)
+
+1. Sign in to the [Zoom App Marketplace](https://marketplace.zoom.us) → **Develop → Build App → OAuth → User-managed app**
+2. Redirect URL: `http://localhost:3000/api/integrations/zoom/callback` (add your prod URL later)
+3. Scopes: `meeting:write`, `user:read`
+4. Copy Client ID + Client Secret into `web/.env.local`:
+   ```
+   ZOOM_CLIENT_ID=...
+   ZOOM_CLIENT_SECRET=...
+   ```
+5. Restart dev server → open `/integrations` → click **Connect** on the Zoom card.
+6. Set `conferencing: { provider: 'zoom' }` on a scheduling link (DB or via the link editor). New bookings will auto-generate a Zoom URL attached to the calendar event + included in the confirmation email.
+
+### Google Calendar (one-way sync — Google → ElevAIte)
+
+Reuses the same `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` you already set up for sign-in. One extra step:
+
+1. Google Cloud Console → **APIs & Services → Library** → enable **Google Calendar API**
+2. Same OAuth client you used for sign-in → **Authorized redirect URIs** → add:
+   ```
+   http://localhost:3000/api/integrations/google-calendar/callback
+   ```
+   (and your prod URL when you deploy)
+3. Restart `npm run dev` → open `/integrations` → click **Connect** on the Google Calendar card.
+
+What it does once connected:
+- Your Google Calendar events appear in `/calendar` and `/home` (rendered in slate, marked read-only)
+- They count as **busy** when finding a time across teammates (`/find-time`)
+- They count as **busy** when generating booking slots — so invitees won't double-book you
+- Events are pulled live with a 60-second per-range cache (no background workers, no DB writes)
+
+Currently read-only. Two-way sync (writing ElevAIte events back to Google) is planned for a later phase.
+
+### Slack / Notion (OAuth scaffolded, exchange not yet wired)
+
+The Connect button + OAuth round-trip works; tokens just aren't persisted until the per-provider exchange function is implemented (see `web/lib/integrations/zoom.ts` for the pattern). Add env vars:
+
+```
+SLACK_CLIENT_ID=...
+SLACK_CLIENT_SECRET=...
+NOTION_CLIENT_ID=...
+NOTION_CLIENT_SECRET=...
+```
+
+### Apple / Outlook calendars
+
+Marked **Coming soon**. iCloud needs a CalDAV implementation (no OAuth); Outlook needs Microsoft Graph and is tracked for a later phase.
+
 ## Prototype
 
 The 42 hand-built HTML pages from the design phase live in `prototype/`. Open `prototype/all-pages.html` in a browser to see every screen — they're the source of truth for visual fidelity during the port.
