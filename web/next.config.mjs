@@ -39,17 +39,6 @@ const nextConfig = {
         // /invite/[token] now has a real React page — static prototype stays at /invite.html for reference.
         { source: '/checkout', destination: '/checkout.html' },
       ],
-      // `fallback` runs AFTER dynamic routes, so /api/auth/[...nextauth] and other
-      // App Router routes win; unmatched /api/* requests get proxied to Express.
-      fallback: [
-        {
-          source: '/api/:path*',
-          destination:
-            process.env.NODE_ENV === 'production'
-              ? `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`
-              : 'http://localhost:4000/api/:path*',
-        },
-      ],
     };
   },
 };
