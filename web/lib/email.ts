@@ -185,3 +185,94 @@ export async function sendBookingEmails(args: BookingEmailArgs): Promise<void> {
     console.error('[email] send failed:', err);
   }
 }
+
+// ─── Cancellation ─────────────────────────────────────────────────────
+
+export type CancellationEmailArgs = {
+  inviteeName: string;
+  inviteeEmail: string;
+  hostName: string;
+  hostEmail: string;
+  linkTitle: string;
+  start: Date;
+  durationMin: number;
+};
+
+export async function sendCancellationEmails(args: CancellationEmailArgs): Promise<void> {
+  if (!resend) {
+    console.log('[email] (disabled) would have sent cancellation to', args.inviteeEmail);
+    return;
+  }
+
+  const time = `${fmt(args.start)} — ${args.durationMin} min`;
+
+  const inviteeHtml = shellHtml({
+    eyebrow: 'Booking cancelled',
+    headline: `Your booking with ${args.hostName} has been cancelled`,
+    body: `<p style="margin:0 0 12px;"><strong>${args.linkTitle}</strong></p><p style="margin:0 0 12px;">${time}</p><p style="margin:14px 0 0;color:${palette.text3};">If you'd like to reschedule, visit the booking link again.</p>`,
+  });
+
+  const hostHtml = shellHtml({
+    eyebrow: 'Booking cancelled',
+    headline: `${args.inviteeName} cancelled their booking`,
+    body: `<p style="margin:0 0 12px;"><strong>${args.linkTitle}</strong></p><p style="margin:0 0 12px;">${time}</p>`,
+    cta: { href: `${APP_URL}/calendar`, label: 'Open calendar' },
+  });
+
+  try {
+    await Promise.allSettled([
+      resend.emails.send({ from: FROM, to: args.inviteeEmail, subject: `Cancelled: ${args.linkTitle} with ${args.hostName}`, html: inviteeHtml }),
+      resend.emails.send({ from: FROM, to: args.hostEmail, subject: `Booking cancelled · ${args.inviteeName}`, html: hostHtml }),
+    ]);
+  } catch (err) {
+    console.error('[email] cancellation send failed:', err);
+  }
+}
+
+// ─── Reschedule notification ──────────────────────────────────────────
+
+export type RescheduleEmailArgs = {
+  inviteeName: string;
+  inviteeEmail: string;
+  hostName: string;
+  hostEmail: string;
+  linkTitle: string;
+  oldStart: Date;
+  newStart: Date;
+  durationMin: number;
+  bookingId: string;
+};
+
+export async function sendRescheduleEmails(args: RescheduleEmailArgs): Promise<void> {
+  if (!resend) {
+    console.log('[email] (disabled) would have sent reschedule notice to', args.inviteeEmail);
+    return;
+  }
+
+  const oldTime = fmt(args.oldStart);
+  const newTime = `${fmt(args.newStart)} — ${args.durationMin} min`;
+  const confirmUrl = `${APP_URL}/booked/${args.bookingId}`;
+
+  const inviteeHtml = shellHtml({
+    eyebrow: 'Booking rescheduled',
+    headline: `Your meeting with ${args.hostName} has been moved`,
+    body: `<p style="margin:0 0 12px;"><strong>${args.linkTitle}</strong></p><p style="margin:0 0 6px;color:${palette.text3};"><s>${oldTime}</s></p><p style="margin:0 0 12px;"><strong>${newTime}</strong></p>`,
+    cta: { href: confirmUrl, label: 'View updated booking' },
+  });
+
+  const hostHtml = shellHtml({
+    eyebrow: 'Booking rescheduled',
+    headline: `${args.inviteeName} rescheduled their booking`,
+    body: `<p style="margin:0 0 12px;"><strong>${args.linkTitle}</strong></p><p style="margin:0 0 6px;color:${palette.text3};"><s>${oldTime}</s></p><p style="margin:0 0 12px;"><strong>${newTime}</strong></p>`,
+    cta: { href: `${APP_URL}/calendar`, label: 'Open calendar' },
+  });
+
+  try {
+    await Promise.allSettled([
+      resend.emails.send({ from: FROM, to: args.inviteeEmail, subject: `Rescheduled: ${args.linkTitle} with ${args.hostName}`, html: inviteeHtml }),
+      resend.emails.send({ from: FROM, to: args.hostEmail, subject: `Rescheduled · ${args.inviteeName}`, html: hostHtml }),
+    ]);
+  } catch (err) {
+    console.error('[email] reschedule send failed:', err);
+  }
+}

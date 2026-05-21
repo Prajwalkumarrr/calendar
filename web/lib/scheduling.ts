@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb';
 import clientPromise from './mongodb';
-import { createEvent } from './events';
+import { createEvent, updateEvent } from './events';
 import { createZoomMeeting } from './integrations/zoom';
 
 const DB_NAME = 'elevaite';
@@ -195,7 +195,7 @@ export async function updateLink(
   const res = await c.findOneAndUpdate(
     { _id: new ObjectId(id), ownerId },
     { $set: { ...patch, updatedAt: new Date() } },
-    { returnDocument: 'after' },
+    { returnDocument: 'after', includeResultMetadata: false },
   );
   return res ? linkToDTO(res as SchedulingLinkDoc) : null;
 }
@@ -340,6 +340,41 @@ export async function getBooking(id: string): Promise<BookingDTO | null> {
   const linksC = await linksCol();
   const link = await linksC.findOne({ _id: doc.linkId });
   return bookingToDTO(doc, link ?? undefined);
+}
+
+export async function cancelBooking(id: string): Promise<BookingDTO | null> {
+  if (!ObjectId.isValid(id)) return null;
+  const c = await bookingsCol();
+  const result = await c.updateOne(
+    { _id: new ObjectId(id), status: 'confirmed' },
+    { $set: { status: 'cancelled' } },
+  );
+  if (result.modifiedCount === 0) return null;
+  return getBooking(id); // re-fetch the updated document
+}
+
+export async function rescheduleBooking(
+  id: string,
+  newStart: Date,
+  newEnd: Date,
+): Promise<BookingDTO | null> {
+  if (!ObjectId.isValid(id)) return null;
+  const c = await bookingsCol();
+  const doc = await c.findOne({ _id: new ObjectId(id), status: 'confirmed' });
+  if (!doc) return null;
+
+  const result = await c.updateOne(
+    { _id: new ObjectId(id) },
+    { $set: { start: newStart, end: newEnd } },
+  );
+  if (result.modifiedCount === 0) return null;
+
+  // Update the linked calendar event if it exists
+  if (doc.eventId) {
+    await updateEvent(doc.ownerId, doc.eventId.toHexString(), { start: newStart, end: newEnd });
+  }
+
+  return getBooking(id); // re-fetch the updated document
 }
 
 export const DURATION_OPTIONS = [15, 30, 45, 60, 90];

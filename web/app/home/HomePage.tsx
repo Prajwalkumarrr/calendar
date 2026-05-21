@@ -275,7 +275,7 @@ export function HomePage({ userName, userEmail }: { userName: string; userEmail:
           <button className="icon-btn"><IconChevronRight /></button>
           <button className="today-btn">Today</button>
         </div>
-        <div className="topbar__date" style={{ marginLeft: 2 }}>{todayLabel}</div>
+        <div className="topbar__date" style={{ marginLeft: 2 }} suppressHydrationWarning>{todayLabel}</div>
         <div style={{ flex: 1 }} />
         <button className="new-event-btn" onClick={() => router.push('/calendar')}>
           <IconPlus size={14} stroke={2} /> New event
@@ -386,7 +386,7 @@ export function HomePage({ userName, userEmail }: { userName: string; userEmail:
                 <div className="ho-hello__streak">
                   ☀️ <b>1</b>-day streak
                 </div>
-                <div className="ho-hello__date">
+                <div className="ho-hello__date" suppressHydrationWarning>
                   {now.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })} · Week {Math.ceil((now.getTime() / 86_400_000 + 1) / 7) % 53}
                   <br />
                   {now.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}

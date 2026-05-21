@@ -318,7 +318,7 @@ export async function updateProfile(id: string, input: UpdateProfileInput): Prom
   const res = await c.findOneAndUpdate(
     { _id: new ObjectId(id) },
     { $set: patch },
-    { returnDocument: 'after' },
+    { returnDocument: 'after', includeResultMetadata: false },
   );
   if (!res) return { ok: false, error: 'not_found' };
   return { ok: true, profile: toDTO(res as UserRecord) };

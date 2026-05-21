@@ -1,6 +1,7 @@
 // Icons ported verbatim from prototype/icons.jsx
 
-type IconProps = React.SVGProps<SVGSVGElement> & { size?: number; stroke?: number };
+// Omit SVG's `stroke` (string) so our numeric `stroke` prop doesn't conflict
+type IconProps = Omit<React.SVGProps<SVGSVGElement>, 'stroke'> & { size?: number; stroke?: number };
 
 const Icon = ({ children, size = 16, stroke = 1.5, ...rest }: IconProps & { children: React.ReactNode }) => (
   <svg

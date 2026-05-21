@@ -14,7 +14,8 @@ import {
   fmtTime, fmtTime24, type CalendarMeta,
 } from './defaults';
 import { EventPanel, type PanelDraft } from './EventPanel';
-import { CommandPaletteProto, type Cmd } from './CommandPaletteProto';
+import { type Cmd } from './CommandPaletteProto';
+import { useCmdK } from '@/lib/CmdKContext';
 import { useUnreadCount } from '@/lib/useUnreadCount';
 import { useAppearance } from '@/lib/useAppearance';
 import { useTimezones, useTzClocks, tzShortCode } from '@/lib/useTimezones';
@@ -102,7 +103,7 @@ export function CalendarApp() {
   const [calendars, setCalendars] = useState<CalendarMeta[]>(DEFAULT_CALENDARS);
   const [draft, setDraft] = useState<PanelDraft | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
-  const [cmdkOpen, setCmdkOpen] = useState(false);
+  const { open: cmdkOpen, setOpen: setCmdkOpen, registerCommands } = useCmdK();
   const [sidebarMode, setSidebarMode] = useState<'expanded' | 'collapsed' | 'hidden'>('expanded');
   const [appearance, setAppearance] = useAppearance();
   const theme = appearance.theme === 'system'
@@ -168,10 +169,9 @@ export function CalendarApp() {
   // ── Keyboard ──────────────────────────────────────────────────────
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      // ⌘K / Ctrl+K toggles palette anywhere
+      // ⌘K / Ctrl+K — handled globally by CmdKProvider; prevent default only
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        setCmdkOpen((o) => !o);
         return;
       }
       // ⌘⇧D toggles dark mode
@@ -192,6 +192,21 @@ export function CalendarApp() {
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cmdkOpen, theme]);
+
+  // Inject calendar-specific commands into the global ⌘K palette
+  useEffect(() => {
+    const cmds = buildCommands({
+      openCreateNow,
+      gotoToday: () => setAnchor(new Date()),
+      toggleTheme,
+      gotoScheduling: () => { window.location.href = '/scheduling'; },
+      signOut: () => signOut({ callbackUrl: '/' }),
+      events,
+      openEdit,
+    });
+    return registerCommands('calendar', cmds);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [events]);
 
   function openCreateNow() {
     const n = new Date();
@@ -666,19 +681,7 @@ export function CalendarApp() {
         }}
       />
 
-      <CommandPaletteProto
-        open={cmdkOpen}
-        onClose={() => setCmdkOpen(false)}
-        commands={buildCommands({
-          openCreateNow,
-          gotoToday: () => setAnchor(new Date()),
-          toggleTheme,
-          gotoScheduling: () => { window.location.href = '/scheduling'; },
-          signOut: () => signOut({ callbackUrl: '/' }),
-          events,
-          openEdit,
-        })}
-      />
+      {/* Calendar-specific commands are injected into the global CmdK palette via useEffect below */}
     </div>
   );
 }

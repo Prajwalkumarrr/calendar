@@ -130,10 +130,13 @@ function SignInInner() {
 
           {errorMessage && <div className={styles.error}>{errorMessage}</div>}
 
-          <p className={styles.note}>
-            New to ElevAIte? <Link href="/sign-up">Create an account</Link>
-          </p>
-          <p className={styles.note} style={{ marginTop: 8 }}>
+          <div className={styles.divider} style={{ marginTop: 24 }}>or</div>
+
+          <Link href="/sign-up" className={styles.signup}>
+            Create a free account
+          </Link>
+
+          <p className={styles.note} style={{ marginTop: 20 }}>
             By continuing, you agree to our <a href="/terms">Terms</a> and{' '}
             <a href="/privacy">Privacy Policy</a>.
           </p>

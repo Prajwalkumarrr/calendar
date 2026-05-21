@@ -123,8 +123,8 @@ export default async function BookedPage({ params }: { params: Promise<{ id: str
           </div>
 
           <div className="bd-btns">
-            <Link className="bd-btn" href={`/reschedule.html?id=${booking.id}`}>Reschedule</Link>
-            <Link className="bd-btn" href={`/reschedule.html?id=${booking.id}&cancel=1`} style={{ color: 'var(--text-3)' }}>Cancel</Link>
+            <Link className="bd-btn" href={`/reschedule/${booking.id}`}>Reschedule</Link>
+            <Link className="bd-btn" href={`/reschedule/${booking.id}`} style={{ color: 'var(--text-3)' }}>Cancel</Link>
           </div>
 
           <div className="bd-add-cal">

@@ -1,0 +1,291 @@
+.rs-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: start center;
+  padding: 40px 24px;
+  background: var(--bg);
+  font-family: 'Geist', ui-sans-serif, system-ui, sans-serif;
+}
+
+.rs-wrap {
+  width: 100%;
+  max-width: 860px;
+}
+.rs-wrap--narrow { max-width: 480px; }
+
+.rs-back {
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text-3);
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 18px;
+  display: inline-block;
+}
+.rs-back:hover { color: var(--text-2); }
+
+.rs-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: none;
+  color: inherit;
+  margin-bottom: 22px;
+}
+.rs-brand-mark {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  background: var(--coral);
+  display: grid; place-items: center;
+  color: #fff; font-size: 11px; font-weight: 700;
+}
+
+.rs-card {
+  background: var(--bg);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: var(--shadow-lg);
+}
+.rs-card--center { text-align: center; }
+
+.rs-icon {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 auto 18px;
+}
+.rs-icon--coral { background: var(--coral); color: #fff; }
+.rs-icon--grey  { background: var(--surface); color: var(--text-3); }
+
+.rs-h1 {
+  font-size: clamp(20px, 3vw, 26px);
+  font-weight: 600;
+  letter-spacing: -0.018em;
+  margin: 0 0 6px;
+}
+.rs-lede {
+  color: var(--text-2);
+  font-size: 14px;
+  margin: 0 0 24px;
+  line-height: 1.5;
+}
+.rs-lede b { color: var(--text); font-weight: 500; }
+
+.rs-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rs-choice {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 10px;
+  background: var(--bg);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.rs-choice:hover { background: var(--surface); }
+.rs-choice--danger { color: var(--text); }
+.rs-choice--danger:hover { border-color: var(--coral); background: var(--coral-subtle, rgba(217,119,87,0.06)); }
+.rs-choice__icon {
+  font-size: 18px;
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  background: var(--surface-sunken);
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.rs-choice__title { font-size: 14px; font-weight: 500; }
+.rs-choice__sub   { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+
+/* Picker layout */
+.rs-picker {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 24px;
+  margin-top: 24px;
+}
+@media (max-width: 600px) {
+  .rs-picker { grid-template-columns: 1fr; }
+}
+
+/* Calendar */
+.rs-cal {
+  background: var(--bg);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 12px;
+  padding: 20px;
+}
+.rs-cal__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.rs-cal__arrow {
+  background: none; border: none;
+  font: inherit; font-size: 18px;
+  color: var(--text-2); cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.rs-cal__arrow:hover { background: var(--surface); }
+.rs-cal__month { font-size: 14px; font-weight: 600; }
+.rs-cal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.rs-cal__dow {
+  font-size: 11px;
+  color: var(--text-3);
+  text-align: center;
+  padding: 4px 0 8px;
+  font-weight: 600;
+}
+.rs-cal__day {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  font-size: 12.5px;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--text-2);
+  font: inherit;
+}
+.rs-cal__day:disabled { color: var(--text-3); cursor: default; opacity: 0.45; }
+.rs-cal__day--avail { color: var(--text); font-weight: 500; }
+.rs-cal__day--sel { background: var(--coral); color: #fff; font-weight: 600; }
+.rs-cal__day:not(:disabled):not(.rs-cal__day--sel):hover { background: var(--surface); }
+
+/* Slots panel */
+.rs-slots {
+  background: var(--bg);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 440px;
+  overflow-y: auto;
+}
+.rs-slots__date {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+.rs-slots__empty {
+  font-size: 13px;
+  color: var(--text-3);
+  margin: 0;
+}
+.rs-slot {
+  padding: 9px 14px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 8px;
+  background: var(--bg);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: center;
+  color: var(--text);
+  transition: background 100ms ease;
+}
+.rs-slot:hover { background: var(--surface); }
+.rs-slot--sel { background: var(--coral); color: #fff; border-color: var(--coral); }
+
+/* Diff card (confirm step) */
+.rs-diff {
+  background: var(--surface-sunken);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rs-diff__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13.5px;
+}
+.rs-diff__label {
+  min-width: 42px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+}
+.rs-diff__val--old {
+  text-decoration: line-through;
+  color: var(--text-3);
+}
+
+/* Buttons */
+.rs-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+.rs-btn {
+  padding: 9px 18px;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+}
+.rs-btn--primary {
+  background: var(--text);
+  color: var(--bg);
+}
+.rs-btn--primary:hover { opacity: 0.85; }
+.rs-btn--primary:disabled { opacity: 0.5; cursor: default; }
+.rs-btn--ghost {
+  background: transparent;
+  border: 1px solid var(--hairline-strong);
+  color: var(--text-2);
+}
+.rs-btn--ghost:hover { background: var(--surface); }
+.rs-btn--full { width: 100%; }
+
+.rs-cta {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 10px 18px;
+  background: var(--text);
+  color: var(--bg);
+  border-radius: 9px;
+  font-size: 13.5px;
+  font-weight: 500;
+  text-decoration: none;
+}
+.rs-cta:hover { opacity: 0.85; }
+
+.rs-error {
+  font-size: 12.5px;
+  color: #c0392b;
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  background: rgba(192,57,43,0.07);
+  border-radius: 7px;
+}

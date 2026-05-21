@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { parseOAuthState, getProvider, type ProviderId } from '@/lib/integrations';
 import { exchangeZoomCode } from '@/lib/integrations/zoom';
 import { exchangeGoogleCalendarCode } from '@/lib/integrations/google-calendar';
+import { exchangeOutlookCode } from '@/lib/integrations/outlook';
+import { exchangeSlackCode } from '@/lib/integrations/slack';
+import { exchangeNotionCode } from '@/lib/integrations/notion';
 
 function appBase(req: NextRequest): string {
   return process.env.PUBLIC_APP_URL ?? `${req.nextUrl.protocol}//${req.nextUrl.host}`;
@@ -32,8 +35,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ prov
       ok = await exchangeZoomCode({ userId: parsed.userId, code, redirectUri });
     } else if (meta.id === 'google-calendar') {
       ok = await exchangeGoogleCalendarCode({ userId: parsed.userId, code, redirectUri });
+    } else if (meta.id === 'outlook') {
+      ok = await exchangeOutlookCode({ userId: parsed.userId, code, redirectUri });
+    } else if (meta.id === 'slack') {
+      ok = await exchangeSlackCode({ userId: parsed.userId, code, redirectUri });
+    } else if (meta.id === 'notion') {
+      ok = await exchangeNotionCode({ userId: parsed.userId, code, redirectUri });
     } else {
-      // Slack / Notion handlers stubbed — same shape as Zoom; add when you're ready to wire each
       console.warn(`[integrations] callback for ${meta.id} not yet implemented`);
       return NextResponse.redirect(`${appBase(req)}/integrations?error=provider_not_wired&provider=${meta.id}`);
     }

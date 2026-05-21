@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireUser } from '@/lib/session';
 import { createEvent, listEventsInRange, CHIP_COLORS, ChipColor, parseRecurrenceInput } from '@/lib/events';
+import { getIntegration } from '@/lib/integrations';
+import { mirrorEventToNotion } from '@/lib/integrations/notion';
 
 export async function GET(req: NextRequest) {
   try {
@@ -56,6 +58,18 @@ export async function POST(req: NextRequest) {
       description: description || undefined,
       recurrence: parsedRecurrence ?? undefined,
     });
+    // Mirror to Notion if connected and a database is configured
+    const notionIntegration = await getIntegration(user.id, 'notion');
+    if (notionIntegration?.accountInfo?.id) {
+      void mirrorEventToNotion(user.id, notionIntegration.accountInfo.id, {
+        title,
+        start: startDate,
+        end: endDate,
+        location: location || undefined,
+        description: description || undefined,
+      }).catch(() => {});
+    }
+
     return NextResponse.json({ event: created }, { status: 201 });
   } catch (err) {
     if (err instanceof Response) return err;

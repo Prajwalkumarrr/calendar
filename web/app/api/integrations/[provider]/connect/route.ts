@@ -47,6 +47,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ prov
       url.searchParams.set('prompt', 'consent');
       url.searchParams.set('include_granted_scopes', 'true');
     }
+    if (meta.id === 'outlook') {
+      // prompt=consent ensures refresh_token is always returned
+      url.searchParams.set('prompt', 'consent');
+      url.searchParams.set('response_mode', 'query');
+    }
 
     return NextResponse.redirect(url.toString());
   } catch (err) {

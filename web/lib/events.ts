@@ -259,7 +259,7 @@ export async function updateEvent(
   const res = await c.findOneAndUpdate(
     { _id: new ObjectId(id), ownerId },
     update,
-    { returnDocument: 'after' },
+    { returnDocument: 'after', includeResultMetadata: false },
   );
   if (!res) return null;
   return toDTO(res as EventDoc);

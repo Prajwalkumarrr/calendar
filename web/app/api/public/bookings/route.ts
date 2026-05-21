@@ -4,6 +4,7 @@ import { listEventsInRange } from '@/lib/events';
 import { getUserById, getNotificationPrefs } from '@/lib/users';
 import { sendBookingEmails } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
+import { postSlackMessage } from '@/lib/integrations/slack';
 
 // Public — invitee creates a booking.
 // POST /api/public/bookings { slug, startISO, name, email, note? }
@@ -75,6 +76,12 @@ export async function POST(req: NextRequest) {
         meetingProvider: booking.meetingProvider,
       });
     }
+
+    // Slack notification to host — fire-and-forget
+    void postSlackMessage(
+      link.ownerId,
+      `:calendar: *New booking* — ${name} booked *${link.title}* on ${start.toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`,
+    ).catch(() => {});
 
     return NextResponse.json({ booking }, { status: 201 });
   } catch (err) {

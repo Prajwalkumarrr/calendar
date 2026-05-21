@@ -1,12 +1,76 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { ProviderMeta, IntegrationDTO, ProviderId } from '@/lib/integrations';
 import './integrations.css';
 
 type Category = 'all' | 'conferencing' | 'communication' | 'productivity' | 'calendar';
+
+function NotionDbPicker() {
+  const [dbs, setDbs] = useState<{ id: string; title: string }[]>([]);
+  const [selected, setSelected] = useState('');
+  const [savedName, setSavedName] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle');
+
+  useEffect(() => {
+    fetch('/api/integrations/notion/config')
+      .then(r => r.json())
+      .then(d => { if (d.databaseId) { setSelected(d.databaseId); setSavedName(d.databaseName ?? ''); } })
+      .catch(() => {});
+    fetch('/api/integrations/notion/databases')
+      .then(r => r.json())
+      .then(d => setDbs(d.databases ?? []))
+      .catch(() => {});
+  }, []);
+
+  async function save() {
+    if (!selected) return;
+    setSaving(true); setStatus('idle');
+    const db = dbs.find(d => d.id === selected);
+    try {
+      const res = await fetch('/api/integrations/notion/config', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ databaseId: selected, databaseName: db?.title }),
+      });
+      setStatus(res.ok ? 'saved' : 'error');
+      if (res.ok) setSavedName(db?.title ?? '');
+    } catch { setStatus('error'); }
+    finally { setSaving(false); }
+  }
+
+  if (dbs.length === 0) return null;
+
+  return (
+    <div style={{ marginTop: '10px', padding: '10px 12px', background: 'var(--surface-sunken)', borderRadius: '8px', fontSize: '12.5px' }}>
+      <div style={{ fontWeight: 600, marginBottom: '6px', color: 'var(--text-2)' }}>
+        Mirror events to database
+      </div>
+      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+        <select
+          value={selected}
+          onChange={e => { setSelected(e.target.value); setStatus('idle'); }}
+          style={{ flex: 1, padding: '5px 8px', borderRadius: '6px', border: '1px solid var(--hairline-strong)', background: 'var(--bg)', color: 'var(--text)', font: 'inherit', fontSize: '12.5px' }}
+        >
+          <option value="">Select a database…</option>
+          {dbs.map(db => <option key={db.id} value={db.id}>{db.title}</option>)}
+        </select>
+        <button
+          onClick={save}
+          disabled={saving || !selected}
+          style={{ padding: '5px 12px', borderRadius: '6px', border: 'none', background: 'var(--text)', color: 'var(--bg)', font: 'inherit', fontSize: '12px', fontWeight: 600, cursor: 'pointer', opacity: saving || !selected ? 0.5 : 1 }}
+        >
+          {saving ? '…' : 'Save'}
+        </button>
+      </div>
+      {status === 'saved' && <div style={{ marginTop: '5px', color: '#2e7d32', fontSize: '11.5px' }}>Saved — mirroring to <b>{savedName}</b></div>}
+      {status === 'error' && <div style={{ marginTop: '5px', color: '#c0392b', fontSize: '11.5px' }}>Failed to save. Try again.</div>}
+    </div>
+  );
+}
 
 const FILTERS: { id: Category; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -174,6 +238,8 @@ export function IntegrationsApp({
                   Signed in as <strong>{conn.accountInfo.email}</strong>
                 </div>
               )}
+
+              {conn && p.id === 'notion' && <NotionDbPicker />}
 
               {needsCreds && !conn && p.envHint && (
                 <div className="ig-card__hint">{p.envHint}</div>
