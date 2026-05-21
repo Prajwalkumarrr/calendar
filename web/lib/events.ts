@@ -162,11 +162,12 @@ export async function listEventsInRange(
   const c = await col();
   // Pull events whose base start is before `to` AND (it's recurring OR end > from).
   const docs = await c
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .find({
       ownerId,
       start: { $lt: to },
       $or: [
-        { recurrence: { $exists: true, $ne: null } },
+        { recurrence: { $exists: true } as any },
         { end: { $gt: from } },
       ],
     })

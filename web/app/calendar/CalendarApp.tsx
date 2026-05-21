@@ -83,7 +83,7 @@ function eventsToGrid(events: EventDTO[], gridStart: Date, numDays: number): Gri
         raw: e,
       };
     })
-    .filter((x): x is GridEvent => !!x);
+    .filter((x) => x !== null) as GridEvent[];
 }
 
 function groupBy<T extends Record<string, unknown>>(arr: T[], key: keyof T): Record<string, T[]> {
