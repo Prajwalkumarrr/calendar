@@ -33,7 +33,7 @@ export async function DELETE(_req: Request, { params }: Ctx) {
       sendCancellationEmails({
         inviteeName: booking.inviteeName,
         inviteeEmail: booking.inviteeEmail,
-        hostName: host.name ?? host.email,
+        hostName: host.name ?? host.email ?? '',
         hostEmail: host.email,
         linkTitle: booking.link?.title ?? 'Meeting',
         start: new Date(booking.start),
@@ -74,7 +74,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
       sendRescheduleEmails({
         inviteeName: booking.inviteeName,
         inviteeEmail: booking.inviteeEmail,
-        hostName: host.name ?? host.email,
+        hostName: host.name ?? host.email ?? '',
         hostEmail: host.email,
         linkTitle: booking.link?.title ?? 'Meeting',
         oldStart,
