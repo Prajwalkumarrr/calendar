@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: elevaite-api
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: api
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: MONGODB_URI
+        sync: false
+      - key: WEB_ORIGIN
+        sync: false
+      - key: PORT
+        value: 4000
