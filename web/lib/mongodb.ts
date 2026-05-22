@@ -13,14 +13,13 @@ if (!uri) {
   const rejected = Promise.reject(new Error('MONGODB_URI is not set in web/.env.local'));
   rejected.catch(() => {}); // silence unhandled-rejection warning
   clientPromise = rejected;
-} else if (process.env.NODE_ENV === 'development') {
+} else {
+  // Cache the client promise globally so warm serverless invocations reuse the connection.
   const g = globalThis as unknown as { _mongoClientPromise?: Promise<MongoClient> };
   if (!g._mongoClientPromise) {
     g._mongoClientPromise = new MongoClient(uri).connect();
   }
   clientPromise = g._mongoClientPromise;
-} else {
-  clientPromise = new MongoClient(uri).connect();
 }
 
 export default clientPromise;
