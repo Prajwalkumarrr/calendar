@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireUser } from '@/lib/session';
-import { createEvent, listEventsInRange, CHIP_COLORS, ChipColor, parseRecurrenceInput } from '@/lib/events';
+import { createEvent, updateEvent, listEventsInRange, CHIP_COLORS, ChipColor, parseRecurrenceInput } from '@/lib/events';
 import { getIntegration } from '@/lib/integrations';
 import { mirrorEventToNotion } from '@/lib/integrations/notion';
+import { upsertCandidateFromInterview } from '@/lib/hiring';
 
 export async function GET(req: NextRequest) {
   try {
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
   try {
     const user = await requireUser();
     const body = await req.json();
-    const { title, start, end, allDay, color, location, description, recurrence } = body ?? {};
+    const { title, start, end, allDay, color, location, description, recurrence, hiringMeta } = body ?? {};
 
     if (typeof title !== 'string') {
       return NextResponse.json({ error: 'title required' }, { status: 400 });
@@ -47,6 +48,23 @@ export async function POST(req: NextRequest) {
     const safeColor: ChipColor = CHIP_COLORS.includes(color) ? color : 'coral';
 
     const parsedRecurrence = parseRecurrenceInput(recurrence);
+
+    // If this is an interview event, upsert the candidate so it appears in the pipeline
+    let resolvedHiringMeta = hiringMeta && typeof hiringMeta === 'object' ? { ...hiringMeta } : undefined;
+    if (resolvedHiringMeta?.candidateName) {
+      try {
+        const { candidate } = await upsertCandidateFromInterview(user.id, {
+          candidateId: resolvedHiringMeta.candidateId,
+          candidateName: resolvedHiringMeta.candidateName,
+          role: resolvedHiringMeta.role ?? '',
+          stage: resolvedHiringMeta.stage ?? 'screen',
+        });
+        resolvedHiringMeta = { ...resolvedHiringMeta, candidateId: candidate.id };
+      } catch (e) {
+        console.error('[POST /api/events] hiring upsert failed', e);
+      }
+    }
+
     const created = await createEvent({
       ownerId: user.id,
       title,
@@ -57,6 +75,7 @@ export async function POST(req: NextRequest) {
       location: location || undefined,
       description: description || undefined,
       recurrence: parsedRecurrence ?? undefined,
+      hiringMeta: resolvedHiringMeta,
     });
     // Mirror to Notion if connected and a database is configured
     const notionIntegration = await getIntegration(user.id, 'notion');

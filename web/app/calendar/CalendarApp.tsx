@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import './proto.css';
 import { MonthView } from './MonthView';
 import {
@@ -10,16 +11,20 @@ import {
   IconClock, IconEye, IconEyeOff, IconMoon, IconSidebar, IconMore, IconCalendar,
 } from './Icons';
 import {
-  DEFAULT_CALENDARS, DAY_NAMES, HOUR_START, HOUR_END,
+  DEFAULT_CALENDARS, HOUR_START, HOUR_END,
   fmtTime, fmtTime24, type CalendarMeta,
 } from './defaults';
 import { EventPanel, type PanelDraft } from './EventPanel';
+import { HiringPipeline } from './HiringPipeline';
 import { type Cmd } from './CommandPaletteProto';
 import { useCmdK } from '@/lib/CmdKContext';
 import { useUnreadCount } from '@/lib/useUnreadCount';
 import { useAppearance } from '@/lib/useAppearance';
 import { useTimezones, useTzClocks, tzShortCode } from '@/lib/useTimezones';
 import type { ChipColor, EventDTO } from '@/lib/events';
+import { HIRING_STAGES } from '@/lib/hiring-types';
+import { calculateGoldenHours, fmtDecimalHour, type GoldenWindow } from '@/lib/goldenHours';
+import type { TeamGroup } from '@/lib/users';
 import { addDays, daysInWeek, endOfWeek, startOfWeek, isSameDay, MONTHS_FULL } from '@/lib/date';
 
 type GridEvent = {
@@ -94,10 +99,19 @@ function groupBy<T extends Record<string, unknown>>(arr: T[], key: keyof T): Rec
   }, {});
 }
 
+/** Parse "#RRGGBB" hex → "rgba(r,g,b,a)" string */
+function hexRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
 // ─────────────────────────────────────────────────────────────────────
 
 export function CalendarApp() {
   const { data: session } = useSession();
+  const pathname = usePathname();
   const [anchor, setAnchor] = useState<Date>(() => new Date());
   const [events, setEvents] = useState<EventDTO[]>([]);
   const [calendars, setCalendars] = useState<CalendarMeta[]>(DEFAULT_CALENDARS);
@@ -117,6 +131,12 @@ export function CalendarApp() {
   const tzTimes = useTzClocks(tzList);
   const [allDayCollapsed, setAllDayCollapsed] = useState(false);
   const [view, setView] = useState<'day' | 'week' | 'month'>('week');
+  const [showHiring, setShowHiring] = useState(false);
+  const [noMeetingDays, setNoMeetingDays] = useState<number[]>([]);
+  const [teamGroups, setTeamGroups] = useState<TeamGroup[]>([]);
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+
+  const isStartup = (session?.user as { persona?: string } | undefined)?.persona === 'startup';
   const unread = useUnreadCount();
   const scrollRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ day: number; startY: number; column: HTMLDivElement } | null>(null);
@@ -130,6 +150,17 @@ export function CalendarApp() {
   }, [view, anchor, weekStart]);
   const now = new Date();
   const todayIdx = days.findIndex((d) => isSameDay(d, now));
+
+  const activeGroup = useMemo(
+    () => teamGroups.find((g) => g.id === activeGroupId) ?? null,
+    [teamGroups, activeGroupId],
+  );
+
+  // Golden windows per visible day — null if no overlap for that day
+  const goldenWindows = useMemo<(GoldenWindow | null)[]>(() => {
+    if (!activeGroup || activeGroup.members.length === 0) return days.map(() => null);
+    return days.map((d) => calculateGoldenHours('local', 9, 18, activeGroup.members, d));
+  }, [activeGroup, days]);
 
   const toggleTheme = () => {
     setAppearance('theme', theme === 'light' ? 'dark' : 'light');
@@ -156,6 +187,22 @@ export function CalendarApp() {
     setEvents(data.events ?? []);
   }, [weekStart, weekEnd]);
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
+
+  // ── Fetch no-meeting days (once) ──────────────────────────────────
+  useEffect(() => {
+    fetch('/api/me/no-meeting')
+      .then((r) => r.json())
+      .then((d) => setNoMeetingDays(d.days ?? []))
+      .catch(() => {});
+  }, []);
+
+  // ── Fetch team groups for golden hours (once) ─────────────────────
+  useEffect(() => {
+    fetch('/api/me/team-timezones')
+      .then((r) => r.json())
+      .then((d) => setTeamGroups(d.groups ?? []))
+      .catch(() => {});
+  }, []);
 
   // ── Auto-scroll to morning hours on mount ─────────────────────────
   useEffect(() => {
@@ -208,24 +255,36 @@ export function CalendarApp() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [events]);
 
+  function gwForDate(date: Date) {
+    if (!activeGroup || activeGroup.members.length === 0) return null;
+    const gw = calculateGoldenHours('local', 9, 18, activeGroup.members, date);
+    return gw ? { ...gw, groupName: activeGroup.name, color: activeGroup.color } : null;
+  }
+
   function openCreateNow() {
     const n = new Date();
     const end = new Date(n); end.setHours(n.getHours() + 1);
-    setDraft({ title: '', start: n, end, color: 'coral' });
+    setDraft({ title: '', start: n, end, color: 'coral', isNoMeetingDay: noMeetingDays.includes(n.getDay()), goldenWindow: gwForDate(n) });
     setPanelOpen(true);
   }
 
   function openEdit(ev: EventDTO) {
+    const start = new Date(ev.start);
     setDraft({
       id: ev.id,
       seriesId: ev.seriesId,
+      originalDate: ev.originalDate ?? ev.start,
+      instanceIndex: ev.instanceIndex,
       title: ev.title,
-      start: new Date(ev.start),
+      start,
       end: new Date(ev.end),
       color: ev.color,
       location: ev.location,
       description: ev.description,
       recurrence: ev.recurrence,
+      hiringMeta: ev.hiringMeta ?? null,
+      isNoMeetingDay: noMeetingDays.includes(start.getDay()),
+      goldenWindow: gwForDate(start),
     });
     setPanelOpen(true);
   }
@@ -267,7 +326,7 @@ export function CalendarApp() {
     const dayDate = days[drag.day];
     const start = new Date(dayDate); start.setHours(Math.floor(sH), Math.round((sH - Math.floor(sH)) * 60), 0, 0);
     const end = new Date(dayDate); end.setHours(Math.floor(eH), Math.round((eH - Math.floor(eH)) * 60), 0, 0);
-    setDraft({ title: '', start, end, color: 'coral' });
+    setDraft({ title: '', start, end, color: 'coral', isNoMeetingDay: noMeetingDays.includes(start.getDay()), goldenWindow: gwForDate(start) });
     setPanelOpen(true);
   };
 
@@ -385,27 +444,15 @@ export function CalendarApp() {
             {sidebarMode === 'expanded' ? (
               <>
                 <div className="sb-section" style={{ borderBottom: '1px solid var(--hairline)' }}>
-                  <Link
-                    href="/home"
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      padding: '7px 10px', marginBottom: 2,
-                      fontSize: 13, color: 'var(--text-2)',
-                      borderRadius: 7, textDecoration: 'none',
-                    }}
-                  >
+                  <Link className={`ho-nav-item${pathname === '/home' ? ' on' : ''}`} href="/home">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 12l9-9 9 9M5 10v10h14V10" /></svg>
                     Home
                   </Link>
-                  <Link
-                    href="/inbox"
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      padding: '7px 10px', marginBottom: 2,
-                      fontSize: 13, color: 'var(--text-2)',
-                      borderRadius: 7, textDecoration: 'none',
-                    }}
-                  >
+                  <Link className={`ho-nav-item${pathname === '/calendar' ? ' on' : ''}`} href="/calendar">
+                    <IconCalendar size={14} />
+                    Calendar
+                  </Link>
+                  <Link className={`ho-nav-item${pathname === '/inbox' ? ' on' : ''}`} href="/inbox">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></svg>
                     Inbox
                     {unread > 0 && (
@@ -420,27 +467,17 @@ export function CalendarApp() {
                       </span>
                     )}
                   </Link>
-                  <Link
-                    href="/scheduling"
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      padding: '7px 10px', marginBottom: 2,
-                      fontSize: 13, color: 'var(--text-2)',
-                      borderRadius: 7, textDecoration: 'none',
-                    }}
-                  >
+                  <Link className={`ho-nav-item${pathname.startsWith('/scheduling') ? ' on' : ''}`} href="/scheduling">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1" /><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1" /></svg>
                     Scheduling links
                   </Link>
-                  <Link
-                    href="/settings"
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      padding: '7px 10px',
-                      fontSize: 13, color: 'var(--text-2)',
-                      borderRadius: 7, textDecoration: 'none',
-                    }}
-                  >
+                  {isStartup && (
+                    <button className={`ho-nav-item${showHiring ? ' on' : ''}`} onClick={() => setShowHiring(true)} style={{ width: '100%', textAlign: 'left' }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M21 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                      Hiring pipeline
+                    </button>
+                  )}
+                  <Link className={`ho-nav-item${pathname === '/settings' ? ' on' : ''}`} href="/settings">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="3" /></svg>
                     Settings
                   </Link>
@@ -456,7 +493,7 @@ export function CalendarApp() {
                     <div className="tz-row" key={`${z.tz}-${i}`}>
                       <span className="tz-row__offset">{tzShortCode(z.tz)}</span>
                       <span className="tz-row__name">{z.label}</span>
-                      <span className="tz-row__time">{tzTimes[i]}</span>
+                      <span className="tz-row__time" suppressHydrationWarning>{tzTimes[i]}</span>
                     </div>
                   ))}
                 </div>
@@ -487,6 +524,39 @@ export function CalendarApp() {
                   ))}
                   <button className="add-cal"><IconPlus size={13} /> Add calendar</button>
                 </div>
+
+                {teamGroups.length > 0 && (
+                  <div className="sb-section" style={{ borderTop: '1px solid var(--hairline)', flexShrink: 0 }}>
+                    <div className="sb-section__head">
+                      <span>Team groups</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      {teamGroups.map((g) => (
+                        <button
+                          key={g.id}
+                          onClick={() => setActiveGroupId(activeGroupId === g.id ? null : g.id)}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 6, textAlign: 'left',
+                            background: activeGroupId === g.id ? `${g.color}22` : 'none',
+                            border: activeGroupId === g.id ? `1px solid ${g.color}66` : '1px solid transparent',
+                            cursor: 'pointer', padding: '4px 8px', borderRadius: 8, width: '100%',
+                          }}
+                        >
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: g.color }} />
+                          <span style={{ fontSize: 12.5, color: activeGroupId === g.id ? 'var(--text)' : 'var(--text-2)', fontWeight: activeGroupId === g.id ? 600 : 400 }}>
+                            {g.name}
+                          </span>
+                          <span style={{ fontSize: 10.5, color: 'var(--text-3)', marginLeft: 'auto' }}>
+                            {g.members.length}
+                          </span>
+                          {activeGroupId === g.id && (
+                            <span style={{ fontSize: 9, color: g.color, fontWeight: 700, marginLeft: 2 }}>ON</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
               <div style={{ padding: '14px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
@@ -520,6 +590,17 @@ export function CalendarApp() {
               >
                 <div className="cal-day__name">{['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][d.getDay()]}</div>
                 <div className="cal-day__num">{d.getDate()}</div>
+                {activeGroup && goldenWindows[i] && (
+                  <div style={{
+                    fontSize: 9, fontWeight: 600, color: activeGroup.color,
+                    background: hexRgba(activeGroup.color, 0.12),
+                    border: `1px solid ${activeGroup.color}`,
+                    borderRadius: 10, padding: '1px 5px', marginTop: 2,
+                    letterSpacing: '0.02em', whiteSpace: 'nowrap',
+                  }}>
+                    {fmtDecimalHour(goldenWindows[i]!.start, appearance.timeFormat === '24')}–{fmtDecimalHour(goldenWindows[i]!.end, appearance.timeFormat === '24')}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -587,6 +668,62 @@ export function CalendarApp() {
                     onMouseDown={(e) => onColMouseDown(e, i)}
                     style={{ position: 'relative' }}
                   >
+                    {/* No-meeting day overlay */}
+                    {noMeetingDays.includes(d.getDay()) && (
+                      <div style={{
+                        position: 'absolute', inset: 0, zIndex: 2, pointerEvents: 'none',
+                        background: 'repeating-linear-gradient(45deg, transparent, transparent 6px, rgba(217,119,87,0.04) 6px, rgba(217,119,87,0.04) 12px)',
+                        borderLeft: '2px solid rgba(217,119,87,0.25)',
+                      }}>
+                        <div style={{
+                          position: 'sticky', top: 4,
+                          margin: '8px auto 0',
+                          width: 'fit-content',
+                          background: 'rgba(217,119,87,0.12)',
+                          color: 'var(--coral, #D97757)',
+                          fontSize: 10, fontWeight: 600, letterSpacing: '0.04em',
+                          padding: '2px 7px', borderRadius: 20,
+                          textTransform: 'uppercase',
+                        }}>
+                          🚫 Focus day
+                        </div>
+                      </div>
+                    )}
+                    {/* Golden hours band */}
+                    {activeGroup && goldenWindows[i] && (() => {
+                      const gw = goldenWindows[i]!;
+                      const bandTop = (Math.max(gw.start, HOUR_START) - HOUR_START) * hourH;
+                      const bandH = (Math.min(gw.end, HOUR_END) - Math.max(gw.start, HOUR_START)) * hourH;
+                      if (bandH <= 0) return null;
+                      const c = activeGroup.color;
+                      return (
+                        <div style={{
+                          position: 'absolute', left: 0, right: 0, top: bandTop, height: bandH,
+                          zIndex: 50, pointerEvents: 'none',
+                          background: hexRgba(c, 0.12),
+                          borderLeft: `3px solid ${c}`,
+                          borderTop: `1px dashed ${c}`,
+                          borderBottom: `1px dashed ${c}`,
+                          boxSizing: 'border-box',
+                        }}>
+                          {i === 0 && (
+                            <div style={{
+                              position: 'absolute', top: 6, left: 6,
+                              display: 'inline-flex', alignItems: 'center', gap: 4,
+                              fontSize: 10, fontWeight: 700, letterSpacing: '0.03em',
+                              color: c,
+                              background: hexRgba(c, 0.15),
+                              border: `1px solid ${c}`,
+                              padding: '2px 8px', borderRadius: 20,
+                              textTransform: 'uppercase', whiteSpace: 'nowrap',
+                            }}>
+                              ✦ {activeGroup.name} · {fmtDecimalHour(gw.start, appearance.timeFormat === '24')} – {fmtDecimalHour(gw.end, appearance.timeFormat === '24')}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+
                     {Array.from({ length: HOUR_END - HOUR_START + 1 }, (_, k) => k).map((h) => (
                       <div className="cal-col__hour" key={h} />
                     ))}
@@ -616,6 +753,20 @@ export function CalendarApp() {
                           onClick={(ev) => { ev.stopPropagation(); openEdit(e.raw); }}
                         >
                           <div className="event__title">{e.title}</div>
+                          {e.raw.hiringMeta && (() => {
+                            const stageInfo = HIRING_STAGES.find((s) => s.id === e.raw.hiringMeta!.stage);
+                            return (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginTop: 2 }}>
+                                <span style={{
+                                  width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+                                  background: stageInfo?.color ?? '#888',
+                                }} />
+                                <span style={{ fontSize: 10, opacity: 0.9, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  {e.raw.hiringMeta.candidateName}
+                                </span>
+                              </div>
+                            );
+                          })()}
                           {h > 38 && (
                             <div className="event__meta">
                               {appearance.timeFormat === '24'
@@ -672,7 +823,7 @@ export function CalendarApp() {
       </div>
 
       <EventPanel
-        draft={draft}
+        draft={draft ? { ...draft, isStartup } : draft}
         open={panelOpen}
         onClose={closePanel}
         onSaved={() => {
@@ -680,6 +831,44 @@ export function CalendarApp() {
           fetchEvents();
         }}
       />
+
+      {showHiring && isStartup && (
+        <HiringPipeline onClose={() => setShowHiring(false)} />
+      )}
+
+      {/* ── Mobile bottom nav ───────────────────────────────────────── */}
+      <nav className="mobile-nav" aria-label="Main navigation">
+        <Link href="/home" className="mobile-nav__item">
+          <IconCalendar size={20} />
+          Home
+        </Link>
+        <Link href="/calendar" className={`mobile-nav__item ${pathname === '/calendar' ? 'on' : ''}`}>
+          <IconClock size={20} />
+          Calendar
+        </Link>
+        <button
+          className="mobile-nav__item"
+          onClick={openCreateNow}
+          aria-label="New event"
+        >
+          <div style={{
+            width: 36, height: 36, borderRadius: '50%',
+            background: 'var(--coral)', color: '#fff',
+            display: 'grid', placeItems: 'center',
+            marginBottom: 2,
+          }}>
+            <IconPlus size={18} />
+          </div>
+        </button>
+        <Link href="/scheduling-links" className="mobile-nav__item">
+          <IconMore size={20} />
+          Links
+        </Link>
+        <Link href="/settings" className="mobile-nav__item">
+          <IconSidebar size={20} />
+          More
+        </Link>
+      </nav>
 
       {/* Calendar-specific commands are injected into the global CmdK palette via useEffect below */}
     </div>

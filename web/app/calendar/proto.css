@@ -1,5 +1,25 @@
 /* ElevAIte Calendar — layout + components */
 
+/* ===== Shared sidebar nav (used by CalendarApp + HomePage) ===== */
+.ho-nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 12px;
+  font-size: 13px; color: var(--text-2);
+  border-radius: 7px;
+  text-decoration: none;
+  transition: background 120ms ease, color 120ms ease;
+  margin-bottom: 2px;
+  cursor: pointer;
+}
+.ho-nav-item:hover { background: var(--surface); color: var(--text); }
+.ho-nav-item:active { opacity: 0.7; transform: scale(0.98); }
+.ho-nav-item.on {
+  background: var(--coral-subtle);
+  color: var(--coral-strong, var(--coral));
+  font-weight: 500;
+}
+.ho-nav-item svg { flex-shrink: 0; }
+
 /* ===== Top bar ===== */
 .topbar {
   height: var(--topbar-h);
@@ -650,3 +670,145 @@
   transition: all var(--d-base) var(--ease);
 }
 .toast--open { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* =====================================================================
+   MOBILE / PWA — ≤ 768px
+   Layout: sidebar hidden, bottom nav bar, panel goes full-screen,
+   topbar simplified, week view shows 3 days.
+   ===================================================================== */
+
+/* ── Mobile CSS variables ── */
+@media (max-width: 768px) {
+  :root {
+    --sidebar-w: 0px;
+    --panel-w: 100vw;
+    --topbar-h: 52px;
+    --hour-h: 52px;
+    --gutter-w: 44px;
+  }
+}
+
+/* ── Root layout: stack topbar + content ── */
+@media (max-width: 768px) {
+  /* Hide sidebar entirely on mobile */
+  .sidebar { display: none !important; }
+
+  /* Topbar: hide non-essential controls */
+  .topbar { padding: 0 10px; gap: 6px; }
+  .search-trigger { display: none; }
+  .view-picker { display: none; }
+  .topbar__brand { padding-right: 0; margin-right: 0; }
+
+  /* New-event button: icon only on very small screens */
+  .new-event-btn .kbd-on-coral { display: none; }
+
+  /* Calendar grid: show 3 days instead of 7 */
+  .cal-day-headers,
+  .all-day-row,
+  .cal-grid {
+    grid-template-columns: var(--gutter-w) repeat(3, 1fr);
+  }
+
+  /* Hide day columns 4-7 (Mon=1..Sun=7, we show 3 days around today) */
+  .cal-day:nth-child(n+5),
+  .all-day-row__cell:nth-child(n+5),
+  .cal-col:nth-child(n+5) {
+    display: none;
+  }
+
+  /* Event panel: full-screen slide-up from bottom */
+  .panel {
+    top: auto;
+    left: 0; right: 0; bottom: 0;
+    width: 100%;
+    height: 92dvh;
+    border-left: none;
+    border-top: 1px solid var(--hairline-strong);
+    border-radius: 16px 16px 0 0;
+    transform: translateY(100%);
+  }
+  .panel--open { transform: translateY(0); }
+
+  /* Panel drag handle */
+  .panel__hd::before {
+    content: '';
+    position: absolute;
+    top: 8px; left: 50%;
+    transform: translateX(-50%);
+    width: 36px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+  }
+  .panel__hd { position: relative; }
+
+  /* Toast: lift above bottom nav */
+  .toast { bottom: 76px; }
+
+  /* Fab hint: lift above bottom nav */
+  .fab-hint { bottom: 76px; }
+}
+
+/* ── Bottom navigation bar ── */
+.mobile-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: var(--bg);
+    border-top: 1px solid var(--hairline-strong);
+    z-index: 60;
+    padding-bottom: env(safe-area-inset-bottom);
+    align-items: stretch;
+  }
+
+  .mobile-nav__item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-3);
+    text-decoration: none;
+    padding: 8px 4px 4px;
+    transition: color var(--d-fast) var(--ease);
+    cursor: pointer;
+    background: none;
+    border: none;
+  }
+  .mobile-nav__item.on,
+  .mobile-nav__item:active { color: var(--coral); }
+
+  .mobile-nav__item svg { flex-shrink: 0; }
+
+  /* Push calendar content above bottom nav */
+  .cal-wrap { padding-bottom: 60px; }
+}
+
+/* ── Safe area for notched phones (iPhone X+) ── */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  @media (max-width: 768px) {
+    .mobile-nav { height: calc(60px + env(safe-area-inset-bottom)); }
+    .panel { height: calc(92dvh - env(safe-area-inset-bottom)); }
+  }
+}
+
+/* ── Tap target sizes: at least 44×44px on mobile ── */
+@media (max-width: 768px) {
+  .icon-btn { width: 40px; height: 40px; }
+  .chip-toggle { padding: 8px 12px; font-size: 13px; }
+  .ho-nav-item { padding: 10px 12px; font-size: 14px; }
+}
+
+/* ── Landscape phone: give back some height ── */
+@media (max-width: 768px) and (orientation: landscape) {
+  :root { --hour-h: 40px; }
+  .panel { height: 100dvh; border-radius: 0; }
+}

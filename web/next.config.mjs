@@ -7,6 +7,11 @@ const nextConfig = {
   async rewrites() {
     return {
       beforeFiles: [
+        // PWA icon PNGs served via API route
+        { source: '/icons/icon-192.png', destination: '/api/icons/192' },
+        { source: '/icons/icon-512.png', destination: '/api/icons/512' },
+        { source: '/icons/apple-touch-icon.png', destination: '/api/icons/192' },
+
         // NOTE: `/` is handled by app/page.tsx (signed-in → /home, else → /landing.html).
         // Don't rewrite `/` here — it would skip the auth check.
 

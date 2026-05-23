@@ -76,6 +76,7 @@ export function BookingFlow({ link }: { link: PublicLink }) {
   const [phone, setPhone] = useState('');
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [booked, setBooked] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const cells = useMemo(() => {
@@ -152,6 +153,7 @@ export function BookingFlow({ link }: { link: PublicLink }) {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? `HTTP ${res.status}`);
+      setBooked(true);
       router.push(`/booked/${data.booking.id}`);
     } catch (e) {
       setError((e as Error).message);
@@ -384,8 +386,9 @@ export function BookingFlow({ link }: { link: PublicLink }) {
                 type="submit"
                 className="pb-submit"
                 disabled={submitting || !name.trim() || !email.trim()}
+                style={booked ? { background: '#4a9e6b', cursor: 'default' } : undefined}
               >
-                {submitting ? 'Scheduling…' : 'Schedule meeting →'}
+                {booked ? '✓ Booked! Redirecting…' : submitting ? 'Scheduling…' : 'Schedule meeting →'}
               </button>
             </form>
           </div>

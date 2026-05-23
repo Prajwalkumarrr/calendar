@@ -27,22 +27,8 @@
   padding: 12px 10px 8px;
   border-bottom: 1px solid var(--hairline);
 }
-.ho-nav-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 7px 12px;
-  font-size: 13px; color: var(--text-2);
-  border-radius: 7px;
-  text-decoration: none;
-  transition: background 120ms var(--ease), color 120ms var(--ease);
-  margin-bottom: 2px;
-}
-.ho-nav-item:hover { background: var(--surface); color: var(--text); }
-.ho-nav-item.on {
-  background: var(--coral-subtle);
-  color: var(--coral-strong, var(--coral));
-  font-weight: 500;
-}
-.ho-nav-item svg { flex-shrink: 0; }
+/* .ho-nav-item is defined in proto.css (shared) */
+.ho-nav-item:active { opacity: 0.7; transform: scale(0.98); }
 
 .tz-row {
   display: flex; align-items: center; gap: 10px;
@@ -391,6 +377,7 @@
 @media (hover: hover) {
   .ho-q-card:hover { transform: translateY(-1px); border-color: var(--coral); }
 }
+.ho-q-card:active { transform: scale(0.98); opacity: 0.85; }
 .ho-q-card--primary {
   background: var(--coral);
   color: var(--text-on-coral);
@@ -520,6 +507,7 @@
 @media (hover: hover) {
   .ho-link-card:hover { transform: translateY(-2px); border-color: var(--coral); }
 }
+.ho-link-card:active { transform: scale(0.98); opacity: 0.85; }
 .ho-link-card__head {
   display: flex; align-items: center; gap: 8px;
 }

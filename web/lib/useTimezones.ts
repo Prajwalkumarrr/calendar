@@ -91,12 +91,9 @@ export function useTzClocks(list: SavedTimezone[]): string[] {
   }, []);
   return list.map((z) => {
     try {
-      if (z.tz === 'local') {
-        return now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-      }
-      return now.toLocaleTimeString(undefined, {
-        hour: '2-digit', minute: '2-digit', timeZone: z.tz,
-      });
+      const opts: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
+      if (z.tz !== 'local') opts.timeZone = z.tz;
+      return now.toLocaleTimeString('en-US', opts);
     } catch {
       return '--:--';
     }

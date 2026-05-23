@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createBooking, generateSlots, getLinkBySlug } from '@/lib/scheduling';
 import { listEventsInRange } from '@/lib/events';
-import { getUserById, getNotificationPrefs } from '@/lib/users';
+import { getUserById, getNotificationPrefs, getNoMeetingDays } from '@/lib/users';
 import { sendBookingEmails } from '@/lib/email';
 import { createNotification } from '@/lib/notifications';
 import { postSlackMessage } from '@/lib/integrations/slack';
@@ -26,6 +26,12 @@ export async function POST(req: NextRequest) {
     const end = new Date(start.getTime() + link.durationMin * 60_000);
     if (isNaN(+start)) return NextResponse.json({ error: 'invalid start' }, { status: 400 });
     if (start < new Date()) return NextResponse.json({ error: 'slot is in the past' }, { status: 409 });
+
+    // Reject bookings on the host's no-meeting days
+    const noMeetingDays = await getNoMeetingDays(link.ownerId);
+    if (noMeetingDays.includes(start.getDay())) {
+      return NextResponse.json({ error: 'slot_unavailable' }, { status: 409 });
+    }
 
     // Re-validate the slot is still available (someone might have booked between fetch and submit)
     const dayStart = new Date(start); dayStart.setHours(0, 0, 0, 0);
@@ -60,22 +66,21 @@ export async function POST(req: NextRequest) {
         refId: booking.id,
       });
     }
-    if (prefs.email && host?.email) {
-      void sendBookingEmails({
-        inviteeName: name,
-        inviteeEmail: email,
-        hostName: host.name ?? 'your host',
-        hostEmail: host.email,
-        linkTitle: link.title,
-        start,
-        end,
-        durationMin: link.durationMin,
-        bookingId: booking.id,
-        note: typeof note === 'string' ? note : undefined,
-        meetingUrl: booking.meetingUrl,
-        meetingProvider: booking.meetingProvider,
-      });
-    }
+    // Always send confirmation to the invitee; host notification is gated on their prefs.
+    void sendBookingEmails({
+      inviteeName: name,
+      inviteeEmail: email,
+      hostName: host?.name ?? 'your host',
+      hostEmail: (prefs.email && host?.email) ? host.email : null,
+      linkTitle: link.title,
+      start,
+      end,
+      durationMin: link.durationMin,
+      bookingId: booking.id,
+      note: typeof note === 'string' ? note : undefined,
+      meetingUrl: booking.meetingUrl,
+      meetingProvider: booking.meetingProvider,
+    });
 
     // Slack notification to host — fire-and-forget
     void postSlackMessage(

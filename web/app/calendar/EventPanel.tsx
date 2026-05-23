@@ -1,21 +1,22 @@
 'use client';
 
-// Right-slide event detail panel — faithful port of prototype/event-panel.jsx,
-// wired to the real /api/events backend.
-
 import { useEffect, useState } from 'react';
 import {
-  IconChevronDown, IconClock, IconMapPin, IconMore, IconPlus, IconTrash,
+  IconChevronDown, IconClock, IconMapPin, IconMore, IconTrash,
   IconVideo, IconX, IconCalendar,
 } from './Icons';
 import { DEFAULT_CALENDARS } from './defaults';
-import type { ChipColor, EventDTO, RecurrenceDTO } from '@/lib/events';
+import type { ChipColor, RecurrenceDTO } from '@/lib/events';
+import { HIRING_STAGES, type HiringStage } from '@/lib/hiring-types';
+import type { HiringMeta } from '@/lib/events';
 
 const CHIP_COLORS: ChipColor[] = ['coral', 'sand', 'sage', 'slate', 'plum', 'ochre', 'rose', 'stone'];
 
 export type PanelDraft = {
   id?: string;
-  seriesId?: string;  // if editing an expanded instance, use this id for PATCH/DELETE
+  seriesId?: string;
+  originalDate?: string;
+  instanceIndex?: number;
   title: string;
   start: Date;
   end: Date;
@@ -24,9 +25,14 @@ export type PanelDraft = {
   description?: string;
   allDay?: boolean;
   recurrence?: RecurrenceDTO | null;
+  hiringMeta?: HiringMeta | null;
+  isStartup?: boolean;       // passed from CalendarApp when persona === 'startup'
+  isNoMeetingDay?: boolean;  // true when the event falls on a configured no-meeting day
+  goldenWindow?: { start: number; end: number; groupName: string; color: string } | null;
 };
 
 type RepeatPreset = 'none' | 'daily' | 'weekly' | 'weekdays';
+type RecurringScope = 'this' | 'future' | 'all';
 
 function recurrenceToPreset(r: RecurrenceDTO | null | undefined): RepeatPreset {
   if (!r) return 'none';
@@ -34,10 +40,9 @@ function recurrenceToPreset(r: RecurrenceDTO | null | undefined): RepeatPreset {
   if (r.freq === 'weekly' && (!r.interval || r.interval === 1)) {
     const days = r.byWeekday;
     if (!days || days.length === 0) return 'weekly';
-    // 1,2,3,4,5 = Mon-Fri
     if (days.length === 5 && [1, 2, 3, 4, 5].every((d) => days.includes(d))) return 'weekdays';
   }
-  return 'weekly'; // anything custom → render as weekly preset for now
+  return 'weekly';
 }
 
 function presetToRecurrence(p: RepeatPreset, start: Date): RecurrenceDTO | null {
@@ -93,16 +98,87 @@ function durationMin(start: Date, end: Date) {
   return Math.round((end.getTime() - start.getTime()) / 60_000);
 }
 
-const AVATAR_BGS = [
-  'linear-gradient(135deg, #D97757, #C28699)',
-  'linear-gradient(135deg, #88A188, #B89968)',
-  'linear-gradient(135deg, #7A8DA8, #9A7B98)',
-  'linear-gradient(135deg, #C8A057, #D97757)',
-  'linear-gradient(135deg, #B89968, #88A188)',
-];
+// ─── Scope picker modal ────────────────────────────────────────────────
+
+type ScopeModalProps = {
+  mode: 'edit' | 'delete';
+  onConfirm: (scope: RecurringScope) => void;
+  onCancel: () => void;
+};
+
+function ScopeModal({ mode, onConfirm, onCancel }: ScopeModalProps) {
+  const [scope, setScope] = useState<RecurringScope>('this');
+  const verb = mode === 'edit' ? 'Edit' : 'Delete';
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 9999,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: 'rgba(0,0,0,0.35)', backdropFilter: 'blur(2px)',
+    }}>
+      <div style={{
+        background: 'var(--surface-up, #fff)',
+        border: '1px solid var(--hairline, rgba(0,0,0,0.1))',
+        borderRadius: 14,
+        padding: '24px 24px 20px',
+        width: 320,
+        boxShadow: '0 8px 40px rgba(0,0,0,0.18)',
+      }}>
+        <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 16, letterSpacing: '-0.01em' }}>
+          {verb} recurring event
+        </div>
+
+        {(['this', 'future', 'all'] as RecurringScope[]).map((s) => (
+          <label key={s} style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '9px 0', cursor: 'pointer',
+            borderBottom: s !== 'all' ? '1px solid var(--hairline, rgba(0,0,0,0.07))' : 'none',
+          }}>
+            <input
+              type="radio"
+              name="scope"
+              value={s}
+              checked={scope === s}
+              onChange={() => setScope(s)}
+              style={{ accentColor: 'var(--coral, #D97757)', width: 15, height: 15 }}
+            />
+            <span style={{ fontSize: 13.5, color: 'var(--text, #1F1E1B)' }}>
+              {s === 'this' && 'Just this event'}
+              {s === 'future' && 'This and following events'}
+              {s === 'all' && 'All events'}
+            </span>
+          </label>
+        ))}
+
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 20 }}>
+          <button
+            onClick={onCancel}
+            style={{
+              padding: '8px 14px', borderRadius: 8, border: '1px solid var(--hairline, rgba(0,0,0,0.15))',
+              background: 'transparent', fontSize: 13, cursor: 'pointer', color: 'var(--text-2, #6B6862)',
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => onConfirm(scope)}
+            style={{
+              padding: '8px 16px', borderRadius: 8, border: 'none',
+              background: mode === 'delete' ? '#e53e3e' : 'var(--text, #1F1E1B)',
+              color: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer',
+            }}
+          >
+            {verb}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main panel ────────────────────────────────────────────────────────
 
 export function EventPanel({ draft, open, onClose, onSaved }: Props) {
-  // Hooks always run regardless of draft (rules of hooks)
   const [title, setTitle] = useState('');
   const [color, setColor] = useState<ChipColor>('coral');
   const [location, setLocation] = useState('');
@@ -112,6 +188,19 @@ export function EventPanel({ draft, open, onClose, onSaved }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [repeat, setRepeat] = useState<RepeatPreset>('none');
+  const [scopeModal, setScopeModal] = useState<'edit' | 'delete' | null>(null);
+
+  // Hiring fields (startup only)
+  const [isInterview, setIsInterview] = useState(false);
+  const [candidateName, setCandidateName] = useState('');
+  const [candidateRole, setCandidateRole] = useState('');
+  const [candidateEmail, setCandidateEmail] = useState('');
+  const [interviewStage, setInterviewStage] = useState<HiringStage>('screen');
+
+  // True for any existing recurring event — base or expanded instance
+  const isRecurringInstance = !!(
+    draft?.id && (draft?.recurrence || draft?.seriesId)
+  );
 
   useEffect(() => {
     if (!draft) return;
@@ -121,14 +210,27 @@ export function EventPanel({ draft, open, onClose, onSaved }: Props) {
     setDescription(draft.description ?? '');
     setRepeat(recurrenceToPreset(draft.recurrence));
     setError(null);
+    setScopeModal(null);
+    // Hiring fields
+    if (draft.hiringMeta) {
+      setIsInterview(true);
+      setCandidateName(draft.hiringMeta.candidateName);
+      setCandidateRole(draft.hiringMeta.role);
+      setCandidateEmail('');
+      setInterviewStage(draft.hiringMeta.stage);
+    } else {
+      setIsInterview(false);
+      setCandidateName('');
+      setCandidateRole('');
+      setCandidateEmail('');
+      setInterviewStage('screen');
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draft?.id, draft?.seriesId, draft?.start?.toISOString()]);
 
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [open, onClose]);
@@ -142,15 +244,16 @@ export function EventPanel({ draft, open, onClose, onSaved }: Props) {
     );
   }
 
-  const cal = DEFAULT_CALENDARS[0]; // TODO: real calendar selection in next pass
+  const cal = DEFAULT_CALENDARS[0];
   const dayLabel = fmtDayLabel(draft.start);
 
-  async function save() {
+  async function executeSave(scope: RecurringScope) {
     if (!draft) return;
     setSaving(true);
     setError(null);
+    setScopeModal(null);
     try {
-      const body = {
+      const body: Record<string, unknown> = {
         title: title.trim() || 'Untitled',
         start: draft.start.toISOString(),
         end: draft.end.toISOString(),
@@ -158,9 +261,13 @@ export function EventPanel({ draft, open, onClose, onSaved }: Props) {
         location: location || undefined,
         description: description || undefined,
         recurrence: presetToRecurrence(repeat, draft.start),
+        scope,
+        originalDate: draft.originalDate ?? draft.start.toISOString(),
+        hiringMeta: isInterview && candidateName.trim()
+          ? { candidateName: candidateName.trim(), role: candidateRole.trim() || 'Interview', stage: interviewStage }
+          : null,
       };
-      // When editing an expanded instance, the panel's `id` is synthetic ("baseId@N").
-      // Use seriesId (the real Mongo id) for PATCH.
+
       const targetId = draft.seriesId ?? draft.id;
       const res = targetId
         ? await fetch(`/api/events/${targetId}`, {
@@ -173,6 +280,7 @@ export function EventPanel({ draft, open, onClose, onSaved }: Props) {
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify(body),
           });
+
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         throw new Error(data?.error ?? `HTTP ${res.status}`);
@@ -185,17 +293,16 @@ export function EventPanel({ draft, open, onClose, onSaved }: Props) {
     }
   }
 
-  async function remove() {
+  async function executeDelete(scope: RecurringScope) {
     if (!draft) { onClose(); return; }
     const targetId = draft.seriesId ?? draft.id;
     if (!targetId) { onClose(); return; }
-    const msg = draft.recurrence
-      ? 'Delete this recurring event and ALL of its repeats?'
-      : 'Delete this event?';
-    if (!confirm(msg)) return;
     setSaving(true);
+    setScopeModal(null);
     try {
-      const res = await fetch(`/api/events/${targetId}`, { method: 'DELETE' });
+      const originalDate = encodeURIComponent(draft.originalDate ?? draft.start.toISOString());
+      const url = `/api/events/${targetId}?scope=${scope}&originalDate=${originalDate}`;
+      const res = await fetch(url, { method: 'DELETE' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       onSaved();
     } catch (e) {
@@ -205,8 +312,36 @@ export function EventPanel({ draft, open, onClose, onSaved }: Props) {
     }
   }
 
+  function handleSaveClick() {
+    if (isRecurringInstance) {
+      setScopeModal('edit');
+    } else {
+      executeSave('all');
+    }
+  }
+
+  function handleDeleteClick() {
+    if (!draft) return;
+    if (isRecurringInstance) {
+      setScopeModal('delete');
+    } else if (draft.recurrence) {
+      // base recurring event — confirm all-delete
+      if (confirm('Delete this event and ALL of its repeats?')) executeDelete('all');
+    } else {
+      if (confirm('Delete this event?')) executeDelete('all');
+    }
+  }
+
   return (
     <>
+      {scopeModal && (
+        <ScopeModal
+          mode={scopeModal}
+          onConfirm={(scope) => scopeModal === 'edit' ? executeSave(scope) : executeDelete(scope)}
+          onCancel={() => setScopeModal(null)}
+        />
+      )}
+
       <div
         className={`panel-backdrop ${open ? 'panel-backdrop--open' : ''}`}
         onClick={onClose}
@@ -232,6 +367,55 @@ export function EventPanel({ draft, open, onClose, onSaved }: Props) {
             placeholder="Untitled event"
             autoFocus={!draft.id}
           />
+
+          {draft.isNoMeetingDay && (
+            <div style={{
+              fontSize: 11.5, marginBottom: 12, padding: '8px 12px',
+              background: 'rgba(217,119,87,0.1)',
+              border: '1px solid rgba(217,119,87,0.25)',
+              borderRadius: 8, display: 'flex', alignItems: 'flex-start', gap: 8,
+            }}>
+              <span style={{ fontSize: 14, flexShrink: 0 }}>🚫</span>
+              <div>
+                <div style={{ fontWeight: 600, color: 'var(--coral, #D97757)', fontSize: 12 }}>Focus Day</div>
+                <div style={{ color: 'var(--text-2)', marginTop: 2, lineHeight: 1.4 }}>
+                  You&apos;ve marked this day as a no-meeting day. You can still save, but consider rescheduling to protect your focus time.
+                </div>
+              </div>
+            </div>
+          )}
+
+          {draft.goldenWindow && (() => {
+            const gw = draft.goldenWindow;
+            const eventH = draft.start.getHours() + draft.start.getMinutes() / 60;
+            const inside = eventH >= gw.start && eventH < gw.end;
+            return (
+              <div style={{
+                fontSize: 11.5, marginBottom: 12, padding: '6px 10px',
+                background: inside ? `${gw.color}14` : 'rgba(120,120,120,0.08)',
+                border: `1px solid ${inside ? gw.color + '44' : 'rgba(120,120,120,0.2)'}`,
+                borderRadius: 8, display: 'flex', alignItems: 'center', gap: 7,
+              }}>
+                <span style={{ fontSize: 12, flexShrink: 0 }}>{inside ? '✦' : '○'}</span>
+                <span style={{ color: inside ? gw.color : 'var(--text-3)', fontWeight: 500 }}>
+                  {inside
+                    ? `Within ${gw.groupName} golden hours`
+                    : `Outside ${gw.groupName} golden hours`}
+                </span>
+              </div>
+            );
+          })()}
+
+          {isRecurringInstance && (
+            <div style={{
+              fontSize: 11.5, color: 'var(--coral, #D97757)',
+              marginBottom: 12, padding: '5px 10px',
+              background: 'var(--coral-subtle, rgba(217,119,87,0.08))',
+              borderRadius: 6, display: 'inline-block',
+            }}>
+              Recurring event — changes will ask which occurrences to update
+            </div>
+          )}
 
           <div className="panel-row">
             <IconClock className="panel-row__icon" />
@@ -302,6 +486,82 @@ export function EventPanel({ draft, open, onClose, onSaved }: Props) {
             )}
           </div>
 
+          {/* ── Hiring section — startup only ── */}
+          {draft.isStartup && (
+            <div className="panel-section">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <div className="panel-section__lbl" style={{ marginBottom: 0 }}>Interview</div>
+                <button
+                  type="button"
+                  className="chip-toggle"
+                  aria-pressed={isInterview}
+                  onClick={() => setIsInterview((v) => !v)}
+                  style={{ fontSize: 11.5 }}
+                >
+                  {isInterview ? '✓ Interview event' : 'Mark as interview'}
+                </button>
+              </div>
+
+              {isInterview && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <input
+                    style={{
+                      background: 'var(--surface-sunken)', border: '1px solid var(--hairline)',
+                      borderRadius: 7, padding: '7px 10px', fontSize: 12.5,
+                      color: 'var(--text)', width: '100%',
+                    }}
+                    placeholder="Candidate name *"
+                    value={candidateName}
+                    onChange={(e) => setCandidateName(e.target.value)}
+                  />
+                  <input
+                    style={{
+                      background: 'var(--surface-sunken)', border: '1px solid var(--hairline)',
+                      borderRadius: 7, padding: '7px 10px', fontSize: 12.5,
+                      color: 'var(--text)', width: '100%',
+                    }}
+                    placeholder="Role (e.g. Frontend Engineer)"
+                    value={candidateRole}
+                    onChange={(e) => setCandidateRole(e.target.value)}
+                  />
+                  <input
+                    style={{
+                      background: 'var(--surface-sunken)', border: '1px solid var(--hairline)',
+                      borderRadius: 7, padding: '7px 10px', fontSize: 12.5,
+                      color: 'var(--text)', width: '100%',
+                    }}
+                    placeholder="Candidate email (optional)"
+                    type="email"
+                    value={candidateEmail}
+                    onChange={(e) => setCandidateEmail(e.target.value)}
+                  />
+                  <div>
+                    <div style={{ fontSize: 11, color: 'var(--text-3)', marginBottom: 6, fontWeight: 500 }}>Stage</div>
+                    <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                      {HIRING_STAGES.filter((s) => s.id !== 'rejected').map((s) => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          className="chip-toggle"
+                          aria-pressed={interviewStage === s.id}
+                          onClick={() => setInterviewStage(s.id)}
+                          style={{
+                            fontSize: 11.5,
+                            ...(interviewStage === s.id
+                              ? { background: s.color, color: '#fff', borderColor: s.color }
+                              : {}),
+                          }}
+                        >
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="panel-section">
             <div className="panel-section__lbl">Notes</div>
             <textarea
@@ -349,11 +609,11 @@ export function EventPanel({ draft, open, onClose, onSaved }: Props) {
         </div>
 
         <div className="panel__foot">
-          <button className="danger" onClick={remove} disabled={saving}>
+          <button className="danger" onClick={handleDeleteClick} disabled={saving}>
             <IconTrash size={13} style={{ marginRight: 4, verticalAlign: '-2px' }} />
             Delete
           </button>
-          <button className="save" onClick={save} disabled={saving}>
+          <button className="save" onClick={handleSaveClick} disabled={saving}>
             {saving ? 'Saving…' : draft.id ? 'Save' : 'Create'}
           </button>
         </div>

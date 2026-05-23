@@ -4,6 +4,26 @@ import clientPromise from './mongodb';
 const DB_NAME = 'elevaite';
 const COLLECTION = 'users';
 
+// ── Team timezone groups ────────────────────────────────────────────
+
+export type TeamMember = {
+  id: string;             // client-generated uuid
+  name: string;
+  tz: string;             // IANA timezone, e.g. "Asia/Kolkata"
+  workStart: number;      // decimal hours, e.g. 9 = 9:00 am
+  workEnd: number;        // decimal hours, e.g. 18 = 6:00 pm
+  fromWorkspaceUserId?: string; // set when imported from workspace member
+};
+
+export type TeamGroup = {
+  id: string;
+  name: string;
+  color: string;          // hex, e.g. "#748AA6"
+  members: TeamMember[];
+};
+
+export const GROUP_COLORS = ['#748AA6', '#997594', '#C49746', '#7E9C7A', '#A08060', '#6A8CAA', '#C47A6B'];
+
 export type SavedTimezone = {
   tz: string;     // IANA name, or "local" for browser-local
   label: string;  // user-chosen display, e.g. "Palo Alto"
@@ -81,6 +101,8 @@ export type UserRecord = {
   notificationPrefs?: Partial<NotificationPrefs>;
   appearancePrefs?: Partial<AppearancePrefs>;
   timezones?: SavedTimezone[];
+  noMeetingDays?: number[];  // 0=Sun, 1=Mon … 6=Sat. Days where new meetings are blocked.
+  teamGroups?: TeamGroup[];  // named groups of people for golden-hours calculation
   persona?: 'student' | 'startup' | 'solo';
   onboardedAt?: Date;
   // Email + password credentials (alongside Google OAuth)
@@ -153,17 +175,20 @@ export async function createCredentialsUser(input: {
   email: string;
   passwordHash: string;
   name?: string;
-  verificationCode: string;
-  verificationCodeExpiresAt: Date;
+  verificationCode?: string;
+  verificationCodeExpiresAt?: Date;
+  emailVerified?: Date | null;
 }): Promise<UserRecord> {
   const c = await col();
   const doc = {
     email: input.email.toLowerCase().trim(),
     name: input.name?.trim(),
     passwordHash: input.passwordHash,
-    emailVerified: null,
-    verificationCode: input.verificationCode,
-    verificationCodeExpiresAt: input.verificationCodeExpiresAt,
+    emailVerified: input.emailVerified ?? null,
+    ...(input.verificationCode ? {
+      verificationCode: input.verificationCode,
+      verificationCodeExpiresAt: input.verificationCodeExpiresAt,
+    } : {}),
     updatedAt: new Date(),
   };
   const res = await c.insertOne(doc as unknown as UserRecord);
@@ -287,6 +312,37 @@ const RESERVED_HANDLES = new Set([
   'onboarding', 'invite', 'checkout', 'empty', 'find-time', 'recurring', 'search',
   'timezones', 'integrations', 'mobile-preview', 'reschedule',
 ]);
+
+export async function getNoMeetingDays(id: string): Promise<number[]> {
+  const u = await getUserById(id);
+  return Array.isArray(u?.noMeetingDays) ? u.noMeetingDays : [];
+}
+
+export async function updateNoMeetingDays(id: string, days: number[]): Promise<number[]> {
+  if (!ObjectId.isValid(id)) return [];
+  const c = await col();
+  const valid = [...new Set(days.filter((d) => Number.isInteger(d) && d >= 0 && d <= 6))];
+  await c.updateOne(
+    { _id: new ObjectId(id) },
+    { $set: { noMeetingDays: valid, updatedAt: new Date() } },
+  );
+  return valid;
+}
+
+export async function getTeamGroups(id: string): Promise<TeamGroup[]> {
+  const u = await getUserById(id);
+  return Array.isArray(u?.teamGroups) ? (u.teamGroups as TeamGroup[]) : [];
+}
+
+export async function updateTeamGroups(id: string, groups: TeamGroup[]): Promise<TeamGroup[]> {
+  if (!ObjectId.isValid(id)) return [];
+  const c = await col();
+  await c.updateOne(
+    { _id: new ObjectId(id) },
+    { $set: { teamGroups: groups, updatedAt: new Date() } },
+  );
+  return groups;
+}
 
 export async function updateProfile(id: string, input: UpdateProfileInput): Promise<UpdateProfileResult> {
   if (!ObjectId.isValid(id)) return { ok: false, error: 'not_found' };

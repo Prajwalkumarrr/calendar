@@ -161,29 +161,49 @@
 }
 
 .codeRow {
-  display: flex; gap: 8px; justify-content: space-between;
-  margin: 8px 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  margin: 20px 0 18px;
+}
+.codeSep {
+  width: 14px;
+  height: 2px;
+  background: var(--hairline-strong);
+  border-radius: 2px;
+  flex-shrink: 0;
 }
 .codeCell {
-  flex: 1;
+  width: 48px;
   height: 56px;
   text-align: center;
   font-family: 'Geist Mono', monospace;
-  font-size: 22px; font-weight: 600;
+  font-size: 24px; font-weight: 600;
   border: 1.5px solid var(--hairline-strong);
-  background: var(--bg);
-  border-radius: 10px;
+  background: var(--surface);
+  border-radius: 12px;
   color: var(--text);
   outline: none;
+  caret-color: var(--coral);
+  transition: border-color 160ms, box-shadow 160ms, background 160ms;
 }
-.codeCell:focus { border-color: var(--coral); box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.18); }
+.codeCell:focus {
+  border-color: var(--coral);
+  box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.18);
+  background: var(--bg);
+}
+.codeCell:not(:placeholder-shown) {
+  border-color: var(--coral);
+  background: var(--bg);
+}
+.codeCell:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .resend {
   background: none; border: 0; padding: 0;
   color: var(--coral);
   font-size: 12.5px; font-weight: 500;
   cursor: pointer; font-family: inherit;
-  margin-top: 6px;
 }
 .resend:hover { text-decoration: underline; }
 .resend:disabled { color: var(--text-3); cursor: not-allowed; text-decoration: none; }

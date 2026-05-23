@@ -47,9 +47,27 @@ export const authOptions: NextAuthOptions = {
     signIn: '/sign-in',
   },
   callbacks: {
+    async jwt({ token, trigger, user }) {
+      // On first sign-in `user` is populated — fetch persona and cache in token
+      if (user || trigger === 'update') {
+        const userId = token.sub;
+        if (userId) {
+          try {
+            const { getUserById } = await import('./users');
+            const dbUser = await getUserById(userId);
+            if (dbUser?.persona) token.persona = dbUser.persona;
+          } catch {}
+        }
+      }
+      return token;
+    },
     async session({ session, token }) {
       if (token.sub && session.user) {
         session.user.id = token.sub;
+        // Pass persona from JWT token into the session so client can read it
+        if (token.persona) {
+          (session.user as { persona?: string }).persona = token.persona as string;
+        }
       }
       return session;
     },

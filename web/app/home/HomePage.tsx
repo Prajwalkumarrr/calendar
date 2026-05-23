@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import '../calendar/proto.css'; // reuse .topbar, .icon-btn, .today-btn, .new-event-btn, .search-trigger, .kbd, .avatar
 import './home.css';
@@ -14,6 +14,7 @@ import { DEFAULT_CALENDARS } from '../calendar/defaults';
 import type { EventDTO } from '@/lib/events';
 import { useUnreadCount } from '@/lib/useUnreadCount';
 import { useAppearance } from '@/lib/useAppearance';
+import { useCmdK } from '@/lib/CmdKContext';
 import { useTimezones, useTzClocks, tzShortCode } from '@/lib/useTimezones';
 
 type Booking = {
@@ -83,11 +84,13 @@ function avatarFor(name: string): string {
 
 export function HomePage({ userName, userEmail }: { userName: string; userEmail: string }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [now, setNow] = useState<Date>(() => new Date());
   const [events, setEvents] = useState<EventDTO[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [links, setLinks] = useState<Link[]>([]);
   const unread = useUnreadCount();
+  const { setOpen: setCmdkOpen } = useCmdK();
 
   // Tick every minute for now-line + countdowns
   useEffect(() => {
@@ -281,7 +284,7 @@ export function HomePage({ userName, userEmail }: { userName: string; userEmail:
           <IconPlus size={14} stroke={2} /> New event
           <span className="kbd-on-coral">C</span>
         </button>
-        <button className="search-trigger" onClick={() => router.push('/calendar')}>
+        <button className="search-trigger" title="Search (⌘K)" onClick={() => setCmdkOpen(true)}>
           <IconSearch size={14} />
           <span className="search-trigger__placeholder">Search or command…</span>
           <span className="kbd">⌘K</span>
@@ -300,15 +303,15 @@ export function HomePage({ userName, userEmail }: { userName: string; userEmail:
         {/* Sidebar */}
         <aside className="ho-side">
           <div className="ho-sec">
-            <Link className="ho-nav-item on" href="/home">
+            <Link className={`ho-nav-item${pathname === '/home' ? ' on' : ''}`} href="/home">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 12l9-9 9 9M5 10v10h14V10" /></svg>
               Home
             </Link>
-            <Link className="ho-nav-item" href="/calendar">
+            <Link className={`ho-nav-item${pathname === '/calendar' ? ' on' : ''}`} href="/calendar">
               <IconCalendar size={14} />
               Calendar
             </Link>
-            <Link className="ho-nav-item" href="/inbox">
+            <Link className={`ho-nav-item${pathname === '/inbox' ? ' on' : ''}`} href="/inbox">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></svg>
               Inbox
               {unread > 0 && (
@@ -323,11 +326,11 @@ export function HomePage({ userName, userEmail }: { userName: string; userEmail:
                 </span>
               )}
             </Link>
-            <Link className="ho-nav-item" href="/scheduling">
+            <Link className={`ho-nav-item${pathname.startsWith('/scheduling') ? ' on' : ''}`} href="/scheduling">
               <IconLink size={14} />
               Scheduling links
             </Link>
-            <Link className="ho-nav-item" href="/settings">
+            <Link className={`ho-nav-item${pathname === '/settings' ? ' on' : ''}`} href="/settings">
               <IconSettings size={14} />
               Settings
             </Link>

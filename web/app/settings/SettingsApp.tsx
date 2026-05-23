@@ -5,6 +5,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { signOut } from 'next-auth/react';
 import './settings.css';
 import { useAppearance } from '@/lib/useAppearance';
 
@@ -327,6 +328,20 @@ function Profile({ userName, userEmail }: { userName: string; userEmail: string 
           {saving ? 'Saving…' : 'Save changes'}
         </button>
       </div>
+
+      <div style={{ marginTop: 32, paddingTop: 24, borderTop: '1px solid var(--hairline)' }}>
+        <h2 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-2)', marginBottom: 4 }}>Session</h2>
+        <p style={{ fontSize: 12.5, color: 'var(--text-3)', marginBottom: 14 }}>
+          Signed in as <strong style={{ color: 'var(--text-2)' }}>{userEmail}</strong>
+        </p>
+        <button
+          className="cta-ghost"
+          style={{ color: 'var(--coral)', borderColor: 'var(--coral)', opacity: 0.85 }}
+          onClick={() => signOut({ callbackUrl: '/' })}
+        >
+          Sign out
+        </button>
+      </div>
     </>
   );
 }
@@ -402,6 +417,83 @@ type Prefs = {
   slack: boolean; linear: boolean;
 };
 
+const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function FocusDays() {
+  const [days, setDays] = useState<number[] | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [savedAt, setSavedAt] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch('/api/me/no-meeting')
+      .then((r) => r.json())
+      .then((d) => setDays(d.days ?? []))
+      .catch(() => setDays([]));
+  }, []);
+
+  async function toggle(day: number) {
+    if (!days) return;
+    const next = days.includes(day) ? days.filter((d) => d !== day) : [...days, day];
+    setDays(next);
+    setSaving(true);
+    try {
+      const res = await fetch('/api/me/no-meeting', {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ days: next }),
+      });
+      const data = await res.json();
+      if (res.ok) { setDays(data.days); setSavedAt(Date.now()); }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="ss-card">
+      <div className="ss-card__h">Focus Days (No-Meeting Days)</div>
+      <p className="ss-card__sub" style={{ color: 'var(--text-3)', fontSize: 12 }}>
+        Pick days that are off-limits for meetings. The calendar will highlight them and warn you on
+        those days. External booking pages will hide slots entirely.{' '}
+        {saving && <span style={{ color: 'var(--text-3)' }}>Saving…</span>}
+        {!saving && savedAt && Date.now() - savedAt < 3000 && <span style={{ color: 'var(--coral)' }}>Saved ✓</span>}
+      </p>
+      {days === null ? (
+        <div style={{ fontSize: 13, color: 'var(--text-3)', padding: '8px 0' }}>Loading…</div>
+      ) : (
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
+          {DAY_LABELS.map((label, i) => {
+            const on = days.includes(i);
+            return (
+              <button
+                key={i}
+                type="button"
+                onClick={() => toggle(i)}
+                style={{
+                  padding: '6px 14px', borderRadius: 8, fontSize: 13, cursor: 'pointer',
+                  fontWeight: on ? 600 : 400,
+                  border: `1px solid ${on ? 'var(--coral)' : 'var(--border)'}`,
+                  background: on ? 'var(--coral-subtle, rgba(217,119,87,0.12))' : 'transparent',
+                  color: on ? 'var(--coral)' : 'var(--text-2)',
+                  transition: 'all 120ms ease',
+                }}
+              >
+                {label}
+                {on && <span style={{ marginLeft: 5, fontSize: 11 }}>🚫</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {days && days.length > 0 && (
+        <p style={{ marginTop: 10, fontSize: 12, color: 'var(--text-3)' }}>
+          No meetings on: {days.sort((a, b) => a - b).map((d) => DAY_LABELS[d]).join(', ')}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function Notifications() {
   const [prefs, setPrefs] = useState<Prefs | null>(null);
   const [savingKey, setSavingKey] = useState<keyof Prefs | null>(null);
@@ -441,15 +533,6 @@ function Notifications() {
     }
   }
 
-  if (!prefs) {
-    return (
-      <>
-        <h1 className="ss-page-h">Notifications</h1>
-        <p className="ss-page-sub">Loading your preferences…</p>
-      </>
-    );
-  }
-
   return (
     <>
       <h1 className="ss-page-h">Notifications</h1>
@@ -459,7 +542,13 @@ function Notifications() {
           <span style={{ color: 'var(--coral)' }}>Saved ✓</span>
         )}
         {savingKey && <span style={{ color: 'var(--text-3)' }}>· Saving…</span>}
+        {!prefs && !error && <span style={{ color: 'var(--text-3)' }}>Loading…</span>}
       </p>
+
+      {/* Focus Days renders independently — always visible */}
+      <FocusDays />
+
+      {!prefs ? null : (<>
 
       {error && (
         <div style={{
@@ -515,6 +604,8 @@ function Notifications() {
         <SwitchRow title="Slack — post in #standup before your standup" on={prefs.slack} onChange={(v) => save('slack', v)} />
         <SwitchRow title="Linear — link issues mentioned in events" on={prefs.linear} onChange={(v) => save('linear', v)} />
       </div>
+
+      </>)}
     </>
   );
 }
@@ -745,6 +836,272 @@ function Billing({ userEmail }: { userEmail: string }) {
   );
 }
 
+// ─── Team Timezones (Golden Hours) ──────────────────────────────────
+
+type TzMember = { id: string; name: string; tz: string; workStart: number; workEnd: number; fromWorkspaceUserId?: string };
+type TzGroup  = { id: string; name: string; color: string; members: TzMember[] };
+
+const TZ_GROUP_COLORS = ['#748AA6','#997594','#C49746','#7E9C7A','#A08060','#6A8CAA','#C47A6B'];
+const COMMON_TZ = [
+  'America/Los_Angeles','America/Denver','America/Chicago','America/New_York',
+  'Europe/London','Europe/Paris','Europe/Berlin','Europe/Madrid',
+  'Asia/Kolkata','Asia/Singapore','Asia/Tokyo','Asia/Dubai',
+  'Australia/Sydney','UTC',
+];
+
+function uid() { return Math.random().toString(36).slice(2, 10); }
+
+function TeamTimezones({ workspaceMembers }: { workspaceMembers: { userId: string; name?: string; email?: string }[] }) {
+  const [groups, setGroups] = useState<TzGroup[] | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [savedAt, setSavedAt] = useState<number | null>(null);
+
+  // new group form
+  const [newGroupName, setNewGroupName] = useState('');
+  const [showNewGroup, setShowNewGroup] = useState(false);
+
+  // add member form
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [memName, setMemName] = useState('');
+  const [memTz, setMemTz] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC');
+  const [memStart, setMemStart] = useState(9);
+  const [memEnd, setMemEnd] = useState(18);
+
+  useEffect(() => {
+    fetch('/api/me/team-timezones')
+      .then((r) => r.json())
+      .then((d) => {
+        const g: TzGroup[] = d.groups ?? [];
+        setGroups(g);
+        if (g.length > 0) setActiveId(g[0].id);
+      })
+      .catch(() => setGroups([]));
+  }, []);
+
+  async function persist(next: TzGroup[]) {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/me/team-timezones', {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ groups: next }),
+      });
+      if (res.ok) { setGroups(next); setSavedAt(Date.now()); }
+    } finally { setSaving(false); }
+  }
+
+  function createGroup() {
+    if (!newGroupName.trim() || !groups) return;
+    const g: TzGroup = {
+      id: uid(), name: newGroupName.trim(),
+      color: TZ_GROUP_COLORS[groups.length % TZ_GROUP_COLORS.length],
+      members: [],
+    };
+    const next = [...groups, g];
+    setNewGroupName(''); setShowNewGroup(false);
+    setActiveId(g.id);
+    persist(next);
+  }
+
+  function deleteGroup(id: string) {
+    if (!groups) return;
+    if (!confirm('Delete this group?')) return;
+    const next = groups.filter((g) => g.id !== id);
+    if (activeId === id) setActiveId(next[0]?.id ?? null);
+    persist(next);
+  }
+
+  function addMember() {
+    if (!groups || !activeId || !memName.trim()) return;
+    const member: TzMember = { id: uid(), name: memName.trim(), tz: memTz, workStart: memStart, workEnd: memEnd };
+    const next = groups.map((g) => g.id === activeId ? { ...g, members: [...g.members, member] } : g);
+    setMemName(''); setShowAddMember(false);
+    persist(next);
+  }
+
+  function importFromWorkspace(ws: { userId: string; name?: string; email?: string }) {
+    if (!groups || !activeId) return;
+    const alreadyIn = groups.find((g) => g.id === activeId)?.members.some((m) => m.fromWorkspaceUserId === ws.userId);
+    if (alreadyIn) return;
+    const member: TzMember = {
+      id: uid(),
+      name: ws.name ?? ws.email ?? ws.userId,
+      tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      workStart: 9, workEnd: 18,
+      fromWorkspaceUserId: ws.userId,
+    };
+    const next = groups.map((g) => g.id === activeId ? { ...g, members: [...g.members, member] } : g);
+    persist(next);
+  }
+
+  function removeMemberFromGroup(groupId: string, memberId: string) {
+    if (!groups) return;
+    const next = groups.map((g) => g.id === groupId ? { ...g, members: g.members.filter((m) => m.id !== memberId) } : g);
+    persist(next);
+  }
+
+  const activeGroup = groups?.find((g) => g.id === activeId) ?? null;
+
+  return (
+    <div className="ss-card">
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+        <div>
+          <div className="ss-card__h" style={{ marginBottom: 0 }}>Team Timezone Groups</div>
+          <p className="ss-card__sub" style={{ marginBottom: 0 }}>
+            Named groups of people — the calendar highlights when everyone overlaps.{' '}
+            {saving && <span style={{ color: 'var(--text-3)' }}>Saving…</span>}
+            {!saving && savedAt && Date.now() - savedAt < 3000 && <span style={{ color: 'var(--coral)' }}>Saved ✓</span>}
+          </p>
+        </div>
+      </div>
+
+      {groups === null ? (
+        <div style={{ fontSize: 13, color: 'var(--text-3)', padding: '12px 0' }}>Loading…</div>
+      ) : (
+        <>
+          {/* Group pills */}
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 12, alignItems: 'center' }}>
+            {groups.map((g) => (
+              <button
+                key={g.id}
+                type="button"
+                onClick={() => setActiveId(g.id)}
+                style={{
+                  padding: '5px 12px', borderRadius: 20, fontSize: 12.5, cursor: 'pointer',
+                  fontWeight: activeId === g.id ? 600 : 400,
+                  border: `1.5px solid ${activeId === g.id ? g.color : 'var(--border)'}`,
+                  background: activeId === g.id ? g.color : 'transparent',
+                  color: activeId === g.id ? '#fff' : 'var(--text-2)',
+                  transition: 'all 120ms ease',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                }}
+              >
+                {g.name}
+                <span
+                  onClick={(e) => { e.stopPropagation(); deleteGroup(g.id); }}
+                  style={{ opacity: 0.65, fontSize: 11, lineHeight: 1, cursor: 'pointer' }}
+                >✕</span>
+              </button>
+            ))}
+            {showNewGroup ? (
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <input
+                  autoFocus
+                  value={newGroupName}
+                  onChange={(e) => setNewGroupName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') createGroup(); if (e.key === 'Escape') setShowNewGroup(false); }}
+                  placeholder="Group name"
+                  style={{ background: 'var(--surface-sunken)', border: '1px solid var(--hairline)', borderRadius: 7, padding: '4px 10px', fontSize: 12.5, color: 'var(--text)', width: 130 }}
+                />
+                <button className="cta-primary" style={{ padding: '4px 10px', fontSize: 12 }} onClick={createGroup}>Add</button>
+                <button className="cta-ghost" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => setShowNewGroup(false)}>Cancel</button>
+              </div>
+            ) : (
+              <button className="cta-ghost" style={{ padding: '4px 12px', fontSize: 12 }} onClick={() => setShowNewGroup(true)}>+ New group</button>
+            )}
+          </div>
+
+          {/* Active group members */}
+          {activeGroup && (
+            <div style={{ marginTop: 14, borderTop: '1px solid var(--hairline)', paddingTop: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-2)', marginBottom: 10 }}>
+                Members of &ldquo;{activeGroup.name}&rdquo;
+              </div>
+
+              {activeGroup.members.length === 0 && (
+                <div style={{ fontSize: 12.5, color: 'var(--text-3)', marginBottom: 10 }}>No members yet — add one below.</div>
+              )}
+
+              {activeGroup.members.map((m) => (
+                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0', borderBottom: '1px solid var(--hairline)' }}>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: activeGroup.color, color: '#fff', display: 'grid', placeItems: 'center', fontSize: 11, fontWeight: 700, flexShrink: 0 }}>
+                    {m.name.trim()[0]?.toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{m.name}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-3)' }}>{m.tz} · {m.workStart}:00–{m.workEnd}:00</div>
+                  </div>
+                  <button onClick={() => removeMemberFromGroup(activeGroup.id, m.id)} style={{ fontSize: 12, color: 'var(--text-3)', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+                </div>
+              ))}
+
+              {/* Add member */}
+              {showAddMember ? (
+                <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    <input
+                      autoFocus
+                      placeholder="Name *"
+                      value={memName}
+                      onChange={(e) => setMemName(e.target.value)}
+                      style={{ background: 'var(--surface-sunken)', border: '1px solid var(--hairline)', borderRadius: 7, padding: '6px 10px', fontSize: 12.5, color: 'var(--text)', flex: '1 1 120px', minWidth: 100 }}
+                    />
+                    <select
+                      value={memTz}
+                      onChange={(e) => setMemTz(e.target.value)}
+                      style={{ background: 'var(--surface-sunken)', border: '1px solid var(--hairline)', borderRadius: 7, padding: '6px 10px', fontSize: 12.5, color: 'var(--text)', flex: '1 1 180px' }}
+                    >
+                      {[memTz, ...COMMON_TZ].filter((v, i, a) => a.indexOf(v) === i).map((tz) => (
+                        <option key={tz} value={tz}>{tz}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, alignItems: 'center', fontSize: 12 }}>
+                    <span style={{ color: 'var(--text-3)' }}>Works</span>
+                    <input type="number" min={0} max={23} value={memStart} onChange={(e) => setMemStart(Number(e.target.value))}
+                      style={{ width: 48, background: 'var(--surface-sunken)', border: '1px solid var(--hairline)', borderRadius: 6, padding: '4px 6px', fontSize: 12, color: 'var(--text)', textAlign: 'center' }} />
+                    <span style={{ color: 'var(--text-3)' }}>to</span>
+                    <input type="number" min={0} max={24} value={memEnd} onChange={(e) => setMemEnd(Number(e.target.value))}
+                      style={{ width: 48, background: 'var(--surface-sunken)', border: '1px solid var(--hairline)', borderRadius: 6, padding: '4px 6px', fontSize: 12, color: 'var(--text)', textAlign: 'center' }} />
+                    <span style={{ color: 'var(--text-3)' }}>(hour)</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button className="cta-primary" style={{ padding: '5px 14px', fontSize: 12 }} onClick={addMember} disabled={!memName.trim()}>Add</button>
+                    <button className="cta-ghost" style={{ padding: '5px 14px', fontSize: 12 }} onClick={() => setShowAddMember(false)}>Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+                  <button className="cta-ghost" style={{ padding: '5px 12px', fontSize: 12 }} onClick={() => setShowAddMember(true)}>+ Add member</button>
+                  {workspaceMembers.length > 0 && (
+                    <div style={{ position: 'relative' }}>
+                      <details style={{ listStyle: 'none' }}>
+                        <summary style={{ listStyle: 'none', cursor: 'pointer', padding: '5px 12px', fontSize: 12, borderRadius: 8, border: '1px solid var(--border)', color: 'var(--text-2)', background: 'transparent' }}>
+                          Import from workspace ▾
+                        </summary>
+                        <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 10, background: 'var(--bg)', border: '1px solid var(--hairline-strong)', borderRadius: 10, boxShadow: '0 4px 20px rgba(0,0,0,0.12)', minWidth: 200, padding: '4px 0', marginTop: 4 }}>
+                          {workspaceMembers.map((wm) => (
+                            <button
+                              key={wm.userId}
+                              type="button"
+                              onClick={() => importFromWorkspace(wm)}
+                              style={{ display: 'block', width: '100%', padding: '8px 14px', textAlign: 'left', fontSize: 12.5, color: 'var(--text)', background: 'none', border: 'none', cursor: 'pointer' }}
+                            >
+                              {wm.name ?? wm.email ?? wm.userId}
+                              <span style={{ fontSize: 11, color: 'var(--text-3)', marginLeft: 6 }}>{wm.email}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </details>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {groups.length === 0 && !showNewGroup && (
+            <p style={{ fontSize: 12.5, color: 'var(--text-3)', marginTop: 10 }}>
+              Create a group to start tracking timezone overlaps.
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 type WorkspaceDTO = { id: string; name: string; slug: string; ownerId: string; role: 'owner' | 'admin' | 'member' | 'guest'; memberCount: number };
 type MemberDTO = { userId: string; name?: string; email?: string; image?: string; role: 'owner' | 'admin' | 'member' | 'guest'; joinedAt: string };
 type InvitationDTO = { id: string; email: string; role: 'admin' | 'member' | 'guest'; token: string; createdAt: string; expiresAt: string };
@@ -765,6 +1122,7 @@ function Workspace() {
   const [workspaces, setWorkspaces] = useState<WorkspaceDTO[] | null>(null);
   const [activeWs, setActiveWs] = useState<WorkspaceDTO | null>(null);
   const [members, setMembers] = useState<MemberDTO[]>([]);
+  const [membersLoaded, setMembersLoaded] = useState(false);
   const [invitations, setInvitations] = useState<InvitationDTO[]>([]);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
   const [creating, setCreating] = useState(false);
@@ -787,6 +1145,7 @@ function Workspace() {
 
   // Load members + invitations + audit log for the active workspace
   async function loadDetails(wsId: string) {
+    setMembersLoaded(false);
     const [mRes, iRes, aRes] = await Promise.all([
       fetch(`/api/workspaces/${wsId}/members`),
       fetch(`/api/workspaces/${wsId}/invitations`),
@@ -796,6 +1155,7 @@ function Workspace() {
       const d = await mRes.json();
       setMembers(d.members ?? []);
     }
+    setMembersLoaded(true);
     if (iRes.ok) {
       const d = await iRes.json();
       setInvitations(d.invitations ?? []);
@@ -950,9 +1310,13 @@ function Workspace() {
           )}
         </div>
 
-        {members.length === 0 ? (
+        {!membersLoaded ? (
           <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-3)', fontSize: 13 }}>
             Loading members…
+          </div>
+        ) : members.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-3)', fontSize: 13 }}>
+            No members yet.
           </div>
         ) : (
           members.map((m) => (
@@ -1041,6 +1405,8 @@ function Workspace() {
         <SwitchRow title="Google Workspace SSO" sub="Available on Team plan." on={false} onChange={() => {}} />
         <SwitchRow title="SAML SSO (Okta, Auth0)" sub="Available on Enterprise. Contact sales." on={false} onChange={() => {}} />
       </div>
+
+      <TeamTimezones workspaceMembers={members} />
     </>
   );
 }

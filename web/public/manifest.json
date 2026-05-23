@@ -1,0 +1,45 @@
+{
+  "name": "ElevAIte Calendar",
+  "short_name": "ElevAIte",
+  "description": "The calendar that fits how you actually work.",
+  "start_url": "/calendar",
+  "display": "standalone",
+  "background_color": "#FAF9F5",
+  "theme_color": "#D97757",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New event",
+      "url": "/calendar",
+      "description": "Open calendar to create a new event"
+    },
+    {
+      "name": "Scheduling links",
+      "url": "/scheduling-links",
+      "description": "Manage your scheduling links"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["productivity", "utilities"]
+}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getLinkBySlug, generateSlots } from '@/lib/scheduling';
 import { listEventsInRange } from '@/lib/events';
+import { getNoMeetingDays } from '@/lib/users';
 
 function pad(n: number) { return String(n).padStart(2, '0'); }
 function localKey(d: Date) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
@@ -14,6 +15,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
     const { searchParams } = new URL(req.url);
     const link = await getLinkBySlug(slug);
     if (!link) return NextResponse.json({ error: 'not_found' }, { status: 404 });
+
+    // Fetch the host's no-meeting days once
+    const noMeetingDays = await getNoMeetingDays(link.ownerId);
 
     const fromParam = searchParams.get('from');
     const toParam = searchParams.get('to');
@@ -38,6 +42,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
         const day = new Date(rangeStart);
         day.setDate(rangeStart.getDate() + i);
         day.setHours(0, 0, 0, 0);
+        // Skip no-meeting days entirely — show no slots to external bookers
+        if (noMeetingDays.includes(day.getDay())) continue;
         const daySlots = generateSlots(link, day, busy);
         if (daySlots.length > 0) slots[localKey(day)] = daySlots;
       }
@@ -50,6 +56,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
     if (!dateStr) return NextResponse.json({ error: 'date or from+to required' }, { status: 400 });
     const date = new Date(`${dateStr}T00:00:00`);
     if (isNaN(+date)) return NextResponse.json({ error: 'invalid date' }, { status: 400 });
+
+    // Block the entire day if it's a no-meeting day
+    if (noMeetingDays.includes(date.getDay())) {
+      return NextResponse.json({ slots: [] });
+    }
 
     const dayStart = new Date(date); dayStart.setHours(0, 0, 0, 0);
     const dayEnd = new Date(date); dayEnd.setHours(23, 59, 59, 999);

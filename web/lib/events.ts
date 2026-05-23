@@ -8,14 +8,21 @@ export type ChipColor = 'coral' | 'sand' | 'sage' | 'slate' | 'plum' | 'ochre' |
 
 export type Recurrence = {
   freq: 'daily' | 'weekly' | 'monthly' | 'yearly';
-  interval: number;        // every N units; default 1
-  byWeekday?: number[];    // 0=Sun..6=Sat, only used when freq='weekly'
-  count?: number;          // stop after N occurrences (including base)
-  until?: Date;            // stop on or before this date (inclusive)
+  interval: number;
+  byWeekday?: number[];
+  count?: number;
+  until?: Date;
 };
 
 export type RecurrenceDTO = Omit<Recurrence, 'until'> & {
   until?: string; // ISO
+};
+
+export type HiringMeta = {
+  candidateId?: string;
+  candidateName: string;
+  role: string;
+  stage: 'screen' | 'technical' | 'founder' | 'offer' | 'rejected';
 };
 
 export type EventDoc = {
@@ -30,23 +37,27 @@ export type EventDoc = {
   description?: string;
   conferencing?: { provider: 'meet' | 'zoom' | 'teams' | 'custom'; url?: string };
   recurrence?: Recurrence;
+  exdates?: Date[];
+  hiringMeta?: HiringMeta;   // set when this is an interview event
   createdAt: Date;
   updatedAt: Date;
 };
 
-export type EventDTO = Omit<EventDoc, '_id' | 'start' | 'end' | 'createdAt' | 'updatedAt' | 'recurrence'> & {
+export type EventDTO = Omit<EventDoc, '_id' | 'start' | 'end' | 'createdAt' | 'updatedAt' | 'recurrence' | 'exdates' | 'hiringMeta'> & {
   id: string;
-  start: string; // ISO
-  end: string;   // ISO
+  start: string;
+  end: string;
   recurrence?: RecurrenceDTO;
-  // Set on expanded instances of a recurring series
-  seriesId?: string;       // base event id (same as `id` for the base)
-  instanceIndex?: number;  // 0 = base, 1 = first repeat, ...
-  // Provenance — local Mongo (default) or pulled from an external calendar.
+  seriesId?: string;
+  instanceIndex?: number;
+  originalDate?: string;
+  hiringMeta?: HiringMeta;
   source?: 'google';
   readOnly?: boolean;
-  externalLink?: string;   // e.g. htmlLink to open in source calendar
+  externalLink?: string;
 };
+
+export type RecurringScope = 'this' | 'future' | 'all';
 
 function recurrenceToDTO(r?: Recurrence): RecurrenceDTO | undefined {
   if (!r) return undefined;
@@ -70,6 +81,8 @@ function toDTO(doc: EventDoc, overrideStart?: Date, overrideEnd?: Date, idx = 0)
     recurrence: recurrenceToDTO(doc.recurrence),
     seriesId: doc.recurrence ? doc._id!.toHexString() : undefined,
     instanceIndex: doc.recurrence ? idx : undefined,
+    originalDate: doc.recurrence ? start.toISOString() : undefined,
+    hiringMeta: doc.hiringMeta,
   };
 }
 
@@ -78,12 +91,18 @@ async function col() {
   return client.db(DB_NAME).collection<EventDoc>(COLLECTION);
 }
 
-const MAX_INSTANCES = 730; // 2-year cap as a runaway-safety
+const MAX_INSTANCES = 730;
+
+/** Returns true if `date` matches any exdate (same UTC day). */
+function isExcluded(date: Date, exdates?: Date[]): boolean {
+  if (!exdates || exdates.length === 0) return false;
+  const d = date.toISOString().slice(0, 10);
+  return exdates.some((ex) => new Date(ex).toISOString().slice(0, 10) === d);
+}
 
 /** Expand a (potentially recurring) event into all instances whose start∈[from,to). */
 function expandToRange(doc: EventDoc, from: Date, to: Date): EventDTO[] {
   if (!doc.recurrence) {
-    // Non-recurring — include if it overlaps the range
     if (doc.start < to && doc.end > from) return [toDTO(doc)];
     return [];
   }
@@ -94,15 +113,12 @@ function expandToRange(doc: EventDoc, from: Date, to: Date): EventDTO[] {
   const limitCount = Math.min(r.count ?? MAX_INSTANCES, MAX_INSTANCES);
   const out: EventDTO[] = [];
 
-  // Generate occurrence start times.
   const cursors: Date[] = [];
 
   if (r.freq === 'weekly' && r.byWeekday && r.byWeekday.length > 0) {
-    // Walk from base.start day by day; emit on matching weekdays.
-    // Respect interval (every N weeks): only emit if (weeksSinceBase % interval === 0).
     const baseSunday = new Date(doc.start);
     baseSunday.setHours(0, 0, 0, 0);
-    baseSunday.setDate(baseSunday.getDate() - baseSunday.getDay()); // Sunday of base week
+    baseSunday.setDate(baseSunday.getDate() - baseSunday.getDay());
     const baseHour = doc.start.getHours();
     const baseMin = doc.start.getMinutes();
     const baseSec = doc.start.getSeconds();
@@ -119,13 +135,16 @@ function expandToRange(doc: EventDoc, from: Date, to: Date): EventDTO[] {
       if (weeksSinceBase % interval === 0 && days.has(walker.getDay())) {
         const slot = new Date(walker);
         slot.setHours(baseHour, baseMin, baseSec, 0);
-        if (slot >= from) cursors.push(slot);
-        i++;
+        if (!isExcluded(slot, doc.exdates)) {
+          if (slot >= from) cursors.push(slot);
+          i++;
+        } else {
+          i++; // still count toward limit so exdates don't extend series indefinitely
+        }
       }
       walker.setDate(walker.getDate() + 1);
     }
   } else {
-    // Daily / weekly (no byWeekday) / monthly / yearly — step by interval
     const advance = (d: Date): Date => {
       const n = new Date(d);
       if (r.freq === 'daily') n.setDate(n.getDate() + interval);
@@ -138,7 +157,9 @@ function expandToRange(doc: EventDoc, from: Date, to: Date): EventDTO[] {
     let i = 0;
     while (i < limitCount && cursor < to) {
       if (limitUntil && cursor > limitUntil) break;
-      if (cursor.getTime() + duration > from.getTime()) cursors.push(new Date(cursor));
+      if (!isExcluded(cursor, doc.exdates)) {
+        if (cursor.getTime() + duration > from.getTime()) cursors.push(new Date(cursor));
+      }
       cursor = advance(cursor);
       i++;
     }
@@ -160,13 +181,12 @@ export async function listEventsInRange(
 ): Promise<EventDTO[]> {
   const includeExternal = opts.includeExternal !== false;
   const c = await col();
-  // Pull events whose base start is before `to` AND (it's recurring OR end > from).
   const docs = await c
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .find({
       ownerId,
       start: { $lt: to },
       $or: [
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         { recurrence: { $exists: true } as any },
         { end: { $gt: from } },
       ],
@@ -216,6 +236,7 @@ export type CreateEventInput = {
   description?: string;
   conferencing?: EventDoc['conferencing'];
   recurrence?: Recurrence;
+  hiringMeta?: HiringMeta;
 };
 
 export async function createEvent(input: CreateEventInput): Promise<EventDTO> {
@@ -231,6 +252,7 @@ export async function createEvent(input: CreateEventInput): Promise<EventDTO> {
     description: input.description,
     conferencing: input.conferencing,
     recurrence: input.recurrence,
+    hiringMeta: input.hiringMeta,
     createdAt: now,
     updatedAt: now,
   };
@@ -250,7 +272,6 @@ export async function updateEvent(
   const c = await col();
   const $set: Record<string, unknown> = { ...patch, updatedAt: new Date() };
   const $unset: Record<string, ''> = {};
-  // null recurrence means "remove recurrence" — delete the field
   if ('recurrence' in patch && patch.recurrence == null) {
     delete $set.recurrence;
     $unset.recurrence = '';
@@ -273,14 +294,146 @@ export async function deleteEvent(ownerId: string, id: string): Promise<boolean>
   return res.deletedCount === 1;
 }
 
+// ─── Scoped recurring edit/delete ─────────────────────────────────────
+
+/**
+ * Edit just one occurrence: add its date to exdates, create a standalone event
+ * with the edited data.
+ */
+export async function editThisOnly(
+  ownerId: string,
+  seriesId: string,
+  originalDate: Date,
+  patch: UpdateEventInput,
+): Promise<EventDTO | null> {
+  if (!ObjectId.isValid(seriesId)) return null;
+  const c = await col();
+
+  // Fetch base to get duration + existing fields
+  const base = await c.findOne({ _id: new ObjectId(seriesId), ownerId });
+  if (!base) return null;
+
+  const duration = base.end.getTime() - base.start.getTime();
+  const newStart = (patch.start as Date | undefined) ?? originalDate;
+  const newEnd = (patch.end as Date | undefined) ?? new Date(newStart.getTime() + duration);
+
+  // Exclude this date from the series
+  await c.updateOne(
+    { _id: new ObjectId(seriesId), ownerId },
+    { $addToSet: { exdates: originalDate }, $set: { updatedAt: new Date() } },
+  );
+
+  // Create standalone override event (no recurrence)
+  const now = new Date();
+  const overrideDoc: EventDoc = {
+    ownerId,
+    title: (patch.title as string | undefined) ?? base.title,
+    start: newStart,
+    end: newEnd,
+    allDay: (patch.allDay as boolean | undefined) ?? base.allDay,
+    color: (patch.color as ChipColor | undefined) ?? base.color,
+    location: (patch.location as string | undefined) ?? base.location,
+    description: (patch.description as string | undefined) ?? base.description,
+    conferencing: base.conferencing,
+    createdAt: now,
+    updatedAt: now,
+  };
+  const res = await c.insertOne(overrideDoc);
+  return toDTO({ ...overrideDoc, _id: res.insertedId });
+}
+
+/**
+ * Edit this occurrence and all future ones: truncate the original series to end
+ * the day before originalDate, then create a new series from originalDate forward.
+ */
+export async function editThisAndFuture(
+  ownerId: string,
+  seriesId: string,
+  originalDate: Date,
+  patch: UpdateEventInput,
+): Promise<EventDTO | null> {
+  if (!ObjectId.isValid(seriesId)) return null;
+  const c = await col();
+
+  const base = await c.findOne({ _id: new ObjectId(seriesId), ownerId });
+  if (!base) return null;
+
+  // Truncate original series to end just before this occurrence
+  const cutoff = new Date(originalDate.getTime() - 1);
+  await c.updateOne(
+    { _id: new ObjectId(seriesId), ownerId },
+    { $set: { 'recurrence.until': cutoff, updatedAt: new Date() } },
+  );
+
+  // New series starts at originalDate with edits applied
+  const duration = base.end.getTime() - base.start.getTime();
+  const newStart = (patch.start as Date | undefined) ?? originalDate;
+  // Preserve the time-of-day from newStart, but anchor to originalDate's date
+  const newEnd = (patch.end as Date | undefined) ?? new Date(newStart.getTime() + duration);
+
+  const now = new Date();
+  const newDoc: EventDoc = {
+    ownerId,
+    title: (patch.title as string | undefined) ?? base.title,
+    start: newStart,
+    end: newEnd,
+    allDay: (patch.allDay as boolean | undefined) ?? base.allDay,
+    color: (patch.color as ChipColor | undefined) ?? base.color,
+    location: (patch.location as string | undefined) ?? base.location,
+    description: (patch.description as string | undefined) ?? base.description,
+    conferencing: base.conferencing,
+    recurrence: base.recurrence ? { ...base.recurrence, until: undefined } : undefined,
+    createdAt: now,
+    updatedAt: now,
+  };
+  // Apply any recurrence override from patch
+  if ('recurrence' in patch) {
+    if (patch.recurrence == null) delete newDoc.recurrence;
+    else newDoc.recurrence = patch.recurrence as Recurrence;
+  }
+
+  const res = await c.insertOne(newDoc);
+  return toDTO({ ...newDoc, _id: res.insertedId });
+}
+
+/** Delete just this occurrence by adding to exdates. */
+export async function deleteThisOnly(
+  ownerId: string,
+  seriesId: string,
+  originalDate: Date,
+): Promise<boolean> {
+  if (!ObjectId.isValid(seriesId)) return false;
+  const c = await col();
+  const res = await c.updateOne(
+    { _id: new ObjectId(seriesId), ownerId },
+    { $addToSet: { exdates: originalDate }, $set: { updatedAt: new Date() } },
+  );
+  return res.modifiedCount === 1;
+}
+
+/** Delete this occurrence and all future ones by truncating the series. */
+export async function deleteThisAndFuture(
+  ownerId: string,
+  seriesId: string,
+  originalDate: Date,
+): Promise<boolean> {
+  if (!ObjectId.isValid(seriesId)) return false;
+  const c = await col();
+  const cutoff = new Date(originalDate.getTime() - 1);
+  const res = await c.updateOne(
+    { _id: new ObjectId(seriesId), ownerId },
+    { $set: { 'recurrence.until': cutoff, updatedAt: new Date() } },
+  );
+  return res.modifiedCount === 1;
+}
+
 export const CHIP_COLORS: ChipColor[] = [
   'coral', 'sand', 'sage', 'slate', 'plum', 'ochre', 'rose', 'stone',
 ];
 
-/** Parse a recurrence DTO from request JSON into a server-side Recurrence. */
 export function parseRecurrenceInput(input: unknown): Recurrence | null | undefined {
-  if (input === undefined) return undefined; // not provided — don't change
-  if (input === null) return null;            // explicitly clear
+  if (input === undefined) return undefined;
+  if (input === null) return null;
   const r = input as Partial<RecurrenceDTO>;
   if (!r.freq || !['daily', 'weekly', 'monthly', 'yearly'].includes(r.freq)) return null;
   const out: Recurrence = {
