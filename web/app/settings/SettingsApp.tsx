@@ -5,7 +5,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import './settings.css';
 import { useAppearance } from '@/lib/useAppearance';
 
@@ -101,12 +101,15 @@ function Row({ label, sub, children }: { label: string; sub?: string; children: 
 // ─── Tabs ────────────────────────────────────────────────────────────
 
 function Profile({ userName, userEmail }: { userName: string; userEmail: string }) {
+  const { update: updateSession } = useSession();
+
   // Server profile (snapshot of what's in Mongo)
   const [serverProfile, setServerProfile] = useState<{
     displayName: string;
     bio: string;
     handle: string;
     timezone: string;
+    persona: 'student' | 'startup' | 'solo';
   } | null>(null);
 
   // Form state
@@ -114,6 +117,7 @@ function Profile({ userName, userEmail }: { userName: string; userEmail: string 
   const [bio, setBio] = useState('');
   const [handle, setHandle] = useState('');
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const [persona, setPersona] = useState<'student' | 'startup' | 'solo'>('solo');
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -135,12 +139,14 @@ function Profile({ userName, userEmail }: { userName: string; userEmail: string 
             bio: p.bio ?? '',
             handle: p.handle ?? '',
             timezone: p.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+            persona: (p.persona ?? 'solo') as 'student' | 'startup' | 'solo',
           };
           setServerProfile(snap);
           setDisplayName(snap.displayName);
           setBio(snap.bio);
           setHandle(snap.handle);
           setTimezone(snap.timezone);
+          setPersona(snap.persona);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -154,7 +160,8 @@ function Profile({ userName, userEmail }: { userName: string; userEmail: string 
     (displayName !== serverProfile.displayName ||
       bio !== serverProfile.bio ||
       handle !== serverProfile.handle ||
-      timezone !== serverProfile.timezone);
+      timezone !== serverProfile.timezone ||
+      persona !== serverProfile.persona);
 
   function discard() {
     if (!serverProfile) return;
@@ -172,7 +179,7 @@ function Profile({ userName, userEmail }: { userName: string; userEmail: string 
       const res = await fetch('/api/me', {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ displayName, bio, handle, timezone }),
+        body: JSON.stringify({ displayName, bio, handle, timezone, persona }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -191,13 +198,17 @@ function Profile({ userName, userEmail }: { userName: string; userEmail: string 
         bio: p.bio ?? '',
         handle: p.handle ?? '',
         timezone: p.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone,
+        persona: (p.persona ?? 'solo') as 'student' | 'startup' | 'solo',
       };
       setServerProfile(snap);
       setDisplayName(snap.displayName);
       setBio(snap.bio);
       setHandle(snap.handle);
       setTimezone(snap.timezone);
+      setPersona(snap.persona);
       setSavedAt(Date.now());
+      // Refresh JWT so session.user.persona updates immediately (hiring pipeline visibility)
+      void updateSession();
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -305,6 +316,34 @@ function Profile({ userName, userEmail }: { userName: string; userEmail: string 
               ))}
           </select>
         </Row>
+      </div>
+
+      <div className="ss-card">
+        <div className="ss-card__h">Account type</div>
+        <p className="ss-card__sub">Controls which features you see — e.g. Startup unlocks the Hiring Pipeline.</p>
+        <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+          {([
+            { id: 'student', emoji: '🎓', label: 'Student' },
+            { id: 'startup', emoji: '⚡', label: 'Startup' },
+            { id: 'solo',    emoji: '🧘', label: 'Just me' },
+          ] as const).map((p) => (
+            <button
+              key={p.id}
+              onClick={() => setPersona(p.id)}
+              style={{
+                flex: 1, padding: '10px 8px', borderRadius: 10, cursor: 'pointer',
+                border: `2px solid ${persona === p.id ? 'var(--coral)' : 'var(--hairline)'}`,
+                background: persona === p.id ? 'var(--coral-subtle, rgba(217,119,87,0.08))' : 'transparent',
+                color: persona === p.id ? 'var(--coral)' : 'var(--text-2)',
+                fontWeight: persona === p.id ? 600 : 400,
+                fontSize: 13, transition: 'all 0.15s',
+              }}
+            >
+              <div style={{ fontSize: 20, marginBottom: 4 }}>{p.emoji}</div>
+              {p.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {error && (

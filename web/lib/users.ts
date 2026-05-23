@@ -122,6 +122,7 @@ export type UserProfileDTO = {
   bio?: string;
   handle: string;         // resolved: handle || derived from email
   timezone?: string;
+  persona?: 'student' | 'startup' | 'solo';
   updatedAt?: string;
 };
 
@@ -143,6 +144,7 @@ function toDTO(u: UserRecord): UserProfileDTO {
     bio: u.bio,
     handle: u.handle ?? deriveHandle(u.email, u.name),
     timezone: u.timezone,
+    persona: u.persona,
     updatedAt: u.updatedAt?.toISOString(),
   };
 }
@@ -296,6 +298,7 @@ export type UpdateProfileInput = {
   bio?: string;
   handle?: string;
   timezone?: string;
+  persona?: 'student' | 'startup' | 'solo';
 };
 
 export type UpdateProfileResult =
@@ -360,6 +363,9 @@ export async function updateProfile(id: string, input: UpdateProfileInput): Prom
   }
   if (typeof input.timezone === 'string' && input.timezone) {
     patch.timezone = input.timezone.slice(0, 64);
+  }
+  if (input.persona && ['student', 'startup', 'solo'].includes(input.persona)) {
+    patch.persona = input.persona;
   }
   if (typeof input.handle === 'string') {
     const h = input.handle.trim().toLowerCase();

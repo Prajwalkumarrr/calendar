@@ -25,6 +25,7 @@ export async function PATCH(req: NextRequest) {
       bio: body.bio,
       handle: body.handle,
       timezone: body.timezone,
+      persona: body.persona,
     });
     if (!res.ok) {
       const status = res.error === 'not_found' ? 404 : 400;
